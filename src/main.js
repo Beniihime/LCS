@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import './style.css'
 import App from './App.vue'
 // import router from './router'
+import Tooltip from 'primevue/tooltip';
 import axios from 'axios';
 import "bootstrap/dist/css/bootstrap.min.css"
 import "bootstrap";
@@ -40,5 +41,5 @@ app.use(PrimeVue, {
     },
     ripple: true,
 });
-
+app.directive('tooltip', Tooltip);
 app.mount('#app');

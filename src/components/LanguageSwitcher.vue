@@ -11,7 +11,7 @@ const languages = ref([
 <template>
     <div class="d-flex gap-3 align-items-center">
         <i class="bi bi-globe2"></i>
-        <Select v-model="selectedLanguage" :options="languages" optionLabel="name" class="drop"/>
+        <Select v-model="selectedLanguage" :options="languages" optionLabel="name" class="drop rounded-3" placeholder="Выберите язык"/>
     </div>
 </template>
 
@@ -28,7 +28,7 @@ export default {
 
 <style scoped>
 .drop {
-    width: 150px;
+    width: 190px;
 }
 .bi {
     font-size: 2.5rem;

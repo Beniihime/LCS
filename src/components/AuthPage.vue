@@ -1,12 +1,13 @@
 <template>
     <main class="position-relative">
         <div class="p-5 d-flex justify-content-end position-absolute end-0">
-            <LanguageSwitcher />
+            <!-- <LanguageSwitcher /> -->
         </div>
-        <div class="row-auto d-flex justify-content-center align-items-center">
+        <div class="row d-flex justify-content-center align-items-center">
             <form @submit.prevent="auth">
-                <div class="card flex-column d-flex gap-5 p-5 rounded-4">
+                <div class="card gap-3 px-4 pt-5 rounded-4">
                     <LogoSvg />
+                    <div class="title">Личный кабинет СибАДИ</div>
                     <InputGroup class="inpg">
                         <InputGroupAddon>
                             <i class="pi pi-user"></i>
@@ -17,9 +18,10 @@
                         <InputGroupAddon>
                             <i class="pi pi-key"></i>
                         </InputGroupAddon>
-                        <Password v-model="password" toggleMask  placeholder="Пароль" id="password" required/>
+                        <Password v-model="password" toggleMask :feedback="false" placeholder="Пароль" id="password" required/>
                     </InputGroup>
-                    <Button class="but" type="submit" label="Войти" />
+                    <Button class="but mt-3" type="submit" label="Войти" />
+                    <Button label="Забыли пароль?" text/>
                 </div>
             </form>
         </div> 
@@ -37,14 +39,20 @@ import FloatLabel from 'primevue/floatlabel';
 import LogoSvg from '@/assets/logo.svg';
 
 import axios from 'axios';
+import { useToast } from "primevue/usetoast";
 
 export default {
     name: "AuthPage",
     data() {
         return {
             login: "",
-            password: ""
+            password: "",
+            errorMessage: ""
         }
+    },
+    setup() {
+        const toast = useToast();
+        return { toast };
     },
     components: {
         Button,
@@ -70,9 +78,13 @@ export default {
                     }
                 }
             );
-                console.log('Login succesful:', response.data);
+            
+            localStorage.setItem('accessToken', response.data.accessToken);
+            localStorage.setItem('refreshToken', response.data.refreshTokenValue);
+            this.$router.push({ name: 'Home', params: { message: 'success', detail: 'Вы вошли в личный кабинет'} })
             } catch (error) {
-                console.error('Error during login:', error);
+                this.errorMessage = 'Login failed: ' + (error.response ? error.response.data.message : error.message);
+                this.toast.add({ severity: 'error', summary: 'Error Message', detail: this.errorMessage, life: 3000 });
             }
         }
     },
@@ -94,9 +106,9 @@ form {
 .card {
     display: flex;
     place-items: center;
+    justify-content: center;
     width: 500px;
     height: 550px;
-    border: none;
     box-shadow: 2px 2px 40px rgba(0, 0, 0, .25);
 }
 .inpg {
@@ -108,5 +120,8 @@ form {
     height: 50px;
     font-size: 1.25rem;
     border-radius: 10px;
+}
+.title {
+    font-size: 1.5rem;
 }
 </style> 
