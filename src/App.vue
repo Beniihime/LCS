@@ -1,11 +1,11 @@
 <template>
-    <!-- <Toast /> -->
-    <router-view></router-view>
-    <AuthPage />
+  <div>
+    <Toast />
+    <router-view @route-changed="showMessage" />
+  </div>
 </template>
 
 <script>
-import AuthPage from "./components/AuthPage.vue"
 import { useToast } from "primevue/usetoast";
 
 export default {

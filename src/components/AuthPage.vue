@@ -5,7 +5,7 @@
         </div>
         <div class="row d-flex justify-content-center align-items-center">
             <form @submit.prevent="auth">
-                <div class="card gap-3 px-4 pt-5 rounded-4">
+                <div class="card gap-3 px-4 pt-2 rounded-4 pt-md-5">
                     <LogoSvg />
                     <div class="title">Личный кабинет СибАДИ</div>
                     <InputGroup class="inpg">
@@ -35,11 +35,11 @@ import InputGroup from 'primevue/inputgroup';
 import InputText from 'primevue/inputtext';
 import InputGroupAddon from 'primevue/inputgroupaddon';
 import Password from 'primevue/password';
-import FloatLabel from 'primevue/floatlabel';
 import LogoSvg from '@/assets/logo.svg';
+import { useToast } from 'primevue/usetoast';
+import { scheduleTokenRefresh } from '@/utils/TokenService.js';
 
 import axios from 'axios';
-import { useToast } from "primevue/usetoast";
 
 export default {
     name: "AuthPage",
@@ -61,7 +61,6 @@ export default {
         InputGroupAddon,
         InputText,
         Password,
-        FloatLabel,
         LogoSvg
     },
     methods: {
@@ -81,7 +80,15 @@ export default {
             
             localStorage.setItem('accessToken', response.data.accessToken);
             localStorage.setItem('refreshToken', response.data.refreshTokenValue);
-            this.$router.push({ name: 'Home', params: { message: 'success', detail: 'Вы вошли в личный кабинет'} })
+            localStorage.setItem('userId', response.data.userId);
+            
+            scheduleTokenRefresh(response.data.refreshTokenExpired);
+
+            const redirect = this.$route.query.redirect || '/';
+            this.$router.push(redirect);
+            console.log(response.data);    
+            
+            this.$router.push({ name: 'Home', query: { message: 'success', detail: 'Вы вошли в личный кабинет'} })
             } catch (error) {
                 this.errorMessage = 'Login failed: ' + (error.response ? error.response.data.message : error.message);
                 this.toast.add({ severity: 'error', summary: 'Error Message', detail: this.errorMessage, life: 3000 });
@@ -97,7 +104,7 @@ main {
     display: flex;
     place-content: center;
     place-self: center;
-    min-height: 100vh;
+    min-height: 100dvh;
 }
 form {
     display: flex;
@@ -110,10 +117,18 @@ form {
     width: 500px;
     height: 550px;
     box-shadow: 2px 2px 40px rgba(0, 0, 0, .25);
+    @media (max-width: 896px) {
+        width: 350px;
+        height: 500px;
+    }
 }
 .inpg {
     width: 350px;
     font-size: 1.5rem;
+    @media (max-width: 896px)  {
+        width: 250px;
+        font-size: 1rem;
+    }
 }
 .but {
     width: 300px;
@@ -123,5 +138,8 @@ form {
 }
 .title {
     font-size: 1.5rem;
+    @media (max-width: 896px)  {
+        font-size: 1rem;
+    }
 }
 </style> 

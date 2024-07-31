@@ -1,8 +1,8 @@
 import { createApp } from 'vue'
 import './style.css'
 import App from './App.vue'
-// import router from './router'
-import Tooltip from 'primevue/tooltip';
+import ToastService from 'primevue/toastservice';
+import Toast from 'primevue/toast';
 import axios from 'axios';
 import "bootstrap/dist/css/bootstrap.min.css"
 import "bootstrap";
@@ -10,6 +10,7 @@ import "bootstrap-icons/font/bootstrap-icons.css"
 import 'primeicons/primeicons.css'
 import PrimeVue from 'primevue/config';
 import Lara from '@primevue/themes/lara';
+import router from './router';
 
 axios.defaults.baseURL = 'https://development.sibadi.org';
 
@@ -41,5 +42,8 @@ app.use(PrimeVue, {
     },
     ripple: true,
 });
-app.directive('tooltip', Tooltip);
+app.use(ToastService);
+app.component('Toast', Toast);
+
+app.use(router);
 app.mount('#app');
