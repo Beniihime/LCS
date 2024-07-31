@@ -7,7 +7,7 @@
             <form @submit.prevent="auth">
                 <div class="card gap-3 px-4 pt-2 rounded-4 pt-md-5">
                     <LogoSvg />
-                    <div class="title">Личный кабинет СибАДИ</div>
+                    <div class="title">Личный кабинет</div>
                     <InputGroup class="inpg">
                         <InputGroupAddon>
                             <i class="pi pi-user"></i>
@@ -100,7 +100,6 @@ export default {
 
 <style scoped>
 main {
-    background: rgb(214, 236, 253);
     display: flex;
     place-content: center;
     place-self: center;
