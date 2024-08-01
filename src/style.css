@@ -75,3 +75,9 @@ button:focus-visible {
 /* #app {
   background: rgb(214, 236, 253);
 } */
+
+@font-face {
+  font-family: "SF Pro Rounded";
+  src: url('@/assets/fonts/SFProRounded.woff')format("woff"),
+       url('@/assets/fonts/SFProRounded.woff2')format("woff2");
+}

@@ -12,7 +12,7 @@ const routes = [
             message: route.query.message, 
             detail: route.query.detail 
         }),
-        meta: { requiresAuth: true }
+        meta: { requiresAuth: false }
     }, 
     { 
         path: "/auth", 

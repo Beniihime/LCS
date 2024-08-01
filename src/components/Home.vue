@@ -1,11 +1,16 @@
 <template>
     <div>
-        Home
+        <SideBar />
     </div>
 </template>
 
 <script>
+import SideBar from './SideBar.vue';
 export default {
+  name:"Home",
+  components: {
+    SideBar
+  },
   props: {
     message: {
       type: String,

@@ -1,8 +1,5 @@
 <template>
-    <main class="position-relative">
-        <div class="p-5 d-flex justify-content-end position-absolute end-0">
-            <!-- <LanguageSwitcher /> -->
-        </div>
+    <main>
         <div class="row d-flex justify-content-center align-items-center">
             <form @submit.prevent="auth">
                 <div class="card gap-3 px-4 pt-2 rounded-4 pt-md-5">
@@ -29,7 +26,6 @@
 </template>
 
 <script>
-import LanguageSwitcher from './LanguageSwitcher.vue'
 import Button from 'primevue/button';
 import InputGroup from 'primevue/inputgroup';
 import InputText from 'primevue/inputtext';
@@ -56,7 +52,6 @@ export default {
     },
     components: {
         Button,
-        LanguageSwitcher,
         InputGroup,
         InputGroupAddon,
         InputText,
