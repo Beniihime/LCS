@@ -1,15 +1,25 @@
 <template>
-    <div>
-        <SideBar />
+    <div class="app-layout">
+      <SideBar v-if="isAuthenticated"/>
+      <div class="content">
+        <router-view></router-view>
+      </div>
     </div>
 </template>
 
 <script>
 import SideBar from './SideBar.vue';
+import { isAuthenticated } from "@/utils/auth";
+
 export default {
-  name:"Home",
+  name: "Home",
   components: {
-    SideBar
+    SideBar,
+  },
+  computed: {
+    isAuthenticated() {
+      return isAuthenticated();
+    }
   },
   props: {
     message: {
@@ -22,16 +32,26 @@ export default {
     }
   },
   watch: {
-    message(newMessage, oldMessage) {
-      if (newMessage) {
-        this.$emit('route-changed', newMessage, this.detail);
+    $route(newRoute) {
+      if (newRoute.query.message) {
+        this.$emit('route-changed', newRoute.query.message, newRoute.query.detail);
       }
     }
   },
   mounted() {
-    if (this.message) {
-      this.$emit('route-changed', this.message, this.detail);
+    if (this.$route.query.message) {
+      this.$emit('route-changed', this.$route.query.message, this.$route.query.detail);
     }
   }
 };
 </script>
+
+<style scoped>
+.app-layout {
+  display: flex;
+}
+.content {
+  flex-grow: 1;
+  padding: 20px;
+}
+</style>
