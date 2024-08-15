@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import Home from '@/components/Home.vue';
 import AuthPage from '@/components/AuthPage.vue';
 import { isAuthenticated } from "@/utils/auth";
+import UsersPage from '@/components/UsersPage.vue';
 
 const routes = [
     { 
@@ -12,13 +13,25 @@ const routes = [
             message: route.query.message, 
             detail: route.query.detail 
         }),
-        meta: { requiresAuth: false }
+        meta: { requiresAuth: true },
+        children: [
+            {
+                path: "/users",
+                component: UsersPage,
+                name: 'Users',
+            },
+            {
+                path: "/notif",
+                
+            }
+        ]
     }, 
     { 
         path: "/auth", 
         component: AuthPage,
         name: 'Auth',
-    }
+        meta: { requiresAuth: false }
+    },
 ];
 
 const router = createRouter({
