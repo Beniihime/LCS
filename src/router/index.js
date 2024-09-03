@@ -1,14 +1,11 @@
 import { createRouter, createWebHistory } from "vue-router";
-import Home from '@/components/Home.vue';
-import AuthPage from '@/components/AuthPage.vue';
 import { isAuthenticated } from "@/utils/auth";
-import UsersPage from '@/components/UsersPage.vue';
 
 const routes = [
     { 
         path: "/", 
-        component: Home,
-        name: 'Home',
+        component: () => import('@/views/HomePage.vue'),
+        name: 'HomePage',
         props: route =>({ 
             message: route.query.message, 
             detail: route.query.detail 
@@ -17,18 +14,18 @@ const routes = [
         children: [
             {
                 path: "/users",
-                component: UsersPage,
+                component: () => import('@/views/UsersPage.vue'),
                 name: 'Users',
             },
             {
                 path: "/notif",
-                
+                // component: () => import('@/components/NotifPage.vue'),
             }
         ]
     }, 
     { 
         path: "/auth", 
-        component: AuthPage,
+        component: () => import('@/views/AuthPage.vue'),
         name: 'Auth',
         meta: { requiresAuth: false }
     },
