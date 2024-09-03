@@ -9,41 +9,32 @@ import "bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css"
 import 'primeicons/primeicons.css'
 import PrimeVue from 'primevue/config';
-import Lara from '@primevue/themes/lara';
+import ConfirmationService from 'primevue/confirmationservice';
 import router from './router';
+import Noir from './presets/Noir.js';
+import AppState from './plugins/appState.js';
 
 axios.defaults.baseURL = 'https://development.sibadi.org';
 
 
 const app = createApp(App);
+
 app.use(PrimeVue, {
     theme: {
-        preset: {
-            ...Lara,
-            semantic: {
-                ...Lara.semantic,
-            primary: {
-                50: '{blue.50}', 
-                100: '{blue.100}',
-                200: '{blue.200}',
-                300: '{blue.300}',
-                400: '{blue.400}',
-                500: '{blue.500}',
-                600: '{blue.600}',
-                700: '{blue.700}',
-                800: '{blue.800}',
-                900: '{blue.300}',
-                950: '{blue.400}'
-            }
-        }},
+        preset: Noir,
         options: {
-            darkModeSelector: '.my-app-dark',
-        }
-    },
-    ripple: true,
+            prefix: 'p',
+            darkModeSelector: '.p-dark',
+            cssLayer: false,
+        },
+        ripple: true,
+    }
 });
+app.use(AppState);
 app.use(ToastService);
 app.component('Toast', Toast);
+app.use(ConfirmationService);
+
 
 app.use(router);
 app.mount('#app');

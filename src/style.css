@@ -4,9 +4,37 @@
        url('@/assets/fonts/SFProRoundedRegular.woff2')format("woff2");
 }
 
+nav.p-datatable-paginator-bottom {
+  border: 0;
+}
+
 div.p-datatable-header {
-  background-color: transparent;
+  border-radius: 18px 18px 0 0;
+  border: 3px solid var(--p-grey-4);
+  border-bottom: 0;
+  background-color: var(--p-bg-color-2);
+}
+
+div.p-paginator {
+  background-color: var(--p-bg-color-2);
+  border-radius: 0 0 18px 18px;
+  border-inline: 3px solid var(--p-grey-4);
+  border-bottom: 3px solid var(--p-grey-4);
+}
+
+table.p-datatable-table {
+  border: 3px solid var(--p-grey-4);
+}
+
+div.p-selectbutton button.p-togglebutton {
+  font-size: 14pt;
+  width: 100%;
+  background-color: var(--p-grey-4);
   border: none;
+}
+
+div.p-selectbutton button.p-togglebutton-checked::before {
+  background-color: var(--p-bg-color-2);
 }
 
 div.p-datatable-footer {
@@ -18,9 +46,72 @@ th.p-datatable-header-cell {
   background-color: transparent;
 }
 
+#app {
+  background-color: var(--p-bg-color-1);
+  transition: all 0.5s ease;
+}
 
 body {
   font-family: 'SF Pro Rounded' !important;
   font-weight: 400 !important;
   font-size: 16pt !important;
+}
+
+svg.logout path {
+  stroke: var(--p-text-color);
+  transition: all 0.5s ease;
+}
+
+.p-password-input {
+  width: 100%;
+}
+
+.p-dialog-title {
+  font-size: 26px !important;
+}
+
+:root {
+  --p-bg-color-1: #FFFFFF;
+  --p-bg-color-2: #F2F2F7;
+  --p-bg-color-3: #FFFFFF;
+  --p-text-color: #000000;
+
+  --p-separator-opaque: rgba(198, 198, 200, 0.30);
+  --p-inputtext-background: var(--p-bg-color-3) !important;
+  --p-multiselect-background: var(--p-bg-color-3) !important;
+  --p-select-background: var(--p-bg-color-3) !important;
+  --p-divider-border-color: rgba(198, 198, 200, 0.30) !important;
+  --p-datatable-border-color : var(--p-grey-3) !important;
+  --p-selectbutton-border-radius: 10px !important;
+  --p-inputgroup-addon-background: var(--p-bg-color-3) !important;
+  --p-button-primary-background: var(--p-blue-500) !important;
+  --p-togglebutton-hover-background: var(--p-grey-4) !important;
+  --p-datatable-header-cell-selected-color: var(--p-blue-500) !important;
+
+  --p-grey-1: #8E8E93;
+  --p-grey-2: #AEAEB2;
+  --p-grey-3: #C7C7CC;
+  --p-grey-4: #D1D1D6;
+  --p-grey-5: #E5E5EA;
+  --p-grey-6: #F2F2F7;
+
+}
+
+.p-dark {
+  --p-bg-color-1: #1C1C1E;
+  --p-bg-color-2: #2C2C2E;
+  --p-bg-color-3: #3A3A3C;
+  --p-text-color: #FFFFFF;
+
+  --p-separator-opaque: #38383A;
+  --p-divider-border-color: #38383A !important;
+  --p-button-primary-background: var(--p-blue-700) !important;
+  --p-datatable-header-cell-selected-color: var(--p-blue-700) !important;
+
+  --p-grey-1: #8E8E93;
+  --p-grey-2: #636366;
+  --p-grey-3: #48484A;
+  --p-grey-4: #3A3A3C;
+  --p-grey-5: #2C2C2E;
+  --p-grey-6: #1C1C1E;
 }
