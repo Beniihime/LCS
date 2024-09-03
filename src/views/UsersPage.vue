@@ -39,33 +39,32 @@
                             optionLabel="label"
                             placeholder="Статус"
                             class="search"
+                            style="max-width: 16rem;"
                         />
                         <MultiSelect 
                             v-model="filters.roleIds.value" 
-                            :options="roleOptions" 
+                            :options="roles"
+                            display="chip" 
                             optionLabel="title" 
                             placeholder="Роли"
                             class="search"
+                            style="max-width: 16rem;"
                         />
                         <Button class="search" label="Применить фильтры" @click="applyFilters"/>
                     </div>
                 </div>
+                <WelcomeScreen :visible="loading" />
                 <DataTable
                     :value="customers" 
                     paginator 
+                    stripedRows 
                     :rows="rowsPerPage"
-                    dataKey="id"
-                    :totalRecords="totalRecords"
-                    :first="firstRecord"
-                    @page="onPage"
-                    :loading="loading"
                     :globalFilterFields="['firstName', 'lastName','middleName', 'email']"
-                    scrollable
-                    scrollHeight="flex"
                 >
                     <template #header>
                         <div class="d-flex justify-content-between align-items-center">
-                            <h3 class="mb-2">Список пользователей</h3>
+                            <h3 class="m-0 ps-4">Список пользователей</h3>
+                            <CreateUser />
                         </div>
                     </template>
 
@@ -78,21 +77,21 @@
                     <template #empty>Не найдено.</template>
                     <template #loading>Данные загружаются. Подождите.</template>
 
-                    <Column field="firstName" header="Имя" style="min-width: 12rem;">
+                    <Column field="firstName" header="Имя" sortable style="min-width: 12rem;">
                         <template #body="{ data }">
                             <span class="text-nowrap">
                                 {{ data.firstName }}
                             </span>
                         </template>
                     </Column>
-                    <Column field="lastName" header="Фамилия" style="min-width: 12rem;">
+                    <Column field="lastName" header="Фамилия" sortable  style="min-width: 12rem;">
                         <template #body="{ data }">
                             <span class="text-nowrap">
                                 {{ data.lastName }}
                             </span>
                         </template>
                     </Column>
-                    <Column field="middleName" header="Отчество" style="min-width: 12rem;">
+                    <Column field="middleName" header="Отчество" sortable  style="min-width: 12rem;">
                         <template #body="{ data }">
                             <span class="text-nowrap">
                                 {{ data.middleName }}
@@ -109,26 +108,29 @@
                     <Column field="roles" header="Роли" style="min-width: 12rem;">
                         <template #body="{ data }">
                             <div class="roles-grid">
-                                <span
-                                    v-for="role in data.roles"
-                                    :key="role.id"
-                                    class="role-label"
-                                    :class="'role-' + role.type.toLowerCase()"
-                                >
-                                    {{ role.title }}
-                                </span>
-                                <span v-if="data.roles.length === 0" class="role-label role-none">
-                                    Нет ролей
-                                </span>
+                                <Chip class="py-1 px-1">
+                                    <span v-for="role in data.roles" :key="role.id" class="roleType">{{ role.type.charAt(0) }}</span>
+                                    <span v-for="role in data.roles" :key="role.id" :class="'role-' + role.type.toLowerCase()" class="role-label">
+                                        {{ role.title }}
+                                    </span>
+                                    <span v-if="data.roles.length === 0" class="role-label">
+                                        Нет ролей
+                                    </span>
+                                </Chip>
                             </div>
                         </template>
                     </Column>
-                    <Column field="isBlocked" header="Статус" style="min-width: 8rem;">
+                    <Column field="isBlocked" header="Статус" style="min-width: 5rem;">
                         <template #body="{ data }">
                             <span :class="['status-label', data.isBlocked ? 'blocked' : 'active']">
                                 <i class="pi" :class="data.isBlocked ? 'pi-times-circle' : 'pi-check-circle'"></i>
                                 {{ data.isBlocked ? 'Заблокирован' : 'Активен' }}
                             </span>
+                        </template>
+                    </Column>
+                    <Column field="change" header="" style="min-width: 5rem;">
+                        <template #body="{ data }">
+                            <UpdateUser :userId="data.id" :isBlocked="data.isBlocked" :refreshTable="fetchCustomers" :filters="filters"/>
                         </template>
                     </Column>
                     
@@ -140,14 +142,22 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import axios from 'axios';
+import axiosInstance from '@/utils/axios.js';
 import { FilterMatchMode } from '@primevue/core/api';
 import qs from 'qs';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import InputText from 'primevue/inputtext';
+import Select from 'primevue/select';
+import MultiSelect from 'primevue/multiselect';
+import Button from 'primevue/button';
+import Chip from 'primevue/chip';
 
 const customers = ref([]);
 const totalRecords = ref(0);
 const loading = ref(true);
 const filtersSet = ref(false);
+const roles = ref([]);
 
 const currentPageInput = ref(1);
 const rowsPerPageInput = ref(10);
@@ -160,12 +170,11 @@ const filters = ref({
     email: { value: '', matchMode: FilterMatchMode.STARTS_WITH },
     isBlocked: { value: null, matchMode: FilterMatchMode.EQUALS },
     roleIds: { value: [], matchMode: FilterMatchMode.IN },
-    fullName: { value: '', matchMode: FilterMatchMode.CONTAINS }
+    fullName: { value: '', matchMode: FilterMatchMode.STARTS_WITH }
 });
 
 const currentPage = ref(1);
 const rowsPerPage = ref(10);
-const firstRecord = ref(0);
 
 const statusOptions = [
     { label: "Все", value: null },
@@ -173,51 +182,58 @@ const statusOptions = [
     { label: 'Заблокирован', value: true },
 ];
 
-const roleOptions = [
-    { id: 1, type: 'SuperUser', title: 'Суперпользователь' },
-    { id: 2, type: 'Admin', title: 'Администратор' },
-    { id: 25, type: 'Custom', title: 'Сотрудник' },
-    { id: 26, type: 'Custom', title: 'Студент' }
-];
-
 const displayedRowsCount = computed(() => {
-    return Math.min(rowsPerPageInput.value, totalRecords.value);
+    const startRecord = (currentPage.value - 1) * rowsPerPage.value;
+    return Math.min(customers.value.length - startRecord, rowsPerPage.value);
 });
 
-const fetchCustomers = async (page = 1, pageSize = 10, filters) => {
+const fetchCustomers = async (filters) => {
     loading.value = true;
+    customers.value = [];
+    let page = 1;
+    let pageSize = rowsPerPage.value;
+    let totalFetched = 0;
+    let totalEntities = 0;
 
-    const params = {
-        page,
-        pageSize,
-        fullName: filters.fullName.value || undefined,
-        email: filters.email.value || undefined,
-        isBlocked: filters.isBlocked.value !== null ? filters.isBlocked.value.value : undefined,
-        roleIds: filters.roleIds.value.length > 0 ? filters.roleIds.value.map(role => role.id) : undefined
-    };
-
-    console.log(params);
-
-    try {
-        const response = await axios.get('/api/users', { 
-            params,
-            headers: {
+    while (true) {
+        const params = {
+            page,
+            pageSize,
+            fullName: filters.fullName.value || undefined,
+            email: filters.email.value || undefined,
+            isBlocked: filters.isBlocked.value !== null ? filters.isBlocked.value.value : undefined,
+            roleIds: filters.roleIds.value.length > 0 ? filters.roleIds.value.map(role => role.id) : undefined
+        };
+        try {
+            const response = await axiosInstance.get('/api/users', { 
+                params,
+                headers: {
                     'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-            },
-            paramsSerializer: params => {
-                return qs.stringify(params, { arrayFormat: 'repeat' });
-            }
+                },
+                paramsSerializer: params => {
+                    return qs.stringify(params, { arrayFormat: 'repeat' });
+                }
+                
+            });
             
-        });
-        customers.value = response.data.users;
-        totalRecords.value = response.data.countEntities;
+            const newUsers = response.data.users;
+            totalEntities = response.data.countEntities;
+            customers.value.push(...newUsers);
+            totalFetched += newUsers.length;
 
-        firstRecord.value = (page - 1) * pageSize;
-    } catch (error) {
-        console.error('Ошибка при получении пользователей: ', error);
-    } finally {
-        loading.value = false;
+            if (totalFetched >= totalEntities) {
+                break;
+            }
+
+            page += 1;
+        } catch (error) {
+            console.error('Ошибка при получении пользователей: ', error);
+            break;
+        }
     }
+
+    totalRecords.value = totalEntities;
+    loading.value = false;
 };
 
 const applyMandatoryFilters = () => {
@@ -225,64 +241,55 @@ const applyMandatoryFilters = () => {
     rowsPerPage.value = parseInt(rowsPerPageInput.value) || 10;
     filtersSet.value = true;
 
-    fetchCustomers(currentPage.value, rowsPerPage.value, filters.value);
+    fetchCustomers(filters.value);
 };
 
 const applyFilters = () => {
-    fetchCustomers(currentPage.value, rowsPerPage.value, filters.value);
+    fetchCustomers(filters.value);
 }
 
-const onPage = (event) => {
-    currentPage.value = event.page + 1;
-    rowsPerPage.value = event.rows;
-    firstRecord.value = (currentPage.value - 1) * rowsPerPage.value;
-    fetchCustomers(currentPage.value, rowsPerPage.value, filters.value);
-}
-
-onMounted(() => {
+onMounted(async () => {
     if (filtersSet.value) {
-        fetchCustomers(currentPage.value, rowsPerPage.value, filters.value);
+        fetchCustomers(filters.value);
+    }
+
+    try {
+        const response = await axiosInstance.get('/api/rbac/roles');
+        roles.value = response.data;
+    } catch (error) {
+        console.error('Ошибка при получении ролей: ', error);
     }
 });
 
 </script>
 
 <script>
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import ColumnGroup from 'primevue/columngroup'; 
-import Row from 'primevue/row';
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
-import InputText from 'primevue/inputtext';
-import Select from 'primevue/select';
-import MultiSelect from 'primevue/multiselect';
-import Button from 'primevue/button';
+
+
+import CreateUser from '@/components/CreateUser.vue';
+import WelcomeScreen from '@/components/WelcomeScreen.vue';
+import UpdateUser from '@/components/UpdateUser.vue';
 
 export default {
     name: 'Users',
     components: {
-        DataTable,
-        Column, 
-        ColumnGroup,
-        Row,
-        IconField,
-        InputIcon,
-        InputText,
-        Select,
-        MultiSelect
+        CreateUser,
+        WelcomeScreen,
+        UpdateUser
     }
 }
 </script>
-<style>
-
-</style>
 
 <style scoped>
+
+h3 {
+    color: var(--p-text-color);
+    transition: all 0.5s ease;
+}
 main {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 100%;
     box-sizing: border-box;
 }
 .content-wrapper {
@@ -321,14 +328,23 @@ main {
     flex-wrap: wrap;
     gap: 5px;
 }
+.roleType {
+    background-color: #007bff;
+    border-radius: 50%;
+    font-size: 20px;
+    color: white;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 .role-label {
     display: inline-block;
     padding: 4px 8px;
     border-radius: 12px;
-    font-size: 12pt;
-    color: white;
+    font-size: 1rem;
     font-weight: 500;
-    background-color: #007bff;
 }
 .role-admin {
     background-color: #8c00ff;

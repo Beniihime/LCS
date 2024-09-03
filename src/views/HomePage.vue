@@ -8,7 +8,7 @@
 </template>
 
 <script>
-import SideBar from './SideBar.vue';
+import SideBar from '@/components/SideBar.vue';
 import { isAuthenticated } from "@/utils/auth";
 
 export default {
@@ -52,6 +52,5 @@ export default {
 }
 .content {
   flex-grow: 1;
-  padding: 20px;
 }
 </style>
