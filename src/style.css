@@ -33,6 +33,10 @@ div.p-selectbutton button.p-togglebutton {
   border: none;
 }
 
+textarea.p-textarea {
+  background-color: var(--p-inputtext-background);
+}
+
 div.p-selectbutton button.p-togglebutton-checked::before {
   background-color: var(--p-bg-color-2);
 }
@@ -49,6 +53,19 @@ th.p-datatable-header-cell {
 #app {
   background-color: var(--p-bg-color-1);
   transition: all 0.5s ease;
+}
+
+button.copyId {
+  svg path.copy {
+    fill: var(--p-text-color);
+    transition: fill 0.5s ease;
+  }
+}
+
+button.copyId:hover {
+  svg path.copy {    
+    fill: var(--p-grey-3);
+  }
 }
 
 body {
@@ -76,6 +93,9 @@ svg.logout path {
   --p-bg-color-3: #FFFFFF;
   --p-text-color: #000000;
 
+  --p-red: #FF3B30;
+  --p-blue: #007AFF;
+
   --p-separator-opaque: rgba(198, 198, 200, 0.30);
   --p-inputtext-background: var(--p-bg-color-3) !important;
   --p-multiselect-background: var(--p-bg-color-3) !important;
@@ -87,6 +107,8 @@ svg.logout path {
   --p-button-primary-background: var(--p-blue-500) !important;
   --p-togglebutton-hover-background: var(--p-grey-4) !important;
   --p-datatable-header-cell-selected-color: var(--p-blue-500) !important;
+  --p-tooltip-gutter: 0rem !important;
+  --p-tooltip-background: var(--p-blue) !important;
 
   --p-grey-1: #8E8E93;
   --p-grey-2: #AEAEB2;
@@ -114,4 +136,7 @@ svg.logout path {
   --p-grey-4: #3A3A3C;
   --p-grey-5: #2C2C2E;
   --p-grey-6: #1C1C1E;
+
+  --p-red: #FF453A;
+  --p-blue: #0A84FF;
 }
