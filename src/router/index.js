@@ -20,6 +20,21 @@ const routes = [
             {
                 path: "/notif",
                 // component: () => import('@/components/NotifPage.vue'),
+            },
+            {
+                path: "/rbac",
+                component: () => import('@/views/RbacPage.vue'),
+                name: 'Rbac',
+            },
+            {
+                path: "/me-permissions",
+                component: () => import('@/views/MePermissionsPage.vue'),
+                name: 'MePermissions',
+            },
+            {
+                path: "/role-permissions",
+                component: () => import('@/views/RolePermissionsPage.vue'),
+                name: 'RolePermissions',
             }
         ]
     }, 
