@@ -133,6 +133,11 @@ export default {
                     name: 'Уведомления',
                     path: '/notif',
                     icon: 'pi pi-bell'
+                },
+                {
+                    name: 'Роли',
+                    path: '/rbac',
+                    icon: 'pi pi-sitemap'
                 }
             ]
         };
@@ -249,7 +254,7 @@ export default {
 .menucrumb {
     font-family: 'SF Pro Rounded';
     font-size: 14pt;
-    padding-left: 40pt;
+    padding-left: 48pt;
 }
 .menu-item {
     position: relative;

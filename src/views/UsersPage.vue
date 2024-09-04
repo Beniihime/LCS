@@ -1,141 +1,153 @@
 <template>
     <main>
         <div class="content-wrapper">
-            <div v-if="!filtersSet">
-                <h3 class="mb-3">Введите параметры для загрузки данных</h3>
+            <div class="filters">
+                <h3>Фильтры</h3>
                 <div class="filter-group">
                     <InputText 
-                        v-model="currentPageInput"
-                        placeholder="Страница"
+                        v-model="filters.fullName.value"
+                        placeholder="ФИО"
                         class="search"
+                        style="max-width: 16rem;"
                     />
                     <InputText 
-                        v-model="rowsPerPageInput"
-                        placeholder="Количество строк"
+                        v-model="filters.email.value"
+                        placeholder="E-mail"
                         class="search"
+                        style="max-width: 16rem;"
                     />
-                    <Button class="search" label="Применить" @click="applyMandatoryFilters"/>
+                    <Select 
+                        v-model="filters.isBlocked.value" 
+                        :options="statusOptions" 
+                        optionLabel="label"
+                        placeholder="Статус"
+                        class="search"
+                        style="max-width: 16rem;"
+                    />
+                    <MultiSelect 
+                        v-model="filters.roleIds.value" 
+                        :options="roles"
+                        display="chip" 
+                        optionLabel="title" 
+                        placeholder="Роли"
+                        class="search"
+                        style="max-width: 16rem;"
+                    />
+                    <Button class="search" label="Применить фильтры" @click="applyFilters"/>
                 </div>
             </div>
-            <div v-else>
-                <div class="filters">
-                    <h3>Фильтры</h3>
-                    <div class="filter-group">
-                        <InputText 
-                            v-model="filters.fullName.value"
-                            placeholder="ФИО"
-                            class="search"
-                            style="max-width: 16rem;"
-                        />
-                        <InputText 
-                            v-model="filters.email.value"
-                            placeholder="E-mail"
-                            class="search"
-                            style="max-width: 16rem;"
-                        />
-                        <Select 
-                            v-model="filters.isBlocked.value" 
-                            :options="statusOptions" 
-                            optionLabel="label"
-                            placeholder="Статус"
-                            class="search"
-                            style="max-width: 16rem;"
-                        />
-                        <MultiSelect 
-                            v-model="filters.roleIds.value" 
-                            :options="roles"
-                            display="chip" 
-                            optionLabel="title" 
-                            placeholder="Роли"
-                            class="search"
-                            style="max-width: 16rem;"
-                        />
-                        <Button class="search" label="Применить фильтры" @click="applyFilters"/>
+            <WelcomeScreen :visible="loading" />
+            <DataTable
+                :value="customers" 
+                paginator 
+                stripedRows 
+                removableSort 
+                scrollable
+                scrollHeight="765px"
+                :rows="rowsPerPage"
+                :totalRecords="totalRecords"
+                :globalFilterFields="['firstName', 'lastName','middleName', 'email']"
+                @page="onPage"
+            >
+                <template #header>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="m-0 ps-4">Список пользователей</h3>
+                        <CreateUser />
                     </div>
-                </div>
-                <WelcomeScreen :visible="loading" />
-                <DataTable
-                    :value="customers" 
-                    paginator 
-                    stripedRows 
-                    :rows="rowsPerPage"
-                    :globalFilterFields="['firstName', 'lastName','middleName', 'email']"
-                >
-                    <template #header>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h3 class="m-0 ps-4">Список пользователей</h3>
-                            <CreateUser />
+                </template>
+
+                <template #paginatorstart>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>Всего пользователей: {{ displayedRowsCount }}</div>
+                    </div>
+                </template>
+
+                <template #paginatorend>
+                    <div class="d-flex align-items-center">
+                        <span>Показать</span>
+                        <Select 
+                            v-model="rowsPerPage"
+                            :options="rowsPerPageOptions"
+                            optionLabel="label"
+                            optionValue="value"
+                            class="search mx-1 px-1"
+                        />
+                        <span>строк</span>
+                    </div>
+                </template>
+
+                <template #empty>Не найдено.</template>
+                <template #loading>Данные загружаются. Подождите.</template>
+
+                <Column field="firstName" header="Имя" sortable style="min-width: 12rem;">
+                    <template #body="{ data }">
+                        <span class="text-nowrap">
+                            {{ data.firstName }}
+                        </span>
+                    </template>
+                </Column>
+                <Column field="lastName" header="Фамилия" sortable  style="min-width: 12rem;">
+                    <template #body="{ data }">
+                        <span class="text-nowrap">
+                            {{ data.lastName }}
+                        </span>
+                    </template>
+                </Column>
+                <Column field="middleName" header="Отчество" sortable  style="min-width: 12rem;">
+                    <template #body="{ data }">
+                        <span class="text-nowrap">
+                            {{ data.middleName }}
+                        </span>
+                    </template>
+                </Column>
+                <Column field="email" header="E-mail" style="min-width: 12rem;">
+                    <template #body="{ data }">
+                        <span class="text-nowrap">
+                            {{ data.email }}
+                        </span>
+                    </template>
+                </Column>
+                <Column field="roles" header="Роли" style="min-width: 12rem;">
+                    <template #body="{ data }">
+                        <div class="roles-grid">
+                            <Chip class="py-1 px-1">
+                                <span 
+                                    v-for="role in data.roles" 
+                                    :key="role.id" 
+                                    class="roleType"
+                                    :class="['roleType', role.type === 'Custom' ? 'custom-role-type' : '']"
+                                >
+                                    {{ role.type.charAt(0) }}
+                                </span>
+                                <span 
+                                    v-for="role in data.roles" 
+                                    :key="role.id" 
+                                    class="role-label"
+                                >
+                                    {{ role.title }}
+                                </span>
+                                <span v-if="data.roles.length === 0" class="role-label">
+                                    Нет роли
+                                </span>
+                            </Chip>
                         </div>
                     </template>
-
-                    <template #footer>
-                        <div class="d-flex justify-content-end">
-                            Всего пользователей: {{ displayedRowsCount  }}
-                        </div>
+                </Column>
+                <Column field="isBlocked" header="Статус" style="min-width: 5rem;">
+                    <template #body="{ data }">
+                        <span :class="['status-label', data.isBlocked ? 'blocked' : 'active']">
+                            <i class="pi" :class="data.isBlocked ? 'pi-times-circle' : 'pi-check-circle'"></i>
+                            {{ data.isBlocked ? 'Заблокирован' : 'Активен' }}
+                        </span>
                     </template>
-
-                    <template #empty>Не найдено.</template>
-                    <template #loading>Данные загружаются. Подождите.</template>
-
-                    <Column field="firstName" header="Имя" sortable style="min-width: 12rem;">
-                        <template #body="{ data }">
-                            <span class="text-nowrap">
-                                {{ data.firstName }}
-                            </span>
-                        </template>
-                    </Column>
-                    <Column field="lastName" header="Фамилия" sortable  style="min-width: 12rem;">
-                        <template #body="{ data }">
-                            <span class="text-nowrap">
-                                {{ data.lastName }}
-                            </span>
-                        </template>
-                    </Column>
-                    <Column field="middleName" header="Отчество" sortable  style="min-width: 12rem;">
-                        <template #body="{ data }">
-                            <span class="text-nowrap">
-                                {{ data.middleName }}
-                            </span>
-                        </template>
-                    </Column>
-                    <Column field="email" header="E-mail" style="min-width: 12rem;">
-                        <template #body="{ data }">
-                            <span class="text-nowrap">
-                                {{ data.email }}
-                            </span>
-                        </template>
-                    </Column>
-                    <Column field="roles" header="Роли" style="min-width: 12rem;">
-                        <template #body="{ data }">
-                            <div class="roles-grid">
-                                <Chip class="py-1 px-1">
-                                    <span v-for="role in data.roles" :key="role.id" class="roleType">{{ role.type.charAt(0) }}</span>
-                                    <span v-for="role in data.roles" :key="role.id" :class="'role-' + role.type.toLowerCase()" class="role-label">
-                                        {{ role.title }}
-                                    </span>
-                                    <span v-if="data.roles.length === 0" class="role-label">
-                                        Нет ролей
-                                    </span>
-                                </Chip>
-                            </div>
-                        </template>
-                    </Column>
-                    <Column field="isBlocked" header="Статус" style="min-width: 5rem;">
-                        <template #body="{ data }">
-                            <span :class="['status-label', data.isBlocked ? 'blocked' : 'active']">
-                                <i class="pi" :class="data.isBlocked ? 'pi-times-circle' : 'pi-check-circle'"></i>
-                                {{ data.isBlocked ? 'Заблокирован' : 'Активен' }}
-                            </span>
-                        </template>
-                    </Column>
-                    <Column field="change" header="" style="min-width: 5rem;">
-                        <template #body="{ data }">
-                            <UpdateUser :userId="data.id" :isBlocked="data.isBlocked" :refreshTable="fetchCustomers" :filters="filters"/>
-                        </template>
-                    </Column>
-                    
-                </DataTable>
-            </div>
+                </Column>
+                <Column field="change" header="" style="min-width: 5rem;">
+                    <template #body="{ data }">
+                        <UpdateUser :userId="data.id" :isBlocked="data.isBlocked" :refreshTable="fetchCustomers" :filters="filters"/>
+                    </template>
+                </Column>
+                
+            </DataTable>
         </div>
     </main>
 </template>
@@ -156,11 +168,7 @@ import Chip from 'primevue/chip';
 const customers = ref([]);
 const totalRecords = ref(0);
 const loading = ref(true);
-const filtersSet = ref(false);
 const roles = ref([]);
-
-const currentPageInput = ref(1);
-const rowsPerPageInput = ref(10);
 
 const filters = ref({
     global: { value: '', matchMode: FilterMatchMode.CONTAINS },
@@ -176,6 +184,12 @@ const filters = ref({
 const currentPage = ref(1);
 const rowsPerPage = ref(10);
 
+const rowsPerPageOptions = [
+    { label: '5', value: 5 },
+    { label: '10', value: 10 },
+    { label: '15', value: 15 },
+];
+
 const statusOptions = [
     { label: "Все", value: null },
     { label: 'Активен', value: false },
@@ -183,9 +197,15 @@ const statusOptions = [
 ];
 
 const displayedRowsCount = computed(() => {
-    const startRecord = (currentPage.value - 1) * rowsPerPage.value;
-    return Math.min(customers.value.length - startRecord, rowsPerPage.value);
+    const start = (currentPage.value - 1) * rowsPerPage.value;
+    const end = start + rowsPerPage.value;
+    return customers.value.slice(start, end).length;
 });
+
+const onPage = (event) => {
+    currentPage.value = event.page + 1;
+    rowsPerPage.value = event.rows;
+}
 
 const fetchCustomers = async (filters) => {
     loading.value = true;
@@ -236,30 +256,25 @@ const fetchCustomers = async (filters) => {
     loading.value = false;
 };
 
-const applyMandatoryFilters = () => {
-    currentPage.value = parseInt(currentPageInput.value) || 1;
-    rowsPerPage.value = parseInt(rowsPerPageInput.value) || 10;
-    filtersSet.value = true;
-
-    fetchCustomers(filters.value);
-};
-
 const applyFilters = () => {
+    currentPage.value = 1;
     fetchCustomers(filters.value);
 }
 
 onMounted(async () => {
-    if (filtersSet.value) {
-        fetchCustomers(filters.value);
-    }
+    fetchCustomers(filters.value);
+    fetchRoles();
+});
 
+const fetchRoles = async () => {
     try {
         const response = await axiosInstance.get('/api/rbac/roles');
+            
         roles.value = response.data;
     } catch (error) {
         console.error('Ошибка при получении ролей: ', error);
     }
-});
+};
 
 </script>
 
@@ -302,7 +317,7 @@ main {
 }
 .search {
     border-radius: 12pt;
-    font-size: 14pt;
+    font-size: 18px;
     transition: all 0.5s ease-out;
 }
 .text-nowrap {
@@ -339,21 +354,15 @@ main {
     justify-content: center;
     align-items: center;
 }
+.custom-role-type {
+    background-color: #6c2bb4;
+}
 .role-label {
     display: inline-block;
     padding: 4px 8px;
     border-radius: 12px;
     font-size: 1rem;
     font-weight: 500;
-}
-.role-admin {
-    background-color: #8c00ff;
-}
-.role-superuser {
-    background-color: #ffb007;
-}
-.role-none {
-    background-color: #888;
 }
 .filters {
     margin-bottom: 20px;

@@ -2,13 +2,12 @@
     <div class="d-flex justify-content-center">
         <Button icon="pi pi-cog" outlined @click="fetchUserData"/>
         <Dialog v-model:visible="visible" modal header="Изменить информацию" :style="{ 'max-width': '30rem' }">
-            <div class="row mb-4 mt-4">
+            <div class="row my-4">
                 <div class="col">
                     <FloatLabel>
                         <InputText v-model="firstName" class="form-input"/>
                         <label for="firstName">Имя</label>
                     </FloatLabel>
-                    
                 </div>
                 <div class="col">
                     <FloatLabel>
