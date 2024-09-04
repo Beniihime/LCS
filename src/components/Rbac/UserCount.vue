@@ -1,0 +1,142 @@
+<template>
+    <p class="card-text my-0" @click="showUsersWithRole">
+        <div style="cursor: pointer;" class="d-flex align-items-center counter">
+            <span class="count me-2">
+                {{ userCount || 0 }}
+            </span>
+            <i class="pi pi-user"></i>
+        </div>
+    </p>
+    <div class="d-flex justify-content-center">
+        <Dialog header="Пользователи с ролью" v-model:visible="visible" @hide="visible = false" modal style="width: 50vw">
+            <template v-if="selectedRoleUsers.length > 0">
+                <div class="user" v-for="user in selectedRoleUsers" :key="user.id">
+                    {{ user.lastName }} {{ user.firstName }} ({{ user.email }})
+                    <span>
+                        <Chip class="ms-3">
+                            <span :class="['roleType', roleType === 'Custom' ? 'custom-role-type' : '']">
+                                {{ roleType.charAt(0) }}
+                            </span>
+                            <span class="role-label">
+                                {{ roleTitle }}
+                            </span>
+                        </Chip>
+                    </span>
+                </div>
+            </template>
+            <template v-else>
+                <p>Пользователей с этой ролью нет.</p>
+            </template>
+        </Dialog>
+    </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue';
+import axiosInstance from '@/utils/axios.js';
+import qs from 'qs';
+
+import Dialog from 'primevue/dialog';
+import Chip from 'primevue/chip';
+
+const props = defineProps({
+    roleId: {
+        type: Number,
+        required: true
+    },
+    userCount: {
+        type: Number,
+        default: 0
+    },
+    roleType: {
+        type: String,
+        default: ''
+    },
+    roleTitle: {
+        type: String,
+        default: ''
+    },
+});
+
+const visible = ref(false);
+const users = ref([]);
+const selectedRoleUsers = ref([]);
+
+const fetchUsers = async () => {
+    let page = 1;
+    let pageSize = 500;
+    const params = {
+        page,
+        pageSize
+    };
+    try {
+        const response = await axiosInstance.get('/api/users', {
+            params,
+            paramsSerializer: params => {
+                return qs.stringify(params, { arrayFormat: 'repeat' });
+            }
+        });
+
+        users.value = response.data.users;
+    } catch (error) {
+        console.error('Ошибка при получении пользователей: ', error);
+    }
+};
+
+const showUsersWithRole = () => {
+    selectedRoleUsers.value = users.value.filter(user => user.roles.some(role => role.id === props.roleId));
+    visible.value = true;
+}
+
+onMounted(async () => {
+    await fetchUsers();
+});
+</script>
+
+<style scoped>
+.pi {
+    font-size: 20pt;
+}
+.counter {
+    color: var(--p-grey-1);
+    transition: color 0.5s ease;
+}
+.counter:hover {
+    color: white;
+}
+.count {
+    font-size: 1.5rem;
+}
+.card-text {
+    font-size: 1.2rem;
+    font-family: 'SF Pro Rounded', sans-serif;
+    color: var(--p-grey-1);
+    margin-top: 5px;
+}
+.user {
+    background-color: var(--p-grey-4);
+    padding: 20px;
+    border-radius: 18px;
+}
+.roleType {
+    background-color: #007bff;
+    border-radius: 50%;
+    font-size: 20px;
+    color: white;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.custom-role-type {
+    background-color: #6c2bb4;
+}
+.role-label {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 500;
+}
+</style>
