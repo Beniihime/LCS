@@ -12,12 +12,16 @@ import PrimeVue from 'primevue/config';
 import ConfirmationService from 'primevue/confirmationservice';
 import router from './router';
 import Noir from './presets/Noir.js';
+import Tooltip from 'primevue/tooltip';
 import AppState from './plugins/appState.js';
+import { createPinia } from 'pinia'
+
 
 axios.defaults.baseURL = 'https://development.sibadi.org';
 
 
 const app = createApp(App);
+const pinia = createPinia()
 
 app.use(PrimeVue, {
     theme: {
@@ -34,7 +38,8 @@ app.use(AppState);
 app.use(ToastService);
 app.component('Toast', Toast);
 app.use(ConfirmationService);
+app.directive('tooltip', Tooltip);
 
-
+app.use(pinia)
 app.use(router);
 app.mount('#app');
