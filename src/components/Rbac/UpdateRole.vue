@@ -24,9 +24,10 @@
             </div>
             <Divider class="my-4 py-1"/>
             <div class="text-center">
-                <Button label="Сохранить" class="save-btn w-100 mb-3"/>
+                <Button label="Сохранить" class="save-btn w-100 mb-3" @click="updateRole"/>
             </div>
         </Dialog>
+        <Toast ref="toast" />
     </div>
 </template>
 
@@ -41,9 +42,9 @@ import Divider from 'primevue/divider';
 import FloatLabel from 'primevue/floatlabel';
 import Textarea from 'primevue/textarea';
 import Select from 'primevue/select';
+import Toast from 'primevue/toast';
 
 const visible = ref(false);
-const roles = ref([]);
 const currentRole = ref({
     id: null,
     title: '',
@@ -54,33 +55,24 @@ const currentRole = ref({
 const priorities = ref([]);
 
 const roleId = ref(null);
+const toast = ref(null);
 
 const props = defineProps({
     id: Number,
-    title: String,
-    description: String,
-    priority: Number
+    refreshRoles: Function,
+    roles: Object
 })
-
-const fetchRoles = async () => {
-    try {
-        const response = await axiosInstance.get(`/api/rbac/roles/`);
-
-        roles.value = response.data;
-    } catch (error) {
-        console.error('Ошибка при получении ролей: ', error);
-    }
-}
 
 const openDialog = (id) => {
     if (id === null) return;
 
     roleId.value = id;
-    const role = roles.value.find(r => r.id === id);
+    const role = props.roles.find(r => r.id === id);
     if (role) {
         currentRole.value = { ...role };
         visible.value = true;
     }
+    console.log(role);
 };
 
 const fetchPriorities = async () => {
@@ -94,16 +86,24 @@ const fetchPriorities = async () => {
 
 const updateRole = async () => {
     try {
-        await axiosInstance.put(`/api/rbac/roles/${props.id}`);
+        await axiosInstance.put(`/api/rbac/roles/${props.id}`, {
+            title: currentRole.value.title,
+            description: currentRole.value.description,
+            priority: currentRole.value.priority
+        });
+        
         visible.value = false;
-        await fetchRoles();
+        await props.refreshRoles();
+
+        toast.value.add({ severity: 'success', summary: 'Успех', detail: 'Роль обновлена', life: 3000 });
     } catch (error) {
         console.error('Ошибка при обновлении роли: ', error);
+        toast.value.add({ severity: 'error', summary: 'Ошибка', detail: 'Не удалось обновить роль', life: 3000 });
     }
 }
 
 onMounted(async () => {
-    await fetchRoles();
+    // await fetchRoles();
     await fetchPriorities();
 })
 

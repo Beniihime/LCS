@@ -1,5 +1,5 @@
 // utils/TokenService.js
-
+import axiosInstance from '@/utils/axios.js';
 export function scheduleTokenRefresh(refreshTokenExpired) {
   const currentTime = Math.floor(Date.now() / 1000); // Текущее время в секундах
   const timeUntilExpiration = refreshTokenExpired - currentTime;
@@ -34,7 +34,7 @@ async function refreshAccessToken() {
           throw new Error('Missing user credentials');
       }
 
-      const response = await axios.post('/api/auth/refresh-token', null, {
+      const response = await axiosInstance.post('/api/auth/refresh-token', null, {
           params: {
               value: refreshToken,
               userId: userId

@@ -31,10 +31,10 @@
             <div class="split mb-4"></div>
             <ThemeSwitcher />
             <div class="profile">
-                <div class="row d-flex align-items-center justify-content-around px-0">
-                    <div class="col">
+                <div class="row align-items-center px-0">
+                    <div class="col-auto">
                         <div class="initials-circle">
-                            {{ initials }}
+                            <span>{{ initials }}</span>
                         </div>
                     </div>
                     <div class="col">
@@ -45,11 +45,14 @@
                             </span>
                         </div>
                     </div>
-                    <div class="col ps-1">
-                        <button @click="confirm1()" class="logout-button">
-                            <LogoutSvg />
-                        </button>
-                    </div>
+                </div>
+                <div class="row mt-3">
+                    <button @click="confirm1()" class="logout-button">
+                        <div class="d-flex align-items-center justify-content-start">
+                            <LogoutSvg class="me-3"/>
+                            <p class="m-0">Выйти из аккаунта</p>
+                        </div>
+                    </button>
                 </div>
             </div>
         </div>
@@ -163,8 +166,8 @@ export default {
         }
     },
     methods: {
-        getInitials(firstName) {
-            const initials = `${firstName[0] || ''}`.toUpperCase();
+        getInitials(firstName, lastName) {
+            const initials = `${ firstName[0] + lastName[0] || '' }`.toUpperCase();
             return initials;
         },
     },
@@ -188,20 +191,15 @@ export default {
     transition: all 0.5s ease;
 }
 .logout-button {
-    outline: none;
-    border: none;
+    border: 2px solid transparent;
     background-color: transparent;
-    padding: 8px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 10px;
+    padding: 12px 18px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
 }
 .logout-button:hover {
-    background-color: var(--p-bg-color-3);
-}
-.logout-button:active {
-    background-color: var(--p-grey-2);
+    border: 2px solid var(--p-blue-500);
+    color: var(--p-blue-500);
 }
 .email {
     color: var(--p-grey-1);
@@ -210,12 +208,13 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 44pt;
-    height: 44pt;
+    margin: 0;
+    width: 60px;
+    height: 60px;
     background-color: var(--p-button-primary-background);
     color: white;
     border-radius: 50%;
-    font-size: 26pt;
+    font-size: 30px;
     font-weight: 700;
     font-family: 'SF Pro Rounded';
 }
@@ -266,10 +265,11 @@ export default {
     transition: all 0.2s ease-in;
     text-decoration: none;
     color: var(--p-text-color);
+    border: 2px solid transparent;
 }
 .menu-item:hover {
-    background-color: var(--p-button-primary-background);
-    color: white;
+    border: 2px solid var(--p-blue-500);
+    color: var(--p-blue-500);
 }
 .home {
     position: relative;
@@ -305,9 +305,9 @@ export default {
     opacity: 1;
 }
 .menu-item.active-link {
-    background-color: var(--p-button-primary-background);
-    box-shadow: 1pt 1pt 5pt rgba(0, 0, 0, 0.25);
-    color: white;
+    box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.25);
+    color: var(--p-blue-500);
+    border: 2px solid var(--p-blue-500);
 }
 .search {
     border-radius: 12pt;
@@ -331,7 +331,6 @@ export default {
     display: flex;
     flex-direction: column;
     background-color: var(--p-bg-color-2);
-    box-shadow: 1pt 1pt 20pt rgba(0, 0, 0, 0.25);
     width: 256pt;
     margin: 10pt;
     padding: 18pt;

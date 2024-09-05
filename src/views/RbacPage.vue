@@ -1,31 +1,66 @@
 <template>
-    <Toast />
+    <Toast ref="toast"/>
+    <WelcomeScreen :visible="loading" />
     <main>
         <div class="content-wrapper">
             <h1 class="mb-4">Настройки ролей</h1>
-            <router-link class="dPerms" to="/me-permissions">
-                <div class="row ps-4 w-100">
-                    <div class="col-auto">
-                        <i class="pi pi-users icon"></i>
-                    </div>
-                    <div class="col d-flex align-items-center">
-                        <div>
-                            <span>Мои полномочия</span>
-                            <Chip class="ms-4">
-                                <span :class="['roleType', userRole.type === 'Custom' ? 'custom-role-type' : '']">
-                                    {{ userRole.type.charAt(0) }}
-                                </span>
-                                <span class="role-label">
-                                    {{ userRole.title }}
-                                </span>
-                            </Chip>
+            <div class="statistics">
+                <h2 class="statistics-title">Статистика ролей</h2>
+                <div class="stat-cards row row-cols-4 g-3">
+                    <div class="col">
+                        <div class="stat-card">
+                            <div class="row `align-items-center">
+                                <div class="col-auto">
+                                    <i class="bi bi-people-fill"></i>
+                                </div>
+                                <div class="col">
+                                    <span class="stat-label">Всего ролей</span>
+                                </div>
+                            </div>
+                            <span class="stat-number">{{ roles.length }}</span>
                         </div>
                     </div>
-                    <div class="col-auto d-flex align-items-center">
-                        <i class="pi pi-angle-right"></i>
+                    <div class="col">
+                        <div class="stat-card">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                <div class="col">
+                                    <span class="stat-label">Пользовательские роли</span>
+                                </div>
+                            </div>
+                            <span class="stat-number">{{ customRolesCount }}</span>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="stat-card">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="bi bi-person-fill-gear"></i>
+                                </div>
+                                <div class="col">
+                                    <span class="stat-label">Системные роли</span>
+                                </div>
+                            </div>
+                            <span class="stat-number">{{ systemRolesCount }}</span>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="stat-card">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <i class="bi bi-person"></i>
+                                </div>
+                                <div class="col">
+                                    <span class="stat-label">Пользователи без роли</span>
+                                </div>
+                            </div>
+                            <span class="stat-number">{{ noRoleUsersCount }}</span>
+                        </div>
                     </div>
                 </div>
-            </router-link>
+            </div>
             <div class="searchField mt-4">
                 <div class="row align-items-center">
                     <div class="col">
@@ -35,21 +70,17 @@
                         </IconField>
                     </div>
                     <div class="col-auto">
-                         <CreateRole />
+                         <CreateRole :refreshRoles="fetchRoles"/>
                     </div>
                 </div>
             </div>
             <Divider class="my-4"/>
-            <WelcomeScreen :visible="loading" />
             <div class="roles-cards">
                 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
                     <div class="col" v-for="role in filteredRoles" :key="role.id">
                         <div class="card h-100">
                             <div class="card-body">
-                                <button v-tooltip.left="{ value: 'Скопировать ID', showDelay: 300, hideDelay: 300 }" class="copyId" @click="copyRoleId(role.id)">
-                                    <ID />
-                                </button>
-                                <UpdateRole :id="role.id" :title="role.title" :description="role.description" :priority="role.priority"/>
+                                <UpdateRole :id="role.id" :refreshRoles="fetchRoles" :roles="roles"/>
                                 <h5 class="card-title">{{ role.title }}</h5>
                                 <p class="card-text">{{ role.description }}</p>
                                 <p class="card-text"><span class="muted">Приоритет: {{ role.priority }}</span></p>
@@ -70,7 +101,6 @@
                                                 label="Удалить" 
                                                 class="delete-btn me-3"
                                                 severity="danger" 
-                                                outlined 
                                                 @click="confirm1(role)" 
                                             />
                                             <router-link to="/role-permissions">
@@ -100,15 +130,12 @@ import UserCount from '@/components/Rbac/UserCount.vue';
 
 import { useRoleStore } from '@/stores/roleStore';
 
-import ID from '@/assets/Id.svg';
-
 import Button from 'primevue/button';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import InputText from 'primevue/inputtext';
 import { useConfirm } from "primevue/useconfirm";
-import { useToast } from "primevue/usetoast";
-import Chip from 'primevue/chip';
+import Toast from "primevue/toast";
 import Divider from 'primevue/divider';
 
 const loading = ref(true);
@@ -120,6 +147,8 @@ const userRole = ref({title: '', type: '' });
 const filteredRoles = computed(() => {
     return roles.value.filter(role => role.title.toLowerCase().startsWith(searchQuery.value.toLowerCase()));
 });
+
+const toast = ref(null);
 
 const fetchRoles = async () => {
     try {
@@ -164,23 +193,30 @@ const countUsersWithRole = (roleId) => {
     return users.value.filter(user => user.roles.some(role => role.id === roleId)).length;
 }
 
+const customRolesCount = computed(() => {
+    return roles.value.filter(role => role.type === 'Custom').length;
+});
+
+const systemRolesCount = computed(() => {
+    return roles.value.filter(role => role.type !== 'Custom').length;
+});
+
+const noRoleUsersCount = computed(() => {
+    return users.value.filter(user => user.roles.length === 0).length;
+});
+
 const deleteRole = async (role) => {
     if (role.type === 'Custom') {
         try {
-            await axiosInstance.delete(`/api/rbac/roles/${role.id}`, {
-                headers: {
-                    'Authorization': `Bearer ${ localStorage.getItem('accessToken') }`
-                }
-            });
+            await axiosInstance.delete(`/api/rbac/roles/${role.id}`);
             roles.value = roles.value.filter(r => r.id !== role.id);
         } catch (error) {
-            alert('Можно удалять только пользовательские роли.')
+            toast.value.add({ severity: 'info', summary: 'Роли', detail: 'Можно удалять только пользовательские роли', life: 3000 });
         }
     }
 }
 
 const confirm = useConfirm();
-const toast = useToast();
 const router = useRouter();
 
 const confirm1 = (role) => {
@@ -188,9 +224,8 @@ const confirm1 = (role) => {
         message: 'Вы действительно хотите удалить роль?',
         header: 'Удаление роли',
         icon: 'pi pi-info-circle',
-        rejectLabel: 'Отмена',
         rejectProps: {
-            label: 'Cancel',
+            label: 'Отмена',
             severity: 'secondary',
             outlined: true
         },
@@ -200,22 +235,12 @@ const confirm1 = (role) => {
         },
         accept: () => {
             deleteRole(role);
-            toast.add({ severity: 'success', summary: 'Успешно', detail: 'Вы удалили роль', life: 3000 });
+            toast.value.add({ severity: 'success', summary: 'Успешно', detail: 'Вы удалили роль', life: 3000 });
         }, 
         reject: () => {
-            toast.add({ severity: 'info', summary: 'Отклонено', detail: 'Отмена действия', life: 3000 });
+            toast.value.add({ severity: 'info', summary: 'Отклонено', detail: 'Отмена действия', life: 3000 });
         }
     });
-};
-
-const copyRoleId = async (roleId) => {
-    try {
-        await navigator.clipboard.writeText(roleId);
-        toast.add({ severity: 'success', summary: 'Успешно', detail: 'ID скопирован', life: 3000 });
-    } catch (error) {
-        console.error('Ошибка при копировании ID:', error);
-        toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Не удалось скопировать ID', life: 3000 });
-    }
 };
 
 onMounted(async () => {
@@ -251,7 +276,7 @@ p {
     transition: transform 0.3s ease;
     background-color: var(--p-bg-color-2);
     color: var(--p-text-color);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -307,34 +332,11 @@ main {
     overflow: hidden;
     color: var(--p-text-color);
 }
-.dPerms {
-    display: flex;
-    text-decoration: none;
-    justify-content: start;
-    padding: 20px;
-    border-radius: 18px;
-    background-color: var(--p-grey-5);
-    outline: none;
-    border: none;
-    transition: background-color 0.3s ease;
-    font-size: 16pt;
-    color: var(--p-text-color);
-}
-
-.dPerms:hover {
-    background-color: var(--p-grey-4);
-}
-
 .pi {
     font-size: 20pt;
 }
 .pi-search {
     font-size: 1rem;
-}
-.icon {
-    padding: 12px;
-    border-radius: 50%;
-    background-color: var(--p-grey-3);
 }
 .search {
     border-radius: 12pt;
@@ -342,37 +344,39 @@ main {
     transition: all 0.5s ease-out;
     width: 100%; 
 }
-.copyId {
-    margin-top: 10px;
-    border-radius: 12px;
-    color: white;
-    position: absolute;
-    top: 10px;
-    right: 70px;
-    border: none;
+.statistics {
+    background: var(--p-bg-color-2);
+    padding: 20px;
+    border-radius: 18px;
+    border: 1px solid var(--p-grey-4);
 }
-.copyId:hover {
-    background-color: transparent;
+.statistics-title {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: var(--p-text-color);
+    text-align: center;
 }
-.roleType {
-    background-color: #007bff;
-    border-radius: 50%;
-    font-size: 20px;
-    color: white;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.stat-card {
+    background: var(--p-bg-color-1);
+    padding: 20px;
+    border-radius: 18px;
+    color: var(--p-text-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: scale 0.2s ease-in-out;
 }
-.custom-role-type {
-    background-color: #6c2bb4;
+.stat-card:hover {
+    scale: 1.02;
 }
-.role-label {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-weight: 500;
+.stat-number {
+    font-size: 3rem;
+    font-weight: bold;
 }
+.stat-label {
+    font-size: 1.4rem;
+    opacity: 0.8;
+}
+.bi {
+    font-size: larger;
+} 
+
 </style>

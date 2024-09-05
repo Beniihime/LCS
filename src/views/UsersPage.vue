@@ -126,9 +126,6 @@
                                 >
                                     {{ role.title }}
                                 </span>
-                                <span v-if="data.roles.length === 0" class="role-label">
-                                    Нет роли
-                                </span>
                             </Chip>
                         </div>
                     </template>
@@ -262,8 +259,8 @@ const applyFilters = () => {
 }
 
 onMounted(async () => {
-    fetchCustomers(filters.value);
-    fetchRoles();
+    await fetchCustomers(filters.value);
+    await fetchRoles();
 });
 
 const fetchRoles = async () => {
@@ -336,7 +333,8 @@ main {
     background-color: #FF453A;
 }
 .active {
-    background-color: #30D158;
+    border: 1px solid var(--p-green-500);
+    color: var(--p-green-500);
 }
 .roles-grid {
     display: flex;
@@ -344,7 +342,7 @@ main {
     gap: 5px;
 }
 .roleType {
-    background-color: #007bff;
+    background-color: var(--p-blue-500);
     border-radius: 50%;
     font-size: 20px;
     color: white;
@@ -355,7 +353,7 @@ main {
     align-items: center;
 }
 .custom-role-type {
-    background-color: #6c2bb4;
+    background-color: var(--p-purple-500);
 }
 .role-label {
     display: inline-block;

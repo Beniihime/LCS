@@ -5,9 +5,12 @@
             <span>{{ slotProps.option.label }}</span>
         </template>
     </SelectButton>
-    <button class="bt" @click="themeToggle" v-if="isAuthPage">
-        <i :class="`pi ${iconClass}`"></i>
-    </button>
+    <div class="col-lg-auto" @click="themeToggle" v-if="isAuthPage">
+        <div class="bt" optionValue="value">
+            <i :class="`pi ${ iconClass }`" class="me-2 me-lg-0"></i>
+            <span class="d-lg-none fs-5">{{ currentThemeLabel }}</span>
+        </div>
+    </div>
 </template>
 
 <script setup>
@@ -16,7 +19,6 @@ import { ref, watch, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 
 import SelectButton from 'primevue/selectbutton';
-import Button from 'primevue/button';
 
 const themeOptions = ref([
     { icon: 'pi pi-sun', label: 'Светлая', value: 'light' },
@@ -33,6 +35,11 @@ const isAuthPage = computed(() => route.path === '/auth');
 const iconClass = computed(() => {
     return selectedTheme.value === 'dark' ? 'pi-moon' : 'pi-sun';
 });
+
+const currentThemeLabel = computed(() => {
+    const theme = themeOptions.value.find(option => option.value === selectedTheme.value);
+    return theme ? theme.label : '';
+})
 
 onMounted(() => {
     onThemeToggler(selectedTheme.value);
@@ -69,17 +76,15 @@ function themeToggle() {
     align-items: center;
     justify-content: center;
     border: 1px solid var(--p-grey-2);
-    /* background-color: white; */
-    box-shadow: 1pt 1pt 5pt rgba(0, 0, 0, 0.25);
+    background-color: var(--p-bg-color-3);
+    box-shadow: 1px 1px 5pt rgba(0, 0, 0, 0.2);
+    color: var(--p-text-color);
+    cursor: pointer;
 }
 
 @media (max-width: 896px) {
-    .select-button {
-        display: none;
-    }
-
     .bt {
-        display: block;
+        width: 100%;
     }
 }
 </style>

@@ -27,6 +27,7 @@
                 <Button label="Создать" class="save-btn w-100 mb-3" @click="createRole" />
             </div>
         </Dialog>
+        <Toast ref="toast" />
     </div>
 </template>
 
@@ -41,6 +42,7 @@ import Divider from 'primevue/divider';
 import FloatLabel from 'primevue/floatlabel';
 import Textarea from 'primevue/textarea';
 import Select from 'primevue/select';
+import Toast from 'primevue/toast';
 
 const visible = ref(false);
 const newRole = ref({
@@ -48,6 +50,12 @@ const newRole = ref({
     description: '',
     priority: null
 });
+
+const props = defineProps({
+    refreshRoles: Function
+})
+
+const toast = ref(null);
 
 const priorities = ref([]);
 const userPriority = ref(0);
@@ -75,17 +83,20 @@ const fetchUserPriority = async () => {
 };
 
 const createRole = async () => {
-    if (newRole.value.priority > userPriority.value) {
-        alert('Вы не можете создавать роль с приоритетом выше вашего.');
+    if (newRole.value.priority < userPriority.value) {
+        toast.value.add({ severity: 'info', summary: 'Приоритет ролей', detail: 'Вы не можете создавать роль с приоритетом выше вашего.', life: 3000 });
         return;
     }
     if (newRole.value.priority === 0) {
-        alert('Вы не можете создавать роль с приоритетом 0.');
+        toast.value.add({ severity: 'info', summary: 'Приоритет ролей', detail: 'Вы не можете создавать роль с приоритетом 0.', life: 3000 });
     }
 
     try {
         await axiosInstance.post('/api/rbac/roles', newRole.value);
         visible.value = false;
+        await props.refreshRoles();
+
+        toast.value.add({ severity: 'success', summary: 'Успех', detail: 'Роль создана', life: 3000 });
     } catch (error) {
         console.error('Ошибка при создании роли: ', error);
     }
