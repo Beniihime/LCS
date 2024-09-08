@@ -102,7 +102,7 @@ onMounted(async () => {
     transition: color 0.5s ease;
 }
 .counter:hover {
-    color: white;
+    color: var(--p-text-color);
 }
 .count {
     font-size: 1.5rem;
@@ -117,6 +117,7 @@ onMounted(async () => {
     background-color: var(--p-grey-4);
     padding: 20px;
     border-radius: 18px;
+    margin-bottom: 10px;
 }
 .roleType {
     background-color: #007bff;

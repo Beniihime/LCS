@@ -116,8 +116,24 @@ const togglePermission = async (roleId, permissionId, isActive) => {
         const endpoint = `/api/rbac/roles/${roleId}/permissions/${permissionId}`;
         if (isActive) {
             await axiosInstance.patch(endpoint); // Обновляем статус полномочия
+            window.dispatchEvent(new CustomEvent('toast', {
+                detail: { 
+                    severity: 'success', 
+                    summary: 'Роли', 
+                    detail: 'Вы добавили полномочие для роли',
+                    userName: `${ roleStore.roleTitle }`
+                }
+            }));
         } else {
             await axiosInstance.delete(endpoint); // Удаляем полномочие
+            window.dispatchEvent(new CustomEvent('toast', {
+                detail: { 
+                    severity: 'success', 
+                    summary: 'Роли', 
+                    detail: 'Вы удалили полномочие для роли',
+                    userName: `${ roleStore.roleTitle }` 
+                }
+            }));
         }
         updatePermissionStatus(permissionId, isActive);
     } catch (error) {
@@ -175,7 +191,6 @@ onMounted(async () => {
     transition: transform 0.3s ease;
     background-color: var(--p-bg-color-2);
     color: var(--p-text-color);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
     display: flex;
     flex-direction: column;
     justify-content: space-between;

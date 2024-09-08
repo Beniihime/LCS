@@ -1,15 +1,11 @@
 <template>
-    <Toast />
     <ConfirmDialog></ConfirmDialog>
     <div class="sidebar-container">
         <div class="rectangle">
-            <div class="d-flex align-items-center">
-                <router-link to="/" class="col-auto p-0 home">
-                    <LogoSvg class="home1" />
+            <div class="d-flex align-items-center justify-content-center">
+                <router-link to="/" class="logoLCS">
+                    <Lcs />
                 </router-link>
-                <div class="col-auto p-0">
-                    <p class="header">Личный кабинет</p>
-                </div>
             </div>
             <IconField class="searchBar">
                 <InputIcon class="pi pi-search" />
@@ -25,7 +21,14 @@
                     active-class="active-link"
                 >
                     <i :class="item.icon"></i>
-                    <div class="menucrumb">{{ item.name }}</div>
+                    <div class="menucrumb">
+                        <span>{{ item.name }}</span>
+                        <Badge 
+                            v-if="item.path === '/notif' && notificationStore.unreadCount > 0"
+                            :value="notificationStore.unreadCount"
+                            class="p-badge ms-3"
+                        />
+                    </div>
                 </router-link>
             </div>
             <div class="split mb-4"></div>
@@ -60,15 +63,19 @@
 </template>
 
 <script setup>
-import LogoSvg from '@/assets/logo1.svg';
+import { ref } from 'vue';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import LogoutSvg from '@/assets/logout.svg';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import axiosInstance from '@/utils/axios.js';
-import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
+import Badge from 'primevue/badge';
+
+import Lcs from '@/assets/logo/lcs.svg';
+
+import { useNotificationStore } from '@/stores/notifications.js';
 
 import ThemeSwitcher from './ThemeSwitcher.vue';
 
@@ -79,6 +86,8 @@ import { useRouter } from 'vue-router';
 const confirm = useConfirm();
 const toast = useToast();
 const router = useRouter();
+
+const notificationStore = useNotificationStore();
 
 const confirm1 = () => {
     confirm.require({
@@ -182,7 +191,12 @@ export default {
 </style>
 
 <style scoped>
-
+.logoLCS {
+    transition: transform 0.1s ease-in;
+}
+.logoLCS:hover {
+    transform: scale(1.2);
+}
 .middle {
     font-family: 'SF Pro Rounded';
     font-size: 14pt;
@@ -193,12 +207,12 @@ export default {
 .logout-button {
     border: 2px solid transparent;
     background-color: transparent;
-    padding: 12px 18px;
+    padding: 12px 18px 12px 8px;
     border-radius: 12px;
     transition: all 0.3s ease;
 }
 .logout-button:hover {
-    border: 2px solid var(--p-blue-500);
+    background-color: var(--p-blue-500-low-op);
     color: var(--p-blue-500);
 }
 .email {
@@ -219,7 +233,7 @@ export default {
     font-family: 'SF Pro Rounded';
 }
 .split {
-    border: solid 2pt var(--p-separator-opaque);
+    border: solid 2px var(--p-separator-opaque);
     border-radius: 2pt;
     margin-top: auto;
 }
@@ -245,15 +259,22 @@ export default {
 }
 .general {
     font-family: 'SF Pro Rounded';
-    font-weight: 600;
-    margin-block: 20pt;
-    font-size: 14pt;
+    font-weight: bold;
+    margin-block: 20px;
+    font-size: 22px;
     color: var(--p-text-color);
 }
 .menucrumb {
     font-family: 'SF Pro Rounded';
     font-size: 14pt;
     padding-left: 48pt;
+    display: flex;
+    align-items: center;
+}
+.p-badge {
+    background-color: var(--p-red-500);
+    font-size: 16px;
+    padding: 0;
 }
 .menu-item {
     position: relative;
@@ -268,7 +289,7 @@ export default {
     border: 2px solid transparent;
 }
 .menu-item:hover {
-    border: 2px solid var(--p-blue-500);
+    background-color: var(--p-blue-500-low-op);
     color: var(--p-blue-500);
 }
 .home {
@@ -336,6 +357,6 @@ export default {
     padding: 18pt;
     border-radius: 18pt;
     transition: all 0.5s ease;
-    border: 3px solid var(--p-grey-4);
+    border: 2px solid var(--p-grey-4);
 }
 </style>

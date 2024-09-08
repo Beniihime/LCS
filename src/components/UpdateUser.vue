@@ -1,6 +1,6 @@
 <template>
     <div class="d-flex justify-content-center">
-        <Button icon="pi pi-cog" outlined @click="fetchUserData"/>
+        <Button icon="pi pi-cog" outlined @click="fetchUserData" class="upd-btn"/>
         <Dialog v-model:visible="visible" modal header="Изменить информацию" :style="{ 'max-width': '30rem' }">
             <div class="row my-4">
                 <div class="col">
@@ -129,10 +129,26 @@ const updateUserData = async () => {
         await axiosInstance.put(`/api/users/${ props.userId }`, updatedUser);
 
         visible.value = false;
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: { 
+                severity: 'success', 
+                summary: 'Пользователи', 
+                detail: 'Вы обновили данные пользователя',
+                userName: `${ firstName.value} ${lastName.value }` 
+            }
+        }));
 
         props.refreshTable(props.filters);
     } catch (error) {
         console.error('Ошибка при обновлении данных пользователя: ', error);
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: { 
+                severity: 'error', 
+                summary: 'Пользователи',
+                detail: 'Ошибка при обновлении данных пользователя',
+                userName: `${ firstName.value} ${ lastName.value }`
+            }
+        }));
     }
 };
 
@@ -173,5 +189,9 @@ label {
     border-radius: 12pt;
     font-size: 14pt;
     transition: all 0.5s ease-out;
+}
+.upd-btn:hover {
+    background-color: var(--p-blue-500) !important;
+    color: white !important;
 }
 </style>

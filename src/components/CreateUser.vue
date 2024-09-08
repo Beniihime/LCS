@@ -120,10 +120,23 @@ const createUser = async () => {
 
         await axiosInstance.post('/api/users', payload);
         visible.value = false;
-        alert('Пользователь создан');
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: { 
+                severity: 'success', 
+                summary: 'Пользователи', 
+                detail: 'Вы добавили пользователя',
+                userName: `${ firstName.value } ${ lastName.value }`
+            }
+        }));
     } catch (error) {
         console.error('Ошибка при создании: ', error);
-        alert('Ошибка при создании')
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: { 
+                severity: 'error', 
+                summary: 'Пользователи', 
+                detail: 'Ошибка при добавлении пользователя' 
+            }
+        }));
     }
 }
 </script>

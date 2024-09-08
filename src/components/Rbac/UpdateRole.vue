@@ -27,13 +27,13 @@
                 <Button label="Сохранить" class="save-btn w-100 mb-3" @click="updateRole"/>
             </div>
         </Dialog>
-        <Toast ref="toast" />
     </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
 import axiosInstance from '@/utils/axios.js';
+import { useToast } from 'primevue/usetoast';
 
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
@@ -42,7 +42,6 @@ import Divider from 'primevue/divider';
 import FloatLabel from 'primevue/floatlabel';
 import Textarea from 'primevue/textarea';
 import Select from 'primevue/select';
-import Toast from 'primevue/toast';
 
 const visible = ref(false);
 const currentRole = ref({
@@ -55,7 +54,7 @@ const currentRole = ref({
 const priorities = ref([]);
 
 const roleId = ref(null);
-const toast = ref(null);
+const toast = useToast();
 
 const props = defineProps({
     id: Number,
@@ -95,15 +94,14 @@ const updateRole = async () => {
         visible.value = false;
         await props.refreshRoles();
 
-        toast.value.add({ severity: 'success', summary: 'Успех', detail: 'Роль обновлена', life: 3000 });
+        toast.add({ severity: 'success', summary: 'Успешно', detail: 'Роль обновлена', life: 3000 });
     } catch (error) {
         console.error('Ошибка при обновлении роли: ', error);
-        toast.value.add({ severity: 'error', summary: 'Ошибка', detail: 'Не удалось обновить роль', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Не удалось обновить роль', life: 3000 });
     }
 }
 
 onMounted(async () => {
-    // await fetchRoles();
     await fetchPriorities();
 })
 

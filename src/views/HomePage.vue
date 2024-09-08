@@ -2,48 +2,37 @@
     <div class="app-layout">
       <SideBar v-if="isAuthenticated"/>
       <div class="content">
-        <router-view></router-view>
+        <router-view />
       </div>
     </div>
 </template>
 
-<script>
+<script setup>
+import { computed, onMounted } from 'vue';
+import { useToast } from 'primevue/usetoast';
 import SideBar from '@/components/SideBar.vue';
-import { isAuthenticated } from "@/utils/auth";
+import { isAuthenticated } from '@/utils/auth';
+import { useRoute } from 'vue-router';
 
-export default {
-  name: "Home",
-  components: {
-    SideBar,
-  },
-  computed: {
-    isAuthenticated() {
-      return isAuthenticated();
-    }
-  },
-  props: {
-    message: {
-      type: String,
-      default: ''
-    },
-    detail: {
-      type: String,
-      default: ''
-    }
-  },
-  watch: {
-    $route(newRoute) {
-      if (newRoute.query.message) {
-        this.$emit('route-changed', newRoute.query.message, newRoute.query.detail);
-      }
-    }
-  },
-  mounted() {
-    if (this.$route.query.message) {
-      this.$emit('route-changed', this.$route.query.message, this.$route.query.detail);
-    }
+const toast = useToast();
+const route = useRoute();
+
+computed(() => isAuthenticated());
+
+const showMessage = (message, summary, detail) => {
+  if (message === 'success') {
+    toast.add({ severity: 'success', summary, detail, life: 3000 });
+  } else if (message === 'error') {
+    toast.add({ severity: 'error', summary, detail, life: 3000 });
   }
 };
+
+onMounted(() => {
+  const query = route.query;
+  if (query.message) {
+    showMessage(query.message, query.summary, query.detail);
+  }
+});
 </script>
 
 <style scoped>

@@ -1,11 +1,13 @@
 <template>
-    <div class="login-page">
-        <div class="border-wrap">
-            <div class="row login-container">
-                <div class="col login-box">
+    <main>
+        <div class="login-page">
+            <div class="logoUp"></div>
+            <div class="logoDownContainer"></div>
+            <ThemeSwitcher />
+            <div class="login-container">
+                <div class="login-box">
                     <div class="brand">
-                        <img src="../assets/logo.svg" alt="" style="max-width: 10rem;" />
-                        <h2 class="mt-4">Личный кабинет</h2>
+                        <h2>Вход в ЛКС</h2>
                     </div>
                     <form @submit.prevent="auth">
                         <InputGroup class="my-2">
@@ -23,105 +25,126 @@
                         <div>
                             <Button label="Забыли пароль?" text class="forgot-password" />
                         </div>
-                        <Button class="but my-2" type="submit" label="Войти" />
+                        <Button class="but my-2 mb-0" type="submit" label="Войти" />
                     </form>
                 </div>
-                <div class="col d-none d-md-block">
-                    <img src="@/assets/illustration.png" class="img-fluid" alt="Login Illustration" />
-                </div>
-                <ThemeSwitcher />
+                
             </div>
         </div>
-    </div>
+    </main>
 </template>
 
-<script>
+<script setup>
+import { ref } from 'vue';
+import { useToast } from 'primevue/usetoast';
+import { useRouter } from 'vue-router';
+
 import Button from 'primevue/button';
 import InputGroup from 'primevue/inputgroup';
 import InputText from 'primevue/inputtext';
 import InputGroupAddon from 'primevue/inputgroupaddon';
 import Password from 'primevue/password';
-import { useToast } from 'primevue/usetoast';
+
 import { scheduleTokenRefresh } from '@/utils/TokenService.js';
+import { useUserStore } from '@/stores/user';
 import axiosInstance from '@/utils/axios.js';
 
-import WelcomeScreen from '@/components/WelcomeScreen.vue';
 import ThemeSwitcher from '@/components/ThemeSwitcher.vue';
 
-export default {
-    name: "AuthPage",
-    data() {
-        return {
-            login: "",
-            password: "",
-            loading: false,
-            errorMessage: ""
-        }
-    },
-    setup() {
-        const toast = useToast();
-        return { toast };
-    },
-    components: {
-        Button,
-        InputGroup,
-        InputGroupAddon,
-        InputText,
-        Password,
-        WelcomeScreen,
-        ThemeSwitcher
-    },
-    methods: {
-        async auth() {
-            this.loading = true;
-            try {
-                const response = await axiosInstance.post('/api/auth/login', {
-                    login: this.login,
-                    password: this.password
-                },
-                {
-                    headers: {
-                        'accept': 'text/plain',
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
-            
-            localStorage.setItem('accessToken', response.data.accessToken);
-            localStorage.setItem('refreshToken', response.data.refreshTokenValue);
-            localStorage.setItem('userId', response.data.userId);
-            
-            scheduleTokenRefresh(response.data.refreshTokenExpired);
-            
-            const redirect = this.$route.query.redirect || { name: 'HomePage', query: { message: 'success', detail: 'Вы вошли в личный кабинет'} };
-            this.$router.push(redirect);
-            
-            } catch (error) {
-                this.errorMessage = 'Login failed: ' + (error.response ? error.response.data.message : error.message);
-                this.toast.add({ severity: 'error', summary: 'Ошибка', detail: this.errorMessage, life: 3000 });
-            } finally {
-                this.loading = false;
+const login = ref('');
+const password = ref('');
+const errorMessage = ref('');
+const router = useRouter();
+const toast = useToast();
+
+const userStore = useUserStore();
+
+const auth = async () => {
+    try {
+        const response = await axiosInstance.post('/api/auth/login', {
+            login: login.value,
+            password: password.value
+        }, {
+            headers: {
+                'accept': 'text/plain',
+                'Content-Type': 'application/json'
             }
-        }
-    },
+        });
+
+        localStorage.setItem('accessToken', response.data.accessToken);
+        localStorage.setItem('refreshToken', response.data.refreshTokenValue);
+        localStorage.setItem('userId', response.data.userId);
+
+        scheduleTokenRefresh(response.data.refreshTokenExpired);
+
+        router.push({ name: 'HomePage', query: { message: 'success', summary:'Успешно', detail: 'Вы вошли в личный кабинет' } });
+
+    } catch (error) {
+        errorMessage.value = 'Login failed: ' + (error.response ? error.response.data.message : error.message);
+        toast.add({ severity: 'error', summary: 'Ошибка', detail: errorMessage.value, life: 3000 });
+    }
 };
 </script>
 
 
 <style scoped>
-.switcher {
+.logoUp {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 35px;
+    left: 35px;
+    width: 100%;
+    height: 40px;
+    background-repeat: no-repeat;
+    z-index: 1;
+    background-image: url('/src/assets/logo/logoUp.svg');
+    @media (max-width: 896px) {
+        height: 20px;
+    }
 }
-.border-wrap{
-    background: linear-gradient(.25turn, var(--p-blue-500), var(--p-blue-300));
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 4px;
-    border-radius: 22px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+.logoDownContainer {
+    position: absolute;
+    bottom: 0;
+    z-index: 1;
+    width: 70%;
+    left: 30px;
+    height: 30%; /* Задаем высоту контейнера */
+    transition: background-image 0.5s ease; /* Плавная смена фона */
+    @media (max-width: 896px) {
+        height: 10%;
+    }
+}
+
+.logoDownContainer::before, .logoDownContainer::after {
+   content: "";
+   position: absolute;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   background-size: contain;
+   background-position: center;
+   background-repeat: no-repeat;
+   transition: opacity 0.5s ease; /* Плавная смена */
+   z-index: 0;
+   opacity: 0;
+}
+
+.logoDownContainer::before {
+   background-image: url('/src/assets/logo/sibadi.png'); /* Светлое изображение */
+   opacity: 1; /* Показываем светлую картинку по умолчанию */
+}
+
+.logoDownContainer::after {
+   background-image: url('/src/assets/logo/sibadi_dark.png'); /* Темное изображение */
+}
+
+/* Когда включена темная тема */
+.p-dark .logoDownContainer::before {
+   opacity: 0; /* Скрываем светлую картинку */
+}
+
+.p-dark .logoDownContainer::after {
+   opacity: 1; /* Показываем темную картинку */
 }
 .but {
     width: 100%;
@@ -129,27 +152,62 @@ export default {
     font-size: 1.25rem;
     border-radius: 10px;
 }
+main {
+    margin: 0;
+    padding: 0;
+}
 .login-page {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    width: 100dvw;
-    background: var(--p-bg-color-2);
-    transition: background 0.5s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100dvh;
+  width: 100vw;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-page::before, .login-page::after {
+   content: "";
+   position: absolute;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   background-size: cover;
+   background-position: center;
+   transition: opacity 0.5s ease; /* Плавная смена */
+   z-index: 0;
+   opacity: 0;
+}
+
+.login-page::before {
+   background-image: url('/src/assets/backgrounds/lp_bg_light.png'); /* Светлое изображение */
+   opacity: 1; /* Показываем светлую картинку по умолчанию */
+}
+
+.login-page::after {
+   background-image: url('/src/assets/backgrounds/lp_bg_dark.png'); /* Темное изображение */
+}
+
+/* Когда включена темная тема */
+.p-dark .login-page::before {
+   opacity: 0; /* Скрываем светлую картинку */
+}
+
+.p-dark .login-page::after {
+   opacity: 1; /* Показываем темную картинку */
 }
 
 .login-container {
     background: var(--p-bg-color-1);
-    padding: 30px;
+    padding: 28px 40px;
     border-radius: 18px;
-    max-width: 1000px;
-    width: 100%;
     transition: background 0.5s ease;
+    z-index: 1;
 }
 
 .login-box {
-    max-width: 400px;
+    max-width: 300px;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -171,11 +229,12 @@ form {
 
 .brand h2 {
     color: var(--p-text-color);
-    transition: color 0.5s ease;
+    font-weight: 800;
 }
 
 .forgot-password {
     font-size: 16px;
+    color: var(--p-grey-1);
 }
 
 @media (max-width: 768px) {

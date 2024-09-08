@@ -8,7 +8,7 @@
     <div class="col-lg-auto" @click="themeToggle" v-if="isAuthPage">
         <div class="bt" optionValue="value">
             <i :class="`pi ${ iconClass }`" class="me-2 me-lg-0"></i>
-            <span class="d-lg-none fs-5">{{ currentThemeLabel }}</span>
+            <span class="d-lg-none fs-6">{{ currentThemeLabel }}</span>
         </div>
     </div>
 </template>
@@ -68,6 +68,9 @@ function themeToggle() {
 
 <style scoped>
 .bt {
+    position: absolute;
+    top: 35px;
+    right: 35px;
     width: 30px;
     height: 30px;
     padding: 22px;
@@ -75,16 +78,16 @@ function themeToggle() {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--p-grey-2);
-    background-color: var(--p-bg-color-3);
-    box-shadow: 1px 1px 5pt rgba(0, 0, 0, 0.2);
+    background-color: var(--p-bg-color-1);
     color: var(--p-text-color);
     cursor: pointer;
+    z-index: 999;
 }
 
 @media (max-width: 896px) {
     .bt {
-        width: 100%;
+        width: 22%;
+        padding: 18px 50px;
     }
 }
 </style>

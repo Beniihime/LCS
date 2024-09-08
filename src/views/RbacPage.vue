@@ -1,5 +1,4 @@
 <template>
-    <Toast ref="toast"/>
     <WelcomeScreen :visible="loading" />
     <main>
         <div class="content-wrapper">
@@ -80,7 +79,7 @@
                     <div class="col" v-for="role in filteredRoles" :key="role.id">
                         <div class="card h-100">
                             <div class="card-body">
-                                <UpdateRole :id="role.id" :refreshRoles="fetchRoles" :roles="roles"/>
+                                <UpdateRole :id="role.id" :refreshRoles="fetchRoles" :roles="roles" v-if="role.id !== userRole.id && role.id !== 1" />
                                 <h5 class="card-title">{{ role.title }}</h5>
                                 <p class="card-text">{{ role.description }}</p>
                                 <p class="card-text"><span class="muted">Приоритет: {{ role.priority }}</span></p>
@@ -121,6 +120,8 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useToast } from 'primevue/usetoast';
+
 import qs from 'qs';
 import axiosInstance from '@/utils/axios.js';
 import WelcomeScreen from '@/components/WelcomeScreen.vue';
@@ -135,20 +136,19 @@ import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import InputText from 'primevue/inputtext';
 import { useConfirm } from "primevue/useconfirm";
-import Toast from "primevue/toast";
 import Divider from 'primevue/divider';
 
 const loading = ref(true);
 const roles = ref([]);
 const users = ref([]);
 const searchQuery = ref('');
-const userRole = ref({title: '', type: '' });
+const userRole = ref({id: null, title: '', type: '' });
 
 const filteredRoles = computed(() => {
     return roles.value.filter(role => role.title.toLowerCase().startsWith(searchQuery.value.toLowerCase()));
 });
 
-const toast = ref(null);
+const toast = useToast();
 
 const fetchRoles = async () => {
     try {
@@ -211,7 +211,7 @@ const deleteRole = async (role) => {
             await axiosInstance.delete(`/api/rbac/roles/${role.id}`);
             roles.value = roles.value.filter(r => r.id !== role.id);
         } catch (error) {
-            toast.value.add({ severity: 'info', summary: 'Роли', detail: 'Можно удалять только пользовательские роли', life: 3000 });
+            toast.add({ severity: 'info', summary: 'Роли', detail: 'Можно удалять только пользовательские роли', life: 3000 });
         }
     }
 }
@@ -235,10 +235,10 @@ const confirm1 = (role) => {
         },
         accept: () => {
             deleteRole(role);
-            toast.value.add({ severity: 'success', summary: 'Успешно', detail: 'Вы удалили роль', life: 3000 });
+            toast.add({ severity: 'success', summary: 'Успешно', detail: 'Вы удалили роль', life: 3000 });
         }, 
         reject: () => {
-            toast.value.add({ severity: 'info', summary: 'Отклонено', detail: 'Отмена действия', life: 3000 });
+            toast.add({ severity: 'info', summary: 'Отклонено', detail: 'Отмена действия', life: 3000 });
         }
     });
 };
@@ -273,7 +273,7 @@ p {
 }
 .card {
     border-radius: 18px;
-    transition: transform 0.3s ease;
+    transition: all 0.5s ease;
     background-color: var(--p-bg-color-2);
     color: var(--p-text-color);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -306,13 +306,13 @@ p {
 .edit-btn, .delete-btn, .perm-btn {
     width: 100%;
     border-radius: 12px;
+    color: white;
 }
 .perm-btn {
     color: white;
 } 
 .delete-btn:hover {
-    color: var(--p-text-color);
-    background-color: var(--p-red);
+    color: white !important;
 }
 .muted {
     color: var(--p-grey-2);
@@ -341,7 +341,7 @@ main {
 .search {
     border-radius: 12pt;
     font-size: 16pt;
-    transition: all 0.5s ease-out;
+    transition: all 0.5s ease;
     width: 100%; 
 }
 .statistics {
@@ -349,6 +349,7 @@ main {
     padding: 20px;
     border-radius: 18px;
     border: 1px solid var(--p-grey-4);
+    transition: all 0.5s ease;
 }
 .statistics-title {
     font-size: 1.8rem;
@@ -362,7 +363,7 @@ main {
     border-radius: 18px;
     color: var(--p-text-color);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transition: scale 0.2s ease-in-out;
+    transition: all 0.5s ease;
 }
 .stat-card:hover {
     scale: 1.02;
