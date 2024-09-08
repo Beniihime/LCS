@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import './style.css'
 import App from './App.vue'
 import ToastService from 'primevue/toastservice';
-import Toast from 'primevue/toast';
+// import Toast from 'primevue/toast';
 import axios from 'axios';
 import "bootstrap/dist/css/bootstrap.min.css"
 import "bootstrap";
@@ -36,7 +36,7 @@ app.use(PrimeVue, {
 });
 app.use(AppState);
 app.use(ToastService);
-app.component('Toast', Toast);
+// app.component('Toast', Toast);
 app.use(ConfirmationService);
 app.directive('tooltip', Tooltip);
 

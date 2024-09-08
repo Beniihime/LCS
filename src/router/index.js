@@ -6,10 +6,6 @@ const routes = [
         path: "/", 
         component: () => import('@/views/HomePage.vue'),
         name: 'HomePage',
-        props: route =>({ 
-            message: route.query.message, 
-            detail: route.query.detail 
-        }),
         meta: { requiresAuth: true },
         children: [
             {
@@ -19,7 +15,7 @@ const routes = [
             },
             {
                 path: "/notif",
-                // component: () => import('@/components/NotifPage.vue'),
+                component: () => import('@/views/NotifPage.vue'),
             },
             {
                 path: "/rbac",
@@ -53,16 +49,13 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
     if (to.matched.some(record => record.meta.requiresAuth)) {
-        if (!isAuthenticated()) {
-            next({
-                path: '/auth',
-                query: { redirect: to.fullPath }
-            });
-        } else {
-            next();
-        }
-    } else {
+      if (!isAuthenticated()) {
+        next({ path: '/auth', query: { redirect: to.fullPath } });
+      } else {
         next();
+      }
+    } else {
+      next();
     }
 });
 
