@@ -85,6 +85,7 @@ import Password from 'primevue/password';
 import Divider from 'primevue/divider';
 import MultiSelect from 'primevue/multiselect';
 import FloatLabel from 'primevue/floatlabel';
+import { useToast } from 'primevue/usetoast';
 
 const pass = ref('');
 const firstName = ref('');
@@ -96,6 +97,8 @@ const selectedRoles = ref([]);
 const visible = ref(false);
 const roles = ref([]);
 
+const toast = useToast();
+
 onMounted(async () => {
     try {
         const response = await axiosInstance.get('/api/rbac/roles');
@@ -105,7 +108,31 @@ onMounted(async () => {
     }
 });
 
+const checkLoginAndEmail = async () => {
+    const isLoginOccupied = await axiosInstance.get('/api/users/checking/occupy-login', {
+        params: { login: login.value }
+    });
+    const isEmailOccupied = await axiosInstance.get('/api/users/checking/occupy-email', {
+        params: { email: email.value }
+    });
+
+    if (isLoginOccupied.data === true) {
+        toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Логин уже занят', life: 3000 });
+        return false;
+    }
+
+    if (isEmailOccupied.data === true) {
+        toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Email уже занят', life: 3000 });
+        return false;
+    }
+
+    return true;
+};
+
 const createUser = async () => {
+    const isAvailable = await checkLoginAndEmail();
+    if (!isAvailable) return;
+    
     try {
         const roleIds = selectedRoles.value.map(role => role.id);
         const payload = {

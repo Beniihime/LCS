@@ -83,7 +83,7 @@ const auth = async () => {
         setTimeout(() => {
             isLoading.value = false; // Отключаем экран
             router.push({ name: 'HomePage', query: { message: 'success', summary: 'Успешно', detail: 'Вы вошли в личный кабинет' } });
-        }, 2000); // Удерживаем экран на 2 секунды перед переходом
+        }, 1500); // Удерживаем экран на 1.5 секунды перед переходом
 
     } catch (error) {
         errorMessage.value = 'Login failed: ' + (error.response ? error.response.data.message : error.message);

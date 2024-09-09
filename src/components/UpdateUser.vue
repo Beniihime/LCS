@@ -78,6 +78,10 @@ import Divider from 'primevue/divider';
 import MultiSelect from 'primevue/multiselect';
 import FloatLabel from 'primevue/floatlabel';
 
+import { useToast } from 'primevue/usetoast';
+
+const toast = useToast();
+
 const props = defineProps({
     userId: String,
     refreshTable: Function,
@@ -115,7 +119,31 @@ const fetchUserData = async () => {
     }
 };
 
+const checkLoginAndEmail = async () => {
+    const isLoginOccupied = await axiosInstance.get('/api/users/checking/occupy-login', {
+        params: { login: login.value }
+    });
+    const isEmailOccupied = await axiosInstance.get('/api/users/checking/occupy-email', {
+        params: { email: email.value }
+    });
+
+    if (isLoginOccupied.data === true) {
+        toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Логин уже занят', life: 3000 });
+        return false;
+    }
+
+    if (isEmailOccupied.data === true) {
+        toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Email уже занят', life: 3000 });
+        return false;
+    }
+
+    return true;
+};
+
 const updateUserData = async () => {
+    const isAvailable = await checkLoginAndEmail();
+    if (!isAvailable) return;
+    
     try {
         const updatedUser = {
             firstName: firstName.value,
