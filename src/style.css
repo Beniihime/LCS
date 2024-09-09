@@ -10,7 +10,7 @@ nav.p-datatable-paginator-bottom {
 
 div.p-datatable-header {
   border-radius: 18px 18px 0 0;
-  border: 3px solid var(--p-grey-4);
+  border: 2px solid var(--p-grey-4);
   border-bottom: 0;
   background-color: var(--p-bg-color-2);
 }
@@ -18,12 +18,12 @@ div.p-datatable-header {
 div.p-paginator {
   background-color: var(--p-bg-color-2);
   border-radius: 0 0 18px 18px;
-  border-inline: 3px solid var(--p-grey-4);
-  border-bottom: 3px solid var(--p-grey-4);
+  border-inline: 2px solid var(--p-grey-4);
+  border-bottom: 2px solid var(--p-grey-4);
 }
 
 table.p-datatable-table {
-  border: 3px solid var(--p-grey-4);
+  border: 2px solid var(--p-grey-4);
 }
 
 div.p-selectbutton button.p-togglebutton {
@@ -48,6 +48,7 @@ div.p-datatable-footer {
 
 th.p-datatable-header-cell {
   background-color: transparent;
+  border-bottom: 4px solid var(--p-grey-4);
 }
 
 #app {
