@@ -151,18 +151,24 @@ const updatePermissionStatus = (permissionId, isActive) => {
 };
 
 const filteredResources = computed(() => {
+    // Фильтруем ресурсы по параметру isCustomizable
+    const customizableResources = allPermissions.value.map(resource => ({
+        ...resource,
+        permissions: resource.permissions.filter(permission => permission.isCustomizable)
+    }));
+
     if (!searchQuery.value) {
-        return allPermissions.value; // Если нет запроса, возвращаем все ресурсы
+        return customizableResources; // Если нет запроса, возвращаем отфильтрованные ресурсы
     }
 
     // Фильтрация полномочий по названию или описанию
-    return allPermissions.value.map(resource => ({
+    return customizableResources.map(resource => ({
         ...resource,
         permissions: resource.permissions.filter(permission =>
             permission.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
             permission.description.toLowerCase().includes(searchQuery.value.toLowerCase())
         )
-    }));
+    })).filter(resource => resource.permissions.length > 0); // Возвращаем только те ресурсы, которые содержат полномочия после фильтрации
 });
 
 onMounted(async () => {

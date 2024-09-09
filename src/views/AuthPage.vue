@@ -31,6 +31,7 @@
                 
             </div>
         </div>
+        <WelcomeLogin v-if="isLoading" :isLoading="isLoading"/>
     </main>
 </template>
 
@@ -46,10 +47,10 @@ import InputGroupAddon from 'primevue/inputgroupaddon';
 import Password from 'primevue/password';
 
 import { scheduleTokenRefresh } from '@/utils/TokenService.js';
-import { useUserStore } from '@/stores/user';
 import axiosInstance from '@/utils/axios.js';
 
 import ThemeSwitcher from '@/components/ThemeSwitcher.vue';
+import WelcomeLogin from '@/components/WelcomeLogin.vue';
 
 const login = ref('');
 const password = ref('');
@@ -57,9 +58,11 @@ const errorMessage = ref('');
 const router = useRouter();
 const toast = useToast();
 
-const userStore = useUserStore();
+const isLoading = ref(false);
 
 const auth = async () => {
+    isLoading.value = true;
+
     try {
         const response = await axiosInstance.post('/api/auth/login', {
             login: login.value,
@@ -77,7 +80,10 @@ const auth = async () => {
 
         scheduleTokenRefresh(response.data.refreshTokenExpired);
 
-        router.push({ name: 'HomePage', query: { message: 'success', summary:'Успешно', detail: 'Вы вошли в личный кабинет' } });
+        setTimeout(() => {
+            isLoading.value = false; // Отключаем экран
+            router.push({ name: 'HomePage', query: { message: 'success', summary: 'Успешно', detail: 'Вы вошли в личный кабинет' } });
+        }, 2000); // Удерживаем экран на 2 секунды перед переходом
 
     } catch (error) {
         errorMessage.value = 'Login failed: ' + (error.response ? error.response.data.message : error.message);

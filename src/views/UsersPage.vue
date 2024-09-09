@@ -52,7 +52,7 @@
                 <template #header>
                     <div class="d-flex justify-content-between align-items-center">
                         <h3 class="m-0 ps-4">Список пользователей</h3>
-                        <CreateUser />
+                        <CreateUser v-if="hasPermission('User', 'Create')"/>
                     </div>
                 </template>
 
@@ -138,9 +138,14 @@
                         </span>
                     </template>
                 </Column>
-                <Column field="change" header="" style="min-width: 5rem;">
+                <Column field="change" header="" style="min-width: 5rem;" v-if="hasPermission('User', 'Update')">
                     <template #body="{ data }">
-                        <UpdateUser :userId="data.id" :isBlocked="data.isBlocked" :refreshTable="fetchCustomers" :filters="filters"/>
+                        <UpdateUser 
+                            :userId="data.id" 
+                            :isBlocked="data.isBlocked" 
+                            :refreshTable="fetchCustomers" 
+                            :filters="filters"
+                        />
                     </template>
                 </Column>
                 
@@ -161,11 +166,16 @@ import Select from 'primevue/select';
 import MultiSelect from 'primevue/multiselect';
 import Button from 'primevue/button';
 import Chip from 'primevue/chip';
+import { usePermissionStore } from '@/stores/permissions.js';
 
 const customers = ref([]);
 const totalRecords = ref(0);
 const loading = ref(true);
 const roles = ref([]);
+
+const permissionStore = usePermissionStore();
+
+const hasPermission = (type, action) => permissionStore.hasPermission(type, action);
 
 const filters = ref({
     global: { value: '', matchMode: FilterMatchMode.CONTAINS },

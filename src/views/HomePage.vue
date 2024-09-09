@@ -13,11 +13,15 @@ import { useToast } from 'primevue/usetoast';
 import SideBar from '@/components/SideBar.vue';
 import { isAuthenticated } from '@/utils/auth';
 import { useRoute } from 'vue-router';
+import { usePermissionStore } from '@/stores/permissions.js';
+import axiosInstance from '@/utils/axios.js';
 
 const toast = useToast();
 const route = useRoute();
 
 computed(() => isAuthenticated());
+
+const permissionStore = usePermissionStore();
 
 const showMessage = (message, summary, detail) => {
   if (message === 'success') {
@@ -32,7 +36,18 @@ onMounted(() => {
   if (query.message) {
     showMessage(query.message, query.summary, query.detail);
   }
+  fetchPermissions();
 });
+
+const fetchPermissions = async () => {
+    try {
+        const response = await axiosInstance.get('/api/users/me/permissions');
+        const data = await response.data;
+        permissionStore.setPermissions(data);
+    } catch (error) {
+        console.error('Error fetching permissions:', error);
+    }
+  };
 </script>
 
 <style scoped>

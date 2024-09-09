@@ -61,7 +61,7 @@
                 </div>
             </div>
             <div class="searchField mt-4">
-                <div class="row align-items-center">
+                <div class="row align-items-center justify-content-between">
                     <div class="col">
                         <IconField class="searchBar">
                             <InputIcon class="pi pi-search" />
@@ -69,7 +69,7 @@
                         </IconField>
                     </div>
                     <div class="col-auto">
-                         <CreateRole :refreshRoles="fetchRoles"/>
+                         <CreateRole :refreshRoles="fetchRoles" v-if="hasPermission('Rbac', 'Create')"/>
                     </div>
                 </div>
             </div>
@@ -79,7 +79,7 @@
                     <div class="col" v-for="role in filteredRoles" :key="role.id">
                         <div class="card h-100">
                             <div class="card-body">
-                                <UpdateRole :id="role.id" :refreshRoles="fetchRoles" :roles="roles" v-if="role.id !== userRole.id && role.id !== 1" />
+                                <UpdateRole :id="role.id" :refreshRoles="fetchRoles" :roles="roles" v-if="role.id !== userRole.id && role.id !== 1 && hasPermission('Rbac', 'Update')" />
                                 <h5 class="card-title">{{ role.title }}</h5>
                                 <p class="card-text">{{ role.description }}</p>
                                 <p class="card-text"><span class="muted">Приоритет: {{ role.priority }}</span></p>
@@ -96,13 +96,13 @@
                                         <div class="card-text m-0" v-if="role.id === userRole.id">Это вы</div>
                                         <div v-else class="d-flex justify-content-between">
                                             <Button 
-                                                v-if="role.type === 'Custom'" 
+                                                v-if="role.type === 'Custom' && hasPermission('Rbac', 'Delete')"
                                                 label="Удалить" 
                                                 class="delete-btn me-3"
                                                 severity="danger" 
                                                 @click="confirm1(role)" 
                                             />
-                                            <router-link to="/role-permissions">
+                                            <router-link to="/role-permissions" v-if="hasPermission('Rbac', 'Update')">
                                                 <Button label="Полномочия" class="perm-btn" @click.prevent="navigateToPermissions(role)"/>
                                             </router-link>
                                         </div>
@@ -130,6 +130,7 @@ import CreateRole from '@/components/Rbac/CreateRole.vue';
 import UserCount from '@/components/Rbac/UserCount.vue';
 
 import { useRoleStore } from '@/stores/roleStore';
+import { usePermissionStore } from '@/stores/permissions.js';
 
 import Button from 'primevue/button';
 import IconField from 'primevue/iconfield';
@@ -147,6 +148,10 @@ const userRole = ref({id: null, title: '', type: '' });
 const filteredRoles = computed(() => {
     return roles.value.filter(role => role.title.toLowerCase().startsWith(searchQuery.value.toLowerCase()));
 });
+
+const permissionStore = usePermissionStore();
+
+const hasPermission = (type, action) => permissionStore.hasPermission(type, action);
 
 const toast = useToast();
 
@@ -362,7 +367,7 @@ main {
     padding: 20px;
     border-radius: 18px;
     color: var(--p-text-color);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transition: all 0.5s ease;
 }
 .stat-card:hover {

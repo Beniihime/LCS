@@ -13,31 +13,36 @@
             </IconField>
             <div class="general">Управление</div>
             <div class="menu">
-                <router-link 
-                    v-for="item in filteredMenuItems"
-                    :key="item.path"
-                    :to="item.path"
-                    class="menu-item"
-                    active-class="active-link"
-                >
-                    <i :class="item.icon"></i>
-                    <div class="menucrumb">
-                        <span>{{ item.name }}</span>
-                        <Badge 
-                            v-if="item.path === '/notif' && notificationStore.unreadCount > 0"
-                            :value="notificationStore.unreadCount"
-                            class="p-badge ms-3"
-                        />
-                    </div>
-                </router-link>
+                <div v-for="item in filteredMenuItems">
+                    <router-link 
+                        :key="item.path" 
+                        :to="item.path" 
+                        class="menu-item" 
+                        active-class="active-link"
+                        v-if="
+                            item.path === '/rbac' ? hasPermission('Rbac', 'Read') : true && 
+                            item.path === '/users' ? hasPermission('User', 'Read') : true
+                        "
+                    >
+                        <i :class="item.icon"></i>
+                        <div class="menucrumb">
+                            <span>{{ item.name }}</span>
+                            <Badge 
+                                v-if="item.path === '/notif' && notificationStore.unreadCount > 0"
+                                :value="notificationStore.unreadCount"
+                                class="p-badge ms-3"
+                            />
+                        </div>
+                    </router-link>
+                </div>
             </div>
             <div class="split mb-4"></div>
             <ThemeSwitcher />
-            <div class="profile">
-                <div class="row align-items-center px-0">
+            <router-link class="profile" to="/profile">
+                <div class="row align-items-center">
                     <div class="col-auto">
                         <div class="initials-circle">
-                            <span>{{ initials }}</span>
+                            {{ initials }}
                         </div>
                     </div>
                     <div class="col">
@@ -49,7 +54,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="row mt-3">
+            </router-link>
+            <div class="row mt-3">
+                <div class="col">
                     <button @click="confirm1()" class="logout-button">
                         <div class="d-flex align-items-center justify-content-start">
                             <LogoutSvg class="me-3"/>
@@ -63,7 +70,6 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import LogoutSvg from '@/assets/logout.svg';
@@ -76,6 +82,7 @@ import Badge from 'primevue/badge';
 import Lcs from '@/assets/logo/lcs.svg';
 
 import { useNotificationStore } from '@/stores/notifications.js';
+import { usePermissionStore } from '@/stores/permissions.js';
 
 import ThemeSwitcher from './ThemeSwitcher.vue';
 
@@ -88,6 +95,9 @@ const toast = useToast();
 const router = useRouter();
 
 const notificationStore = useNotificationStore();
+const permissionStore = usePermissionStore();
+
+const hasPermission = (type, action) => permissionStore.hasPermission(type, action);
 
 const confirm1 = () => {
     confirm.require({
@@ -183,19 +193,24 @@ export default {
 }
 </script>
 
-<style module>
-.themeSwitcher {
-    width: 100%;
-    border-radius: 18px;
-}
-</style>
-
 <style scoped>
+.profile {
+    border: 2px solid transparent;
+    transition: all 0.5s ease;
+    border-radius: 12px;
+    padding: 5px;
+    text-decoration: none;
+}
+.profile:hover {
+    border: 2px solid var(--p-blue-500);
+    cursor: pointer;
+    background-color: var(--p-blue-500-low-op);
+}
 .logoLCS {
-    transition: transform 0.1s ease-in;
+    transition: transform 0.5s ease;
 }
 .logoLCS:hover {
-    transform: scale(1.2);
+    transform: scale(1.05);
 }
 .middle {
     font-family: 'SF Pro Rounded';
@@ -205,6 +220,7 @@ export default {
     transition: all 0.5s ease;
 }
 .logout-button {
+    width: 100%;
     border: 2px solid transparent;
     background-color: transparent;
     padding: 12px 18px 12px 8px;
@@ -222,6 +238,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
+    text-align: center;
     margin: 0;
     width: 60px;
     height: 60px;
@@ -274,7 +291,8 @@ export default {
 .p-badge {
     background-color: var(--p-red-500);
     font-size: 16px;
-    padding: 0;
+    padding-inline: 12px;
+    border-radius: 12px;
 }
 .menu-item {
     position: relative;

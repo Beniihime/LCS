@@ -31,6 +31,11 @@ const routes = [
                 path: "/role-permissions",
                 component: () => import('@/views/RolePermissionsPage.vue'),
                 name: 'RolePermissions',
+            },
+            {
+                path: "/profile",
+                component: () => import('@/views/ProfilePage.vue'),
+                name: 'Profile',
             }
         ]
     }, 
