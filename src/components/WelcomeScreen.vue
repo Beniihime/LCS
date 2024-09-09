@@ -1,7 +1,9 @@
 <template>
-    <div v-if="visible" class="loading-overlay">
-        <div class="loading-spinner"></div>
-    </div>
+    <transition name="fade" mode="out-in">
+        <div v-if="visible" class="loading-overlay">
+            <div class="loading-spinner"></div>
+        </div>
+    </transition>
 </template>
 
 <script>
@@ -26,21 +28,34 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.7);
     z-index: 9999;
+    opacity: 1;
+    transition: opacity 0.5s ease;
 }
 
 .loading-spinner {
-    border: 16px solid #f3f3f3;
+    border: 12px solid rgba(255,255,255,0.3);
     border-radius: 50%;
     border-top: 16px solid #3498db;
-    width: 120px;
-    height: 120px;
-    animation: spin 2s linear infinite;
+    width: 80px;
+    height: 80px;
+    animation: spin 1.5s linear infinite;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+.fade-enter, .fade-leave-to {
+    opacity: 0;
+}
+.fade-enter-to {
+    opacity: 0;
 }
 </style>
