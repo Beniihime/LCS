@@ -157,6 +157,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import axiosInstance from '@/utils/axios.js';
+
 import { FilterMatchMode } from '@primevue/core/api';
 import qs from 'qs';
 import DataTable from 'primevue/datatable';
@@ -166,6 +167,10 @@ import Select from 'primevue/select';
 import MultiSelect from 'primevue/multiselect';
 import Button from 'primevue/button';
 import Chip from 'primevue/chip';
+
+import CreateUser from '@/components/Users/CreateUser.vue';
+import WelcomeScreen from '@/components/WelcomeScreen.vue';
+import UpdateUser from '@/components/Users/UpdateUser.vue';
 import { usePermissionStore } from '@/stores/permissions.js';
 
 const customers = ref([]);
@@ -283,23 +288,6 @@ const fetchRoles = async () => {
     }
 };
 
-</script>
-
-<script>
-
-
-import CreateUser from '@/components/CreateUser.vue';
-import WelcomeScreen from '@/components/WelcomeScreen.vue';
-import UpdateUser from '@/components/UpdateUser.vue';
-
-export default {
-    name: 'Users',
-    components: {
-        CreateUser,
-        WelcomeScreen,
-        UpdateUser
-    }
-}
 </script>
 
 <style scoped>

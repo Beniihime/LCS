@@ -4,31 +4,26 @@
         <div class="content-wrap">
             <div class="profile-card">
                 <div class="profile-header">
+                    <Button icon="pi pi-pencil" class="edit-btn" severity="contrast" rounded @click="showEditDialog = true" />
                     <img :src="headerSrc" alt="Profile Header" class="header-image"/>
                 </div>
                 <div class="avatar-wrapper">
-                    <Avatar :image="src" size="large" shape="circle" />
+                    <Avatar :image="srcAvatar" size="large" shape="circle" />
+                    <div class="avatar-overlay" @click="triggerFileUpload">
+                        <div class="upload-button pi pi-camera" />
+                        <input 
+                            ref="fileInput" 
+                            type="file" 
+                            style="display: none" 
+                            @change="onFileSelect"
+                        />
+                    </div>
                 </div>
                 <div class="profile-body">
                     <div class="row justify-content-center text-center">
                         <div class="col-auto">
                             <h2>{{ fullName }}</h2>
                             <p class="profile-email">{{ email }}</p>
-                            <!-- <Button 
-                                label="Редактировать профиль" 
-                                icon="pi pi-pencil" 
-                                outlined 
-                                rounded
-                            />
-                            <FileUpload 
-                                mode="basic" 
-                                @select="onFileSelect" 
-                                auto
-                                customUpload
-                                class="p-button-outlined p-button-rounded"
-                                uploadIcon="pi pi-plus"
-                                chooseLabel="Выбрать фото"
-                            /> -->
                         </div>
                     </div>
                     <Divider class="my-4"/>
@@ -70,36 +65,47 @@ import { ref, onMounted } from 'vue';
 import axiosInstance from '@/utils/axios.js';
 
 import Avatar from 'primevue/avatar';
-import FileUpload from 'primevue/fileupload';
 import Button from 'primevue/button';
 import Divider from 'primevue/divider';
 
 import WelcomeScreen from '@/components/WelcomeScreen.vue'
 
-const src = ref(null);
+const srcAvatar = ref(null);
 const loading = ref(true);
 const headerSrc = ref('/src/assets/backgrounds/image.png');
+const fileInput = ref(null);
 
 const firstName = ref('');
 const lastName = ref('');
 const fullName = ref('');
 const email = ref('');
 const userRole = ref('');
+const login = ref('');
+const newLogin = ref('');
+const newPassword = ref('');
+const showEditDialog = ref(false);
+
+const triggerFileUpload = () => {
+  fileInput.value.click();
+}
 
 function onFileSelect(event) {
-    const file = event.files[0];
-    const reader = new FileReader();
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
 
-    reader.onload = async (e) => {
-        src.value = e.target.result;
-    };
+        reader.onload = (e) => {
+            srcAvatar.value = e.target.result; // Предпросмотр загруженного изображения
+        };
 
-    reader.readAsDataURL(file);
+        reader.readAsDataURL(file);
+    }
 }
 
 const fetchMeInfo = async () => {
     try {
         const response = await axiosInstance.get('/api/users/me/info');
+        login.value = response.data.login;
         firstName.value = response.data.firstName;
         lastName.value = response.data.lastName;
         email.value = response.data.email;
@@ -125,7 +131,6 @@ main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     padding: 10pt;
     height: 100%;
     box-sizing: border-box;
@@ -145,6 +150,30 @@ main {
     display: flex;
     transition: all 0.5s ease;
 }
+.avatar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+.avatar-wrapper:hover .avatar-overlay {
+    opacity: 1;
+    cursor: pointer;
+}
+.upload-button {
+    color: white;
+    border: none;
+    background: transparent;
+    margin: 0;
+    font-size: 1.5rem;
+}
 .profile-header {
     position: relative;
     width: 100%;
@@ -155,11 +184,10 @@ main {
 .content-wrap {
     width: 100%;
     color: var(--p-text-color);
-    max-width: 600px;
 }
 .profile-card {
     background-color: var(--p-grey-6);
-    border-radius: 15px;
+    border-radius: 24px;
     border: 2px solid var(--p-grey-4);
     transition: all 0.5s ease;
     width: 100%;
@@ -174,7 +202,7 @@ main {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 15px 15px 0 0;
+    border-radius: 22px 22px 0 0;
 }
 h2 {
     margin-bottom: 5px;
@@ -190,6 +218,10 @@ p {
 }
 .pi {
     font-size: 1.5rem;
-    margin-right: 10px;
+}
+.edit-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
 }
 </style>

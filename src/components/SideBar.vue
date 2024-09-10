@@ -248,6 +248,7 @@ export default {
     border: solid 2px var(--p-separator-opaque);
     border-radius: 2pt;
     margin-top: auto;
+    transition: all 0.5s ease;
 }
 .sidebar-container {
     height: 100vh;
