@@ -38,12 +38,15 @@
             </div>
             <div class="split mb-4"></div>
             <ThemeSwitcher />
-            <router-link class="profile" to="/profile">
+            <router-link class="profile" to="/profile" active-class="active-link">
                 <div class="row align-items-center">
                     <div class="col-auto">
-                        <div class="initials-circle">
-                            {{ initials }}
-                        </div>
+                        <Avatar 
+                            :label="initials" 
+                            size="xlarge" 
+                            shape="circle" 
+                            class="initials-circle"
+                        />
                     </div>
                     <div class="col">
                         <div class="middle">
@@ -78,6 +81,7 @@ import InputIcon from 'primevue/inputicon';
 import axiosInstance from '@/utils/axios.js';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Badge from 'primevue/badge';
+import Avatar from 'primevue/avatar';
 
 import Lcs from '@/assets/logo/lcs.svg';
 
@@ -199,6 +203,7 @@ export default {
     transition: all 0.5s ease;
     border-radius: 12px;
     padding: 5px;
+    color: var(--p-text-color);
     text-decoration: none;
 }
 .profile:hover {
@@ -216,7 +221,6 @@ export default {
     font-family: 'SF Pro Rounded';
     font-size: 14pt;
     line-height: normal;
-    color: var(--p-text-color);
     transition: all 0.5s ease;
 }
 .logout-button {
@@ -235,17 +239,8 @@ export default {
     color: var(--p-grey-1);
 }
 .initials-circle {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    margin: 0;
-    width: 60px;
-    height: 60px;
     background-color: var(--p-button-primary-background);
     color: white;
-    border-radius: 50%;
-    font-size: 30px;
     font-weight: 700;
     font-family: 'SF Pro Rounded';
 }
@@ -310,40 +305,7 @@ export default {
     background-color: var(--p-blue-500-low-op);
     color: var(--p-blue-500);
 }
-.home {
-    position: relative;
-    display: inline-block;
-    
-}
-.home::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 60px;
-    height: 60px;
-    background-image: url('@/assets/back.svg');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.2s ease-in;
-    z-index: 10;
-}
-.home:active::after {
-    background-image: url('@/assets/back-fill.svg');
-}
-.home1 {
-    transition: filter 0.2s ease-in;
-}
-.home1:hover {
-    filter: brightness(50%);
-}
-.home:hover::after {
-    opacity: 1;
-}
-.menu-item.active-link {
+.active-link {
     box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.25);
     color: var(--p-blue-500);
     border: 2px solid var(--p-blue-500);
@@ -357,14 +319,6 @@ export default {
 .searchBar {
     margin-top: 20pt;
     display: inline-block;
-}
-.header {
-    font-family: "SF Pro Rounded";
-    font-size: 18pt;
-    font-weight: 600;
-    margin: 0 0 0 12pt;
-    transition: all 0.5s ease;
-    color: var(--p-text-color);
 }
 .rectangle {
     display: flex;

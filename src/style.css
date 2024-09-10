@@ -1,7 +1,21 @@
 @font-face {
   font-family: "SF Pro Rounded";
-  src: url('@/assets/fonts/SFProRoundedRegular.woff')format("woff"),
-       url('@/assets/fonts/SFProRoundedRegular.woff2')format("woff2");
+  src: url('@/assets/fonts/SFProRoundedRegular.woff') format("woff"),
+       url('@/assets/fonts/SFProRoundedRegular.woff2') format("woff2");
+}
+
+@font-face {
+  font-family: 'SF Mono Heavy';
+  font-style: normal;
+  font-weight: normal;
+  src: url('@/assets/fonts/SFMonoHeavy.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'SF Mono Bold';
+  font-style: normal;
+  font-weight: normal;
+  src: url('@/assets/fonts/SFMonoBold.woff') format('woff');
 }
 
 nav.p-datatable-paginator-bottom {
@@ -118,6 +132,10 @@ svg.lcs {
   --p-transition-property: all !important;
   --p-tooltip-gutter: 0rem !important;
   --p-tooltip-background: var(--p-blue-500) !important;
+
+  --p-avatar-lg-height: 110px !important;
+  --p-avatar-lg-width: 110px !important;
+  --p-avatar-border-radius: 18px !important;
 
   --p-grey-1: #8E8E93;
   --p-grey-2: #AEAEB2;
