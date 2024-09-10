@@ -212,7 +212,7 @@ export default {
     background-color: var(--p-blue-500-low-op);
 }
 .logoLCS {
-    transition: transform 0.5s ease;
+    transition: all 0.5s ease;
 }
 .logoLCS:hover {
     transform: scale(1.05);
@@ -229,7 +229,7 @@ export default {
     background-color: transparent;
     padding: 12px 18px 12px 8px;
     border-radius: 12px;
-    transition: all 0.3s ease;
+    transition: all 0.5s ease;
 }
 .logout-button:hover {
     background-color: var(--p-blue-500-low-op);
@@ -297,7 +297,7 @@ export default {
     width: 100%;
     height: 42pt;
     border-radius: 12pt;
-    transition: all 0.2s ease-in;
+    transition: all 0.5s ease;
     text-decoration: none;
     color: var(--p-text-color);
     border: 2px solid transparent;
@@ -314,7 +314,7 @@ export default {
 .search {
     border-radius: 12pt;
     font-size: 14pt;
-    transition: all 0.5s ease-out;
+    transition: all 0.5s ease;
     width: 100%; 
 }
 .searchBar {

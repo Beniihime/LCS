@@ -115,7 +115,7 @@ label {
 .create-btn {
     border-radius: 12pt;
     font-size: 14pt;
-    transition: all 0.5s ease-out;
+    transition: all 0.5s ease;
 }
 .form-input {
     font-size: 16px;
@@ -124,6 +124,6 @@ label {
 .save-btn {
     border-radius: 12pt;
     font-size: 14pt;
-    transition: all 0.5s ease-out;
+    transition: all 0.5s ease;
 }
 </style>

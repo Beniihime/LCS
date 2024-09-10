@@ -313,7 +313,7 @@ main {
 .search {
     border-radius: 12pt;
     font-size: 18px;
-    transition: all 0.5s ease-out;
+    transition: all 0.5s ease;
 }
 .text-nowrap {
     white-space: nowrap;

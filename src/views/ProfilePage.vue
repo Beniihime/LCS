@@ -4,11 +4,11 @@
         <div class="content-wrap">
             <div class="profile-card">
                 <div class="profile-header">
-                    <Button icon="pi pi-pencil" class="edit-btn" severity="contrast" rounded @click="showEditDialog = true" />
+                    <EditProfile :firstName="firstName" :lastName="lastName" />
                     <img :src="headerSrc" alt="Profile Header" class="header-image"/>
                 </div>
                 <div class="avatar-wrapper">
-                    <Avatar :image="srcAvatar" size="large" shape="circle" />
+                    <Avatar :image="srcAvatar" size="large" shape="circle" style="transition: all 0.5s ease;"/>
                     <div class="avatar-overlay" @click="triggerFileUpload">
                         <div class="upload-button pi pi-camera" />
                         <input 
@@ -26,7 +26,13 @@
                             <p class="profile-email">{{ email }}</p>
                         </div>
                     </div>
-                    <Divider class="my-4"/>
+                    <div class="bio-section">
+                        <h3>О себе</h3>
+                        <p>{{ bio }}</p>
+                    </div>
+
+                    <Divider class="my-4" />
+                    
                     <div class="profile-info">
                         <div class="row mb-3">
                             <div class="col-auto align-items-center d-flex">
@@ -55,7 +61,6 @@
                     </div>
                 </div>
             </div>
-            
         </div>
     </main>
 </template>
@@ -68,11 +73,13 @@ import Avatar from 'primevue/avatar';
 import Button from 'primevue/button';
 import Divider from 'primevue/divider';
 
-import WelcomeScreen from '@/components/WelcomeScreen.vue'
+import WelcomeScreen from '@/components/WelcomeScreen.vue';
+import EditProfile from '@/components/EditProfile.vue';
 
 const srcAvatar = ref(null);
 const loading = ref(true);
 const headerSrc = ref('/src/assets/backgrounds/image.png');
+const bio = ref('');
 const fileInput = ref(null);
 
 const firstName = ref('');
@@ -81,9 +88,6 @@ const fullName = ref('');
 const email = ref('');
 const userRole = ref('');
 const login = ref('');
-const newLogin = ref('');
-const newPassword = ref('');
-const showEditDialog = ref(false);
 
 const triggerFileUpload = () => {
   fileInput.value.click();
@@ -138,7 +142,7 @@ main {
 .avatar-wrapper {
     position: absolute;
     left: 50%;
-    top: 100px;
+    top: 90px;
     transform: translateX(-50%);
     z-index: 10;
     border: 6px solid var(--p-grey-6);
@@ -194,7 +198,7 @@ main {
     position: relative;
 }
 .profile-body {
-    padding: 75px 30px 30px 30px;
+    padding: 70px 30px 30px;
     border-radius: 18px 18px 0 0;
     overflow: hidden;
 }
@@ -219,9 +223,7 @@ p {
 .pi {
     font-size: 1.5rem;
 }
-.edit-btn {
-    position: absolute;
-    top: 10px;
-    right: 15px;
+.bio-section {
+    margin: 20px 0;
 }
 </style>

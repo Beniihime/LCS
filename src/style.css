@@ -83,11 +83,12 @@ body {
 
 svg.logout path {
   stroke: var(--p-text-color);
-  transition: all 0.3s ease;
+  transition: all 0.5s ease;
 }
 
 svg.lcs {
   fill: var(--p-text-color);
+  transition: all 0.5s ease;
 }
 
 .p-password-input {
@@ -100,6 +101,10 @@ svg.lcs {
 .p-inputgroupaddon {
   transition-duration: 0.5s !important;
   transition-timing-function: ease !important;
+}
+
+.p-divider-horizontal {
+  transition: all 0.5s ease !important;
 }
 
 :root {
@@ -136,6 +141,13 @@ svg.lcs {
   --p-avatar-lg-height: 110px !important;
   --p-avatar-lg-width: 110px !important;
   --p-avatar-border-radius: 18px !important;
+
+  --p-popover-background: var(--p-grey-6) !important;
+  --p-popover-arrow-offset: 13rem !important;
+  --p-popover-content-padding: 15px 8px !important;
+  --p-popover-border-radius: 18px !important;
+
+  --p-checkbox-background: var(--p-bg-color-3) !important;
 
   --p-grey-1: #8E8E93;
   --p-grey-2: #AEAEB2;
