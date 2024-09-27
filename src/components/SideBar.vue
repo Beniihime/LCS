@@ -11,7 +11,7 @@
                 <InputIcon class="pi pi-search" />
                 <InputText class="search" v-model="searchQuery" placeholder="Поиск..."/>
             </IconField>
-            <div class="general">Управление</div>
+            <div class="general">Администрирование</div>
             <div class="menu">
                 <div v-for="item in filteredMenuItems">
                     <router-link 
@@ -88,7 +88,7 @@ import Lcs from '@/assets/logo/lcs.svg';
 import { useNotificationStore } from '@/stores/notifications.js';
 import { usePermissionStore } from '@/stores/permissions.js';
 
-import ThemeSwitcher from './ThemeSwitcher.vue';
+import ThemeSwitcher from './Utils/ThemeSwitcher.vue';
 
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
@@ -164,6 +164,11 @@ export default {
                     name: 'Роли',
                     path: '/rbac',
                     icon: 'pi pi-sitemap'
+                },
+                {
+                    name: 'Микросервисы',
+                    path: '/services',
+                    icon: 'pi pi-desktop'
                 }
             ]
         };
