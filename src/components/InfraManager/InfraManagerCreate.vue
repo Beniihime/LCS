@@ -1,0 +1,148 @@
+<template>
+    <div class="d-flex justify-content-center">
+        <Button label="Связать пользователей" class="button" @click="showCreateInfra = true"/>
+
+        <Dialog v-model:visible="showCreateInfra" modal header="Создать связь" :style="{ 'max-width': '50rem' }">
+            <div class="row mb-4">
+                <div class="col">
+                    <h5>Пользователь ЛКС</h5>
+                    <AutoComplete 
+                        v-model="selectedLKSUser"
+                        optionLabel="fullName"
+                        :suggestions="filteredLKSUsers"
+                        @complete="searchLKSUsers"
+                        field="fullName"
+                        placeholder="Выберите пользователя..."    
+                    />
+                </div>
+            </div>
+            <Divider class="my-4"/>
+            <div class="row my-4">
+                <div class="col">
+                    <h5>Пользователь InfraManager</h5>
+                    <AutoComplete 
+                        v-model="selectedInfraUser" 
+                        optionLabel="fullName" 
+                        :suggestions="filteredInfraUsers" 
+                        @complete="searchInfraUsers" 
+                        field="fullName" 
+                        placeholder="Выберите пользователя..."
+                        @item-select="onInfraUserSelect"
+                        @clear="clearInfraUserSelection"
+                    />
+                </div>
+            </div>
+            <div v-if="selectedInfraUserDetails" class="row mt-4">
+                <div class="col">
+                    <h6>Информация о пользователе:</h6>
+                    <p><strong>Email:</strong> {{ selectedInfraUserDetails.email }}</p>
+                    <p><strong>Должность:</strong> {{ selectedInfraUserDetails.positionName }}</p>
+                    <p><strong>Местоположение:</strong> {{ selectedInfraUserLocation.roomName }}</p>
+                </div>
+            </div>
+            <Divider class="my-4" />
+            <Button class="button" label="Создать" />
+        </Dialog>
+    </div>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import axiosInstance from '@/utils/axios.js';
+
+import Dialog from 'primevue/dialog';
+import Divider from 'primevue/divider';
+import Button from 'primevue/button';
+import AutoComplete from 'primevue/autocomplete';
+
+
+const showCreateInfra = ref(false);
+
+// Данные для пользователей ЛКС
+const selectedLKSUser = ref(null);
+const filteredLKSUsers = ref([]);
+
+// Данные для пользователей InfraManager
+const selectedInfraUser = ref(null);
+const filteredInfraUsers = ref([]);
+
+// Дополонительеные данные о пользователе InfraManager
+const selectedInfraUserDetails = ref(null);
+const selectedInfraUserLocation = ref(null);
+
+// Функция для поиска пользователей ЛКС
+const searchLKSUsers = async (event) => {
+    const query = event.query;
+
+    try {
+        const response = await axiosInstance.get('/api/users', {
+            params: {
+                page: 1,
+                pageSize: 30
+            }
+        });
+
+        filteredLKSUsers.value = response.data.users
+            .filter(user =>
+                `${user.firstName} ${user.middleName ?? ''} ${user.lastName}`.toLowerCase().includes(query.toLowerCase())
+            )
+            .map(user => ({
+                fullName: `${user.firstName} ${user.middleName ?? ''} ${user.lastName}`,
+                id: user.id
+            }));
+    } catch (error) {
+        console.error('Ошибка при загрузке пользователей ЛКС:', error);
+    }
+};
+
+// Функция для поиска пользователей InfraManager
+const searchInfraUsers = async (event) => {
+    const query = event.query;
+
+    try {
+        const response = await axiosInstance.get('/api/infra-manager/users', {
+            params: {
+                patternSearch: query
+            }
+        });
+        filteredInfraUsers.value = response.data.map(user => ({
+            fullName: user.fullName,
+            id: user.id,
+            details: user.details
+        }));
+    } catch (error) {
+        console.error('Ошибка при загрузке пользователей:', error);
+    }
+};
+
+// Функция, вызываемая при выборе пользователя InfraManager
+const onInfraUserSelect = async (event) => {
+    const user = event.value;
+    try {
+        // Запрос основной информации о пользователе
+        const userDetailsResponse = await axiosInstance.get(`/api/infra-manager/users/${user.id}`);
+        selectedInfraUserDetails.value = userDetailsResponse.data;
+
+        // Запрос информации о местоположении пользователя
+        const userLocationResponse = await axiosInstance.get(`/api/infra-manager/users/${user.id}/client/info`);
+        selectedInfraUserLocation.value = userLocationResponse.data;
+    } catch (error) {
+        console.error('Ошибка при загрузке информации о пользователе InfraManager:', error);
+    }
+}
+
+// Функция, вызываемая при очистке поля AutoComplete
+const clearInfraUserSelection = () => {
+    selectedInfraUserDetails.value = null;
+    selectedInfraUserLocation.value = null;
+};
+</script>
+
+<style scoped>
+.button {
+    width: 100%;
+    border-radius: 12px;
+    color: white;
+    font-size: 1.2rem;
+}
+</style>
