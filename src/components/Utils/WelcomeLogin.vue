@@ -9,7 +9,7 @@
 
 <script>
 export default {
-    name: 'WelcomeScreen',
+    name: 'WelcomeLogin',
     props: {
         isLoading: {
             type: Boolean,

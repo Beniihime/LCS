@@ -26,10 +26,26 @@
                 </div>
             </div>
 
-            <div class="row mb-4">
+            <div class="row mb-2">
                 <div class="col d-flex align-items-center">
                     <Checkbox v-model="shouldChangePassword" binary />
                     <label for="shouldChangePassword" class="ms-2">Изменить пароль?</label>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col d-flex align-items-center">
+                    <Checkbox v-model="shouldChangeEmail" binary />
+                    <label for="shouldChangeEmail" class="ms-2">Изменить E-mail?</label>
+                </div>
+            </div>
+
+            <div v-if="shouldChangeEmail" class="row mb-4">
+                <div class="col">
+                    <FloatLabel>
+                        <InputText v-model="newEmail" id="email" class="form-input" />
+                        <label for="email">Новый Email</label>
+                    </FloatLabel>
                 </div>
             </div>
 
@@ -89,8 +105,10 @@ const toast = useToast();
 const login = ref('');
 const newPassword = ref('');
 const oldPassword = ref('');
+const newEmail = ref('');
 const showEditDialog = ref(false);
 const shouldChangePassword = ref(false);
+const shouldChangeEmail = ref(false);
 
 const props = defineProps({
     firstName: String,
@@ -116,6 +134,18 @@ const updateProfile = async () => {
 
                 if (!passwordResponse.data) {
                     throw new Error("Ошибка при обновлении пароля");
+                }
+            }
+
+            if (shouldChangeEmail.value && newEmail.value) {
+                const emailResponse = await axiosInstance.get('/api/users/checking/occupy-email', {
+                    params: { email: newEmail.value }
+                });
+                
+                if (emailResponse.data) {
+                    toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Email уже занят', life: 3000 });
+                } else {
+                    await axiosInstance.patch('/api/users/me/email', newEmail.value);
                 }
             }
 
