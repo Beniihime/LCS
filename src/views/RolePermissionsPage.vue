@@ -52,7 +52,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useRoleStore } from '@/stores/roleStore';
 import axiosInstance from '@/utils/axios.js';
-import WelcomeScreen from '@/components/WelcomeScreen.vue';
+import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 
 import ToggleSwitch from 'primevue/toggleswitch';
 import Divider from 'primevue/divider';

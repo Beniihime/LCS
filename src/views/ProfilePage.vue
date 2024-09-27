@@ -70,11 +70,10 @@ import { ref, onMounted } from 'vue';
 import axiosInstance from '@/utils/axios.js';
 
 import Avatar from 'primevue/avatar';
-import Button from 'primevue/button';
 import Divider from 'primevue/divider';
 
-import WelcomeScreen from '@/components/WelcomeScreen.vue';
-import EditProfile from '@/components/EditProfile.vue';
+import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
+import EditProfile from '@/components/Utils/EditProfile.vue';
 
 const srcAvatar = ref(null);
 const loading = ref(true);

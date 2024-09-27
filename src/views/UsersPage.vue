@@ -169,7 +169,7 @@ import Button from 'primevue/button';
 import Chip from 'primevue/chip';
 
 import CreateUser from '@/components/Users/CreateUser.vue';
-import WelcomeScreen from '@/components/WelcomeScreen.vue';
+import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import UpdateUser from '@/components/Users/UpdateUser.vue';
 import { usePermissionStore } from '@/stores/permissions.js';
 

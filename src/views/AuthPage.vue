@@ -49,8 +49,8 @@ import Password from 'primevue/password';
 import { scheduleTokenRefresh } from '@/utils/TokenService.js';
 import axiosInstance from '@/utils/axios.js';
 
-import ThemeSwitcher from '@/components/ThemeSwitcher.vue';
-import WelcomeLogin from '@/components/WelcomeLogin.vue';
+import ThemeSwitcher from '@/components/Utils/ThemeSwitcher.vue';
+import WelcomeLogin from '@/components/Utils/WelcomeLogin.vue';
 
 const login = ref('');
 const password = ref('');

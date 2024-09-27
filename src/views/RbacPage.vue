@@ -5,7 +5,7 @@
             <h1 class="mb-4">Настройки ролей</h1>
             <div class="statistics">
                 <h2 class="statistics-title">Статистика ролей</h2>
-                <div class="stat-cards row row-cols-4 g-3">
+                <div class="row row-cols-4 g-3">
                     <div class="col">
                         <div class="stat-card">
                             <div class="row `align-items-center">
@@ -79,7 +79,12 @@
                     <div class="col" v-for="role in filteredRoles" :key="role.id">
                         <div class="card h-100">
                             <div class="card-body">
-                                <UpdateRole :id="role.id" :refreshRoles="fetchRoles" :roles="roles" v-if="role.id !== userRole.id && role.id !== 1 && hasPermission('Rbac', 'Update')" />
+                                <UpdateRole 
+                                    :id="role.id" 
+                                    :refreshRoles="fetchRoles" 
+                                    :roles="roles" 
+                                    v-if="role.id !== userRole.id && role.id !== 1 && hasPermission('Rbac', 'Update')" 
+                                />
                                 <h5 class="card-title">{{ role.title }}</h5>
                                 <p class="card-text">{{ role.description }}</p>
                                 <p class="card-text"><span class="muted">Приоритет: {{ role.priority }}</span></p>
@@ -124,7 +129,7 @@ import { useToast } from 'primevue/usetoast';
 
 import qs from 'qs';
 import axiosInstance from '@/utils/axios.js';
-import WelcomeScreen from '@/components/WelcomeScreen.vue';
+import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import UpdateRole from '@/components/Rbac/UpdateRole.vue';
 import CreateRole from '@/components/Rbac/CreateRole.vue';
 import UserCount from '@/components/Rbac/UserCount.vue';
