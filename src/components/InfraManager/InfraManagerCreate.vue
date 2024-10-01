@@ -2,7 +2,7 @@
     <div class="d-flex justify-content-center">
         <Button label="Связать пользователей" class="button" @click="showCreateInfra = true"/>
 
-        <Dialog v-model:visible="showCreateInfra" modal header="Создать связь" :style="{ 'max-width': '50rem' }">
+        <Dialog v-model:visible="showCreateInfra" modal header="Связать пользователей" :style="{ 'max-width': '50rem' }">
             <div class="row mb-4">
                 <div class="col">
                     <h5>Пользователь ЛКС</h5>
@@ -40,8 +40,7 @@
                     <p><strong>Местоположение:</strong> {{ selectedInfraUserLocation.roomName }}</p>
                 </div>
             </div>
-            <Divider class="my-4" />
-            <Button class="button" label="Создать" />
+            <Button class="button" label="Создать" @click="createLink" :disabled="!selectedLKSUser || !selectedInfraUser" />
         </Dialog>
     </div>
 </template>
@@ -55,7 +54,6 @@ import Divider from 'primevue/divider';
 import Button from 'primevue/button';
 import AutoComplete from 'primevue/autocomplete';
 
-
 const showCreateInfra = ref(false);
 
 // Данные для пользователей ЛКС
@@ -68,7 +66,7 @@ const filteredInfraUsers = ref([]);
 
 // Дополонительеные данные о пользователе InfraManager
 const selectedInfraUserDetails = ref(null);
-const selectedInfraUserLocation = ref(null);
+const selectedInfraUserLocation = ref({});
 
 // Функция для поиска пользователей ЛКС
 const searchLKSUsers = async (event) => {
@@ -136,6 +134,30 @@ const clearInfraUserSelection = () => {
     selectedInfraUserDetails.value = null;
     selectedInfraUserLocation.value = null;
 };
+
+// Функция для создания связи между пользователями
+const createLink = async () => {
+    if (selectedLKSUser.value && selectedInfraUser.value) {
+        try {
+            await axiosInstance.post('/api/infra-manager/db/users', {
+                personalAccountUserId: selectedLKSUser.value.id,
+                infraManagerUserId: selectedInfraUser.value.id
+            });
+
+            window.dispatchEvent(new CustomEvent('toast', {
+                detail: { 
+                    severity: 'success', 
+                    summary: 'InfraManager', 
+                    detail: `Вы связали пользоватлей ${selectedLKSUser.value.fullName} и ${selectedInfraUser.value.fullName}` ,
+                }
+            }));
+
+            showCreateInfra.value = false;
+        } catch (error) {
+            console.error('Ошибка при создании связи: ', error);
+        }
+    }
+}
 </script>
 
 <style scoped>
