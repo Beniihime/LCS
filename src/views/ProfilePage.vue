@@ -61,6 +61,42 @@
                     </div>
                 </div>
             </div>
+
+            <div class="infra-profile-card mt-3">
+                <h2>Профиль InfraManager</h2>
+                <Divider class="my-4"/>
+                <div class="infra-info">
+                    <div class="row mb-3">
+                        <div class="col-auto align-items-center d-flex">
+                            <i class="pi pi-user"></i>
+                        </div>
+                        <div class="col">
+                            <span>{{ infraFullName }}</span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-auto align-items-center d-flex">
+                            <i class="pi pi-envelope"></i>
+                        </div>
+                        <div class="col">
+                            <span>{{ infraEmail }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Заявки InfraManager -->
+            <div class="service-card mt-3">
+                <h2>Последние заявки</h2>
+                <Divider />
+                <div class="microservice-card">
+                    <div v-for="call in lastCalls" :key="call.id" class="call-card">
+                        <h4>{{ call.title }}</h4>
+                        <p>{{ call.description }}</p>
+                        <p><strong>Статус:</strong> {{ call.status }}</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 </template>
@@ -87,6 +123,14 @@ const fullName = ref('');
 const email = ref('');
 const userRole = ref('');
 const login = ref('');
+
+const infraManagerUser = ref(null);
+const lastCalls = ref([]);
+
+const infraFirstName = ref('');
+const infraLastName = ref('');
+const infraFullName = ref('');
+const infraEmail = ref('');
 
 const triggerFileUpload = () => {
   fileInput.value.click();
@@ -116,6 +160,22 @@ const fetchMeInfo = async () => {
 
         fullName.value = `${firstName.value} ${lastName.value}`.trim();
 
+        // Проверка связки пользователей ЛКС и InfraManager
+        const statusResponse = await axiosInstance.get(`/api/infra-manager/db/users/${response.data.id}/status`);
+        if (statusResponse.data) {
+            infraManagerUser.value = statusResponse.data;
+
+            // Если есть связка, загружаем информацию о пользователе InfraManager
+            const infraManagerInfo = await axiosInstance.get('/api/infra-manager/users/me');
+            infraFirstName.value = infraManagerInfo.data.name;
+            infraLastName.value = infraManagerInfo.data.family;
+            infraFullName.value = infraManagerInfo.data.fullName;
+            infraEmail.value = infraManagerInfo.data.email;
+
+            // Загружаем последние 10 заявок
+            const callsResponse = await axiosInstance.get('/api/infra-manager/users/me/calls');
+            lastCalls.value = callsResponse.data;
+        }
     } catch (error) {
         console.error('Ошибка при получении информации о пользователе: ', error);
     }
@@ -123,8 +183,8 @@ const fetchMeInfo = async () => {
     loading.value = false;
 }
 
-onMounted(async () => {
-    await fetchMeInfo();
+onMounted(() => {
+    fetchMeInfo();
 })
 
 </script>
@@ -195,6 +255,27 @@ main {
     transition: all 0.5s ease;
     width: 100%;
     position: relative;
+}
+.infra-profile-card {
+    border-radius: 24px;
+    border: 2px solid var(--p-grey-4);
+    padding: 30px;
+    transition: all 0.5s ease;
+}
+.service-card .call-card {
+    padding: 15px;
+    margin-bottom: 10px;
+    border: 1px solid var(--p-grey-3);
+    border-radius: 10px;
+    background-color: var(--p-grey-7);
+}
+.service-card {
+    background-color: var(--p-grey-6);
+    border-radius: 24px;
+    border: 2px solid var(--p-grey-4);
+    transition: all 0.5s ease;
+    width: 100%;
+    padding: 30px;
 }
 .profile-body {
     padding: 70px 30px 30px;

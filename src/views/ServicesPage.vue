@@ -38,7 +38,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 
 import Button from 'primevue/button';
 
@@ -46,7 +46,13 @@ import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import InfraManagerCreate from '@/components/InfraManager/InfraManagerCreate.vue';
 import InfraManagerSearchUsers from '@/components/InfraManager/InfraManagerSearchUsers.vue'
 
-const loading = ref(false);
+const loading = ref(true);
+
+onMounted(() => {
+    setTimeout(() => {
+        loading.value = false;
+    }, 250);
+});
 
 </script>
 
@@ -84,20 +90,17 @@ main {
     transition: all 0.5s ease;
     background-color: var(--p-bg-color-2);
     color: var(--p-text-color);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     height: 100%;
+    border: 2px solid var(--p-grey-4);
 }
 .card-body {
     padding: 28px;
     display: flex;
     flex-direction: column;
     flex-grow: 1;
-}
-.card:hover {
-    transform: scale(1.02);
 }
 .button {
     width: 100%;
