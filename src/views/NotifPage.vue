@@ -13,7 +13,7 @@ onMounted(() => {
 <template>
     <main>
         <div class="content-wrap">
-            <h2>Ваши уведомления</h2>
+            <h2>Уведомления</h2>
             <div class="notifications-list">
                 <div v-for="notification in notificationStore.notifications" 
                      :key="notification.id" 

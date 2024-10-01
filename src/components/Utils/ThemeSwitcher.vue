@@ -30,7 +30,7 @@ const savedTheme = localStorage.getItem('theme') || 'light';
 const selectedTheme = ref(savedTheme);
 
 const route = useRoute();
-const isAuthPage = computed(() => route.path === '/auth');
+const isAuthPage = computed(() => route.path === '/auth' || route.path === '/noAccess');
 
 const iconClass = computed(() => {
     return selectedTheme.value === 'dark' ? 'pi-moon' : 'pi-sun';

@@ -31,7 +31,7 @@
                 
             </div>
         </div>
-        <WelcomeLogin v-if="isLoading" :isLoading="isLoading"/>
+        <WelcomeLogin v-if="isLoading" :isLoading="isLoading" @videoEnded="handleVideoEnded" />
     </main>
 </template>
 
@@ -79,16 +79,17 @@ const auth = async () => {
         localStorage.setItem('userId', response.data.userId);
 
         scheduleTokenRefresh(response.data.refreshTokenExpired);
-
-        setTimeout(() => {
-            isLoading.value = false; // Отключаем экран
-            router.push({ name: 'HomePage', query: { message: 'success', summary: 'Успешно', detail: 'Вы вошли в личный кабинет' } });
-        }, 1500); // Удерживаем экран на 1.5 секунды перед переходом
+        
+        // router.push({ name: 'HomePage', query: { message: 'success', summary: 'Успешно', detail: 'Вы вошли в личный кабинет' } });
 
     } catch (error) {
         errorMessage.value = 'Login failed: ' + (error.response ? error.response.data.message : error.message);
         toast.add({ severity: 'error', summary: 'Ошибка', detail: errorMessage.value, life: 3000 });
     }
+};
+
+const handleVideoEnded = () => {
+    isLoading.value = false; // Сброс флага загрузки при окончании видео
 };
 </script>
 
