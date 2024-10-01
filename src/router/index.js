@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { isAuthenticated } from "@/utils/auth";
+import { usePermissionStore } from '@/stores/permissions.js';
 
 const routes = [
     { 
@@ -12,6 +13,7 @@ const routes = [
                 path: "/users",
                 component: () => import('@/views/UsersPage.vue'),
                 name: 'Users',
+                meta: { permission: { type: 'User', action: 'Read' } }
             },
             {
                 path: "/notif",
@@ -21,6 +23,7 @@ const routes = [
                 path: "/rbac",
                 component: () => import('@/views/RbacPage.vue'),
                 name: 'Rbac',
+                meta: { permission: { type: 'Rbac', action: 'Read' } }
             },
             {
                 path: "/me-permissions",
@@ -31,6 +34,7 @@ const routes = [
                 path: "/role-permissions",
                 component: () => import('@/views/RolePermissionsPage.vue'),
                 name: 'RolePermissions',
+                meta: { permission: { type: 'Rbac', action: 'Create' } }
             },
             {
                 path: "/profile",
@@ -41,6 +45,7 @@ const routes = [
                 path: "/services",
                 component: () => import('@/views/ServicesPage.vue'),
                 name: 'Services',
+                meta: { permission: { type: 'InfraManager', action: 'Read' } }
             },
         ]
     }, 
@@ -50,6 +55,11 @@ const routes = [
         name: 'Auth',
         meta: { requiresAuth: false }
     },
+    {
+        path: '/noAccess',
+        component: () => import('@/components/Utils/PermissionDenied.vue'),
+        name: 'NoAccess'
+    }
 ];
 
 const router = createRouter({
@@ -57,15 +67,38 @@ const router = createRouter({
     routes
 });
 
-router.beforeEach((to, from, next) => {
-    if (to.matched.some(record => record.meta.requiresAuth)) {
-      if (!isAuthenticated()) {
-        next({ path: '/auth', query: { redirect: to.fullPath } });
-      } else {
-        next();
-      }
+router.beforeEach(async (to, from, next) => {
+    const permissionStore = usePermissionStore();
+
+    try {
+        await permissionStore.fetchPermissions();  // Ждём загрузки полномочий
+    } catch(error) {
+        console.error('Ошибка при загрузке полномочий:', error);
+        return next('/auth');  // Если ошибка при загрузке, отправляем на страницу авторизации
+    }
+
+    // Если маршрут требует полномочий
+    if (to.meta.permission) {
+        const { type, action } = to.meta.permission;
+
+        // Проверяем, есть ли у пользователя соответсвующее полномочие
+        if (permissionStore.hasPermission(type, action)) {
+            next();
+        } else {
+            next('/noAccess');
+        }
     } else {
-      next();
+        next();
+    }
+
+    if (to.matched.some(record => record.meta.requiresAuth)) {
+        if (!isAuthenticated()) {
+          next({ path: '/auth', query: { redirect: to.fullPath } });
+        } else {
+          next();
+        }
+    } else {
+        next();
     }
 });
 
