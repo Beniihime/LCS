@@ -23,34 +23,44 @@ export function scheduleTokenRefresh(refreshTokenExpired) {
   }
 }
 
+let isRefreshing = false;
+
 async function refreshAccessToken() {
-  try {
-      console.log('Attempting to refresh access token...');
+    if (isRefreshing) {
+        return; // Уже в процессе обновления
+    }
+    isRefreshing = true;
 
-      const userId = localStorage.getItem('userId');
-      const refreshToken = localStorage.getItem('refreshToken');
+    try {
+        console.log('Attempting to refresh access token...');
 
-      if (!userId || !refreshToken) {
-          throw new Error('Missing user credentials');
-      }
+        const userId = localStorage.getItem('userId');
+        const refreshToken = localStorage.getItem('refreshToken');
 
-      const response = await axiosInstance.post('/api/auth/refresh-token', null, {
-          params: {
-              value: refreshToken,
-              userId: userId
-          }
-      });
+        if (!userId || !refreshToken) {
+            throw new Error('Missing user credentials');
+        }
 
-      console.log('Token refreshed successfully');
+        const response = await axiosInstance.post('/api/auth/refresh-token', null, {
+            params: {
+                value: refreshToken,
+                userId: userId
+            },
+            timeout: 5000
+        });
 
-      // Сохраняем новые токены
-      localStorage.setItem('accessToken', response.data.accessToken);
-      localStorage.setItem('refreshToken', response.data.refreshTokenValue);
+        console.log('Token refreshed successfully');
 
-      // Перезапускаем таймер
-      scheduleTokenRefresh(response.data.refreshTokenExpired);
+        // Сохраняем новые токены
+        localStorage.setItem('accessToken', response.data.accessToken);
+        localStorage.setItem('refreshToken', response.data.refreshTokenValue);
 
-  } catch (error) {
-      console.error('Failed to refresh token', error);
-  }
+        // Перезапускаем таймер
+        scheduleTokenRefresh(response.data.refreshTokenExpired);
+
+    } catch (error) {
+        console.error('Failed to refresh token', error);
+    } finally {
+        isRefreshing = false;
+    }
 }
