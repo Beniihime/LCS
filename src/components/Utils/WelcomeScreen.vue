@@ -1,21 +1,24 @@
 <template>
     <transition name="fade" mode="out-in">
         <div v-if="visible" class="loading-overlay">
-            <div class="loading-spinner"></div>
+            <!-- <div class="loading-spinner"></div> -->
+            <trinity-rings-spinner :animation-duration="1500" :size="66" color="#0d7cb8"/>
         </div>
     </transition>
 </template>
 
-<script>
-export default {
-    name: 'WelcomeScreen',
-    props: {
-        visible: {
-            type: Boolean,
-            required: true
-        },
-    },
-};
+<script setup>
+import { TrinityRingsSpinner  } from 'epic-spinners';
+import { toRefs } from 'vue';
+
+const props = defineProps({
+  visible: {
+    type: Boolean,
+    required: true
+  }
+});
+
+const { visible } = toRefs(props);
 </script>
 
 <style scoped>

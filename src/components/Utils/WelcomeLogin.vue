@@ -1,21 +1,47 @@
 <template>
     <transition name="fade" mode="out-in">
-      <div v-if="isLoading" class="login-loading-screen">
-        <div class="gradient-circle"></div>
-        <h1 class="loading-message">Добро пожаловать в ЛКС!</h1>
+      <div v-if="isLoading" :class="{'fade-out': isTransitioning}" class="login-loading-screen">
+        <video 
+            autoplay 
+            muted 
+            ref="videoRef"
+            playsinline 
+            @ended="handleVideoEnded"
+            class="background-video"
+        >
+            <source src="../../assets/backgrounds/video.mp4" type="video/mp4" />
+            Ваш браузер не поддерживает видео.
+        </video>
       </div>
     </transition>
   </template>
 
-<script>
-export default {
-    name: 'WelcomeLogin',
-    props: {
-        isLoading: {
-            type: Boolean,
-            required: true
-        },
-    },
+<script setup>
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+
+const props = defineProps({
+  isLoading: {
+    type: Boolean,
+    required: true
+  }
+});
+
+const isTransitioning = ref(false);
+const videoRef = ref(null);
+const router = useRouter();
+
+const handleVideoEnded = () => {
+  // Плавное исчезновение видео после его завершения
+  isTransitioning.value = true;
+  
+  setTimeout(() => {
+    // Переход на HomePage, когда видео завершено
+    router.push({
+      name: 'HomePage', 
+      query: { message: 'success', summary: 'Успешно', detail: 'Вы вошли в личный кабинет' }
+    });
+  }, 120); // Задержка на 1 секунду для плавного исчезновения видео
 };
 </script>
   
@@ -29,42 +55,33 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: radial-gradient(circle at center, #3498db, #9b59b6, #34495e);
+    /* background: black; */
     z-index: 9999;
-    transition: opacity 1.5s ease;
+    transition: opacity 1s ease;
     opacity: 1;
 }
-
-.gradient-circle {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    background: radial-gradient(circle at center, rgba(52, 152, 219, 0.9), rgba(155, 89, 182, 0.9), rgba(52, 73, 94, 0.9));
-    animation: pulse 2s infinite;
+.background-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
 }
-
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-        opacity: 0.6;
-    }
-    50% {
-        transform: scale(1.1);
-        opacity: 1;
-    }
-    100% {
-        transform: scale(1);
-        opacity: 0.6;
-    }
-}
-
 .fade-enter-active, .fade-leave-active {
-    transition: opacity 1.5s ease; /* Плавность при входе и выходе */
+  transition: opacity 1.5s ease;
 }
 .fade-enter, .fade-leave-to {
     opacity: 0;
 }
-
+.fade-enter-to {
+    opacity: 0;
+}
+.fade-out {
+  opacity: 0;
+  transition: opacity 1s ease-in-out; /* Плавное исчезновение за 1 секунду */
+}
 .loading-message {
     position: absolute;
     font-size: 24px;
