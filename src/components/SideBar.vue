@@ -19,10 +19,7 @@
                         :to="item.path" 
                         class="menu-item" 
                         active-class="active-link"
-                        v-if="
-                            item.path === '/rbac' ? hasPermission('Rbac', 'Read') : true && 
-                            item.path === '/users' ? hasPermission('User', 'Read') : true
-                        "
+                        v-if="checkPermission(item.path)"
                     >
                         <i :class="item.icon"></i>
                         <div class="menucrumb">
@@ -60,7 +57,7 @@
             </router-link>
             <div class="row mt-3">
                 <div class="col">
-                    <button @click="confirm1()" class="logout-button">
+                    <button @click="confirmLogout()" class="logout-button">
                         <div class="d-flex align-items-center justify-content-start">
                             <LogoutSvg class="me-3"/>
                             <p class="m-0">Выйти из аккаунта</p>
@@ -73,6 +70,7 @@
 </template>
 
 <script setup>
+import { ref, computed, onBeforeMount } from 'vue';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import LogoutSvg from '@/assets/logout.svg';
@@ -101,9 +99,61 @@ const router = useRouter();
 const notificationStore = useNotificationStore();
 const permissionStore = usePermissionStore();
 
+const firstName = ref('');
+const lastName = ref('');
+const email = ref('');
+const initials = ref('');
+const fullName = ref('');
+const searchQuery = ref('');
+const permissionsLoaded = ref(false);
+const menuItems = [
+    {
+        name: 'Пользователи',
+        path: '/users',
+        icon: 'pi pi-user'
+    },
+    {
+        name: 'Уведомления',
+        path: '/notif',
+        icon: 'pi pi-bell'
+    },
+    {
+        name: 'Роли',
+        path: '/rbac',
+        icon: 'pi pi-sitemap'
+    },
+    {
+        name: 'Микросервисы',
+        path: '/services',
+        icon: 'pi pi-desktop'
+    }
+];
+
+const filteredMenuItems = computed(() => {
+    return menuItems.filter(item =>
+        item.name.toLowerCase().startsWith(searchQuery.value.toLowerCase())
+    );
+});
+
+const getInitials = (firstName, lastName) => {
+    const initials = `${firstName[0] || ''}${lastName[0] || ''}`.toUpperCase();
+    return initials;
+};
+
 const hasPermission = (type, action) => permissionStore.hasPermission(type, action);
 
-const confirm1 = () => {
+const checkPermission = (path) => {
+    if (path === '/rbac') {
+        return hasPermission('Rbac', 'Read');
+    } else if (path === '/users') {
+        return hasPermission('User', 'Read');
+    } else if (path === '/services') {
+        return hasPermission('InfraManager', 'Read');
+    }
+    return true; // Для остальных путей
+};
+
+const confirmLogout = () => {
     confirm.require({
         message: 'Вы действительно хотите выйти?',
         header: 'Выход из аккаунта',
@@ -126,80 +176,30 @@ const confirm1 = () => {
             toast.add({ severity: 'info', summary: 'Отклонено', detail: 'Вы отклонили выход', life: 3000 })
         }
     });
-}
+};
 
 const logout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userId');
     router.push('/auth');
-}
+};
 
-</script>
+onBeforeMount(async () => {
+    try {
+        const response = await axiosInstance.get('/api/users/me/info');
+        firstName.value = response.data.firstName;
+        lastName.value = response.data.lastName;
+        email.value = response.data.email;
 
-<script>
-
-export default {
-    name: "SideBar",
-    data: function () {
-        return {
-            initials: '',
-            fullName: '',
-            firstName: '',
-            lastName: '',
-            email: '',
-            searchQuery: '',
-            menuItems: [
-                {
-                    name: 'Пользователи', 
-                    path: '/users',
-                    icon: 'pi pi-user'
-                },
-                {
-                    name: 'Уведомления',
-                    path: '/notif',
-                    icon: 'pi pi-bell'
-                },
-                {
-                    name: 'Роли',
-                    path: '/rbac',
-                    icon: 'pi pi-sitemap'
-                },
-                {
-                    name: 'Микросервисы',
-                    path: '/services',
-                    icon: 'pi pi-desktop'
-                }
-            ]
-        };
-    },
-    computed: {
-        filteredMenuItems() {
-            return this.menuItems.filter(item =>
-                item.name.toLowerCase().includes(this.searchQuery.toLowerCase())
-            );
-        }
-    },
-    async mounted() {
-        try {
-            const response = await axiosInstance.get('/api/users/me/info');
-            this.firstName = response.data.firstName;
-            this.lastName = response.data.lastName;
-            this.email = response.data.email;
-
-            this.fullName = `${this.firstName} ${this.lastName}`.trim();
-            this.initials = this.getInitials(this.firstName, this.lastName);
-        } catch (error) {
-            console.error('Ошибка при получении информации о пользователе: ', error);
-        }
-    },
-    methods: {
-        getInitials(firstName, lastName) {
-            const initials = `${ firstName[0] + lastName[0] || '' }`.toUpperCase();
-            return initials;
-        },
-    },
-}
+        fullName.value = `${firstName.value} ${lastName.value}`.trim();
+        initials.value = getInitials(firstName.value, lastName.value);
+    } catch (error) {
+        console.error('Ошибка при получении информации о пользователе: ', error);
+    }
+    await permissionStore.fetchPermissions();
+    permissionsLoaded.value = true;
+});
 </script>
 
 <style scoped>
@@ -248,6 +248,7 @@ export default {
     color: white;
     font-weight: 700;
     font-family: 'SF Pro Rounded';
+    transition: all 0.5s ease;
 }
 .split {
     border: solid 2px var(--p-separator-opaque);
@@ -281,6 +282,7 @@ export default {
     margin-block: 20px;
     font-size: 22px;
     color: var(--p-text-color);
+    transition: all 0.5s ease;
 }
 .menucrumb {
     font-family: 'SF Pro Rounded';
