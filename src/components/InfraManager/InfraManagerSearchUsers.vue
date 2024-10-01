@@ -2,7 +2,7 @@
     <div class="d-flex justify-content-center">
         <Button label="Поиск пользователей" class="button" @click="showSearchInfraUser = true"/>
 
-        <Dialog v-model:visible="showSearchInfraUser" modal header="Найти пользователя" :style="{ 'max-width': '110rem' }">
+        <Dialog v-model:visible="showSearchInfraUser" modal header="Найти пользователя InfraManager" :style="{ 'max-width': '110rem', 'min-width': '35rem' }">
             <div class="row mb-4">
                 <div class="col">
                     <h5>Пользователь InfraManager</h5>
@@ -29,7 +29,7 @@
                 </div>
             </div>
             <Divider v-if="selectedInfraUserDetails" class="my-4"/>
-            <div class="row my-4">
+            <div v-if="selectedInfraUserDetails" class="row my-4">
                 <div class="col">
                     <h4 class="mb-3"><strong>Доступные сервисы</strong></h4>
                     <Tree 
