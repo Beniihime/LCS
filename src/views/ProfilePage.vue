@@ -26,12 +26,8 @@
                             <p class="profile-email">{{ email }}</p>
                         </div>
                     </div>
-                    <div class="bio-section">
-                        <h3>О себе</h3>
-                        <p>{{ bio }}</p>
-                    </div>
 
-                    <Divider class="my-4" />
+                    <Divider class="my-3" />
                     
                     <div class="profile-info">
                         <div class="row mb-3">
@@ -62,9 +58,10 @@
                 </div>
             </div>
 
-            <div class="infra-profile-card mt-3">
+            <div class="infra-profile-card mt-3" v-if="infraManagerUser">
                 <h2>Профиль InfraManager</h2>
-                <Divider class="my-4"/>
+                <Divider class="my-3"/>
+
                 <div class="infra-info">
                     <div class="row mb-3">
                         <div class="col-auto align-items-center d-flex">
@@ -82,21 +79,25 @@
                             <span>{{ infraEmail }}</span>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Заявки InfraManager -->
-            <div class="service-card mt-3">
-                <h2>Последние заявки</h2>
-                <Divider />
-                <div class="microservice-card">
-                    <div v-for="call in lastCalls" :key="call.id" class="call-card">
-                        <h4>{{ call.title }}</h4>
-                        <p>{{ call.description }}</p>
-                        <p><strong>Статус:</strong> {{ call.status }}</p>
+                    <div class="row">
+                        <div class="col-auto align-items-center d-flex">
+                            <i class="pi pi-sitemap"></i>
+                        </div>
+                        <div class="col">
+                            <span>{{ infraPosition }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Сообщение, если связки с InfraManager нет -->
+            <div class="infra-profile-card mt-3" v-else>
+                <h2>Профиль InfraManager отсутствует</h2>
+                <Divider class="my-4"/>
+                <p>Связь с аккаунтом InfraManager не установлена.</p>
+            </div>
+
+            <InfraManagerCalls v-if="infraManagerUser"/>
         </div>
     </main>
 </template>
@@ -110,6 +111,7 @@ import Divider from 'primevue/divider';
 
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import EditProfile from '@/components/Utils/EditProfile.vue';
+import InfraManagerCalls from '../components/InfraManager/InfraManagerCalls.vue';
 
 const srcAvatar = ref(null);
 const loading = ref(true);
@@ -127,10 +129,9 @@ const login = ref('');
 const infraManagerUser = ref(null);
 const lastCalls = ref([]);
 
-const infraFirstName = ref('');
-const infraLastName = ref('');
 const infraFullName = ref('');
 const infraEmail = ref('');
+const infraPosition = ref('');
 
 const triggerFileUpload = () => {
   fileInput.value.click();
@@ -167,10 +168,9 @@ const fetchMeInfo = async () => {
 
             // Если есть связка, загружаем информацию о пользователе InfraManager
             const infraManagerInfo = await axiosInstance.get('/api/infra-manager/users/me');
-            infraFirstName.value = infraManagerInfo.data.name;
-            infraLastName.value = infraManagerInfo.data.family;
             infraFullName.value = infraManagerInfo.data.fullName;
             infraEmail.value = infraManagerInfo.data.email;
+            infraPosition.value = infraManagerInfo.data.positionName;
 
             // Загружаем последние 10 заявок
             const callsResponse = await axiosInstance.get('/api/infra-manager/users/me/calls');
@@ -263,11 +263,13 @@ main {
     transition: all 0.5s ease;
 }
 .service-card .call-card {
-    padding: 15px;
-    margin-bottom: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
     border: 1px solid var(--p-grey-3);
     border-radius: 10px;
-    background-color: var(--p-grey-7);
+    background-color: var(--p-grey-5);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.5s ease;
 }
 .service-card {
     background-color: var(--p-grey-6);
