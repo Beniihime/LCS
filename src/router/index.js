@@ -69,16 +69,15 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
     const permissionStore = usePermissionStore();
-
-    try {
-        await permissionStore.fetchPermissions();  // Ждём загрузки полномочий
-    } catch(error) {
-        console.error('Ошибка при загрузке полномочий:', error);
-        return next('/auth');  // Если ошибка при загрузке, отправляем на страницу авторизации
-    }
-
+    
     // Если маршрут требует полномочий
     if (to.meta.permission) {
+        try {
+            await permissionStore.fetchPermissions();  // Ждём загрузки полномочий
+        } catch(error) {
+            console.error('Ошибка при загрузке полномочий:', error);
+            return next('/auth');  // Если ошибка при загрузке, отправляем на страницу авторизации
+        }
         const { type, action } = to.meta.permission;
 
         // Проверяем, есть ли у пользователя соответсвующее полномочие
