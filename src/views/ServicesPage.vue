@@ -21,7 +21,7 @@
                                         <InfraManagerCreate />
                                     </div>
                                     <div class="col">
-                                        <Button label="Удалить связку" class="button"/>
+                                        <InfraManagerDelete />
                                     </div>
                                     <div class="col">
                                         <InfraManagerSearchUsers />
@@ -40,11 +40,10 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 
-import Button from 'primevue/button';
-
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import InfraManagerCreate from '@/components/InfraManager/InfraManagerCreate.vue';
-import InfraManagerSearchUsers from '@/components/InfraManager/InfraManagerSearchUsers.vue'
+import InfraManagerSearchUsers from '@/components/InfraManager/InfraManagerSearchUsers.vue';
+import InfraManagerDelete from '@/components/InfraManager/InfraManagerDelete.vue';
 
 const loading = ref(true);
 
@@ -101,11 +100,5 @@ main {
     display: flex;
     flex-direction: column;
     flex-grow: 1;
-}
-.button {
-    width: 100%;
-    border-radius: 12px;
-    color: white;
-    font-size: 1.2rem;
 }
 </style>
