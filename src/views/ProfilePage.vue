@@ -5,7 +5,7 @@
             <div class="profile-card">
                 <div class="profile-header">
                     <EditProfile :firstName="firstName" :lastName="lastName" />
-                    <img :src="headerSrc" alt="Profile Header" class="header-image"/>
+                    <img src="../assets/backgrounds/profBack.png" alt="Profile Header" class="header-image"/>
                 </div>
                 <div class="avatar-wrapper">
                     <Avatar :image="srcAvatar" size="large" shape="circle" style="transition: all 0.5s ease;"/>
@@ -113,7 +113,6 @@ import EditProfile from '@/components/Utils/EditProfile.vue';
 
 const srcAvatar = ref(null);
 const loading = ref(true);
-const headerSrc = ref('/src/assets/backgrounds/image.png');
 const bio = ref('');
 const fileInput = ref(null);
 
