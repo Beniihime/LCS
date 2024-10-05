@@ -11,12 +11,13 @@
                         optionLabel="fullName"
                         :suggestions="filteredLKSUsers"
                         @complete="searchLKSUsers"
+                        @item-select="checkLinkStatus"
                         field="fullName"
                         placeholder="Выберите пользователя..."    
                     />
                 </div>
             </div>
-            <Button class="button" label="Удалить" @click="deleteLink" :disabled="!selectedLKSUser" />
+            <Button class="button" label="Удалить" @click="deleteLink" :disabled="!isLinked" />
         </Dialog>
     </div>
 </template>
@@ -26,15 +27,42 @@ import { ref } from 'vue';
 import axiosInstance from '@/utils/axios.js';
 
 import Dialog from 'primevue/dialog';
-import Divider from 'primevue/divider';
 import Button from 'primevue/button';
 import AutoComplete from 'primevue/autocomplete';
 
 const showDelete = ref(false);
+const isLinked = ref(false);
 
 // Данные для пользователей ЛКС
 const selectedLKSUser = ref(null);
 const filteredLKSUsers = ref([]);
+
+const checkLinkStatus = async () => {
+    try {
+        const response = await axiosInstance.get(`/api/infra-manager/db/users/${selectedLKSUser.value.id}/status`);
+
+        if (response.data.personalAccountUserId && response.data.infraManagerUserId) {
+            isLinkExists.value = true;
+            window.dispatchEvent(new CustomEvent('toast', {
+                detail: { 
+                    severity: 'info', 
+                    summary: 'InfraManager', 
+                    detail: `Связка для пользователя ${selectedLKSUser.value.fullName} существует`
+                }
+            }));
+        } else {
+            window.dispatchEvent(new CustomEvent('toast', {
+                detail: {
+                    severity: 'warn',
+                    summary: 'InfraManager',
+                    detail: `Связка для пользователя ${selectedLKSUser.value.fullName} не найдена`
+                }
+            }));
+        }
+    } catch (error) {
+        console.error('Ошибка при проверки статуса связки: ', error);
+    }
+}
 
 const searchLKSUsers = async (event) => {
     const query = event.query;
