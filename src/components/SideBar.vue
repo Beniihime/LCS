@@ -105,7 +105,6 @@ const email = ref('');
 const initials = ref('');
 const fullName = ref('');
 const searchQuery = ref('');
-const permissionsLoaded = ref(false);
 const menuItems = [
     {
         name: 'Пользователи',
@@ -178,10 +177,14 @@ const confirmLogout = () => {
     });
 };
 
-const logout = () => {
+const logout = async () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userId');
+    await permissionStore.clearPermissions();
+    await permissionStore.$reset();
+    // await permissionStore.state.isLoaded = false;
+    
     router.push('/auth');
 };
 
@@ -197,8 +200,7 @@ onBeforeMount(async () => {
     } catch (error) {
         console.error('Ошибка при получении информации о пользователе: ', error);
     }
-    await permissionStore.fetchPermissions();
-    permissionsLoaded.value = true;
+    
 });
 </script>
 
