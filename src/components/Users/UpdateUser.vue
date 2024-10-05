@@ -92,12 +92,16 @@ const props = defineProps({
 const visible = ref(false);
 const selectedRoles = ref([]);
 const roles = ref([]);
+const userPriority = ref(null);
 
 const firstName = ref('');
 const lastName = ref('');
 const middleName = ref('');
 const login = ref('');
 const email = ref('');
+
+const originalLogin = ref('');
+const originalEmail = ref('');
 
 
 const fetchUserData = async () => {
@@ -114,31 +118,53 @@ const fetchUserData = async () => {
         email.value = userData.email;
         
         selectedRoles.value = userData.roles.map(role => role.id);
+        originalLogin.value = userData.login;
+        originalEmail.value = userData.email;
+
+        userPriority.value = userData.roles[0]?.priority;
     } catch (error) {
         console.error('Ошибка при получении данных: ', error);
     }
 };
 
-const checkLoginAndEmail = async () => {
-    const isLoginOccupied = await axiosInstance.get('/api/users/checking/occupy-login', {
-        params: { login: login.value }
-    });
-    const isEmailOccupied = await axiosInstance.get('/api/users/checking/occupy-email', {
-        params: { email: email.value }
-    });
+const updateRolesList = async () => {
+    try {
+        const response = await axiosInstance.get('/api/rbac/roles');
+        const allRoles = response.data;
 
-    if (isLoginOccupied.data === true) {
-        toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Логин уже занят', life: 3000 });
-        return false;
+        // Фильтруем роли по приоритету
+        roles.value = allRoles.filter(role => role.priority > userPriority.value);
+    } catch (error) {
+        console.error('Ошибка при получении ролей: ', error);
     }
-
-    if (isEmailOccupied.data === true) {
-        toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Email уже занят', life: 3000 });
-        return false;
-    }
-
-    return true;
 };
+
+const checkLoginAndEmail = async () => {
+    let isLoginOccupied = false;
+    let isEmailOccupied = false;
+
+    if (login.value !== originalLogin.value) {
+        const loginResponse = await axiosInstance.get('/api/users/checking/occupy-login', {
+            params: { login: login.value }
+        });
+        isLoginOccupied = loginResponse.data === true;
+        if (isLoginOccupied) {
+            toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Логин уже занят', life: 3000 });
+        }
+    }
+
+    if (email.value !== originalEmail.value) {
+        const emailResponse = await axiosInstance.get('/api/users/checking/occupy-email', {
+            params: { email: email.value }
+        });
+        isEmailOccupied = emailResponse.data === true;
+        if (isEmailOccupied) {
+            toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Email уже занят', life: 3000 });
+        }
+    }
+
+    return !isLoginOccupied && !isEmailOccupied;
+}
 
 const updateUserData = async () => {
     const isAvailable = await checkLoginAndEmail();
@@ -194,12 +220,7 @@ const blockButtonLabel = computed(() => (props.isBlocked ? 'Разблокиро
 const blockButtonSeverity = computed(() => (props.isBlocked ? 'success' : 'danger'));
 
 onMounted(async () => {
-    try {
-        const response = await axiosInstance.get('/api/rbac/roles');
-        roles.value = response.data;
-    } catch (error) {
-        console.error('Ошибка при получении ролей: ', error);
-    }
+    await updateRolesList();
 });
 
 
