@@ -20,6 +20,9 @@ export const usePermissionStore = defineStore('permissions', {
         }
       }
     },
+    clearPermissions() {
+      this.permissions = []; // Очищаем разрешения
+    },
     hasPermission(resourceType, actionType) {
       const resource = this.permissions.find(item => item.type === resourceType);
 

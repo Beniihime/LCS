@@ -87,12 +87,6 @@ router.beforeEach(async (to, from) => {
     
     // Если маршрут требует полномочий
     if (to.meta.permission) {
-        try {
-              // Ждём загрузки полномочий
-        } catch (error) {
-            console.error('Ошибка при загрузке полномочий:', error);
-            return { path: '/auth' };  // Если ошибка при загрузке, отправляем на страницу авторизации
-        }
         
         const { type, action } = to.meta.permission;
         
