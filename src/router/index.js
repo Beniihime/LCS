@@ -67,38 +67,41 @@ const router = createRouter({
     routes
 });
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, from) => {
     const permissionStore = usePermissionStore();
     
     // Если маршрут требует полномочий
     if (to.meta.permission) {
         try {
             await permissionStore.fetchPermissions();  // Ждём загрузки полномочий
-        } catch(error) {
+        } catch (error) {
             console.error('Ошибка при загрузке полномочий:', error);
-            return next('/auth');  // Если ошибка при загрузке, отправляем на страницу авторизации
+            return { path: '/auth' };  // Если ошибка при загрузке, отправляем на страницу авторизации
         }
+        
         const { type, action } = to.meta.permission;
-
+        
         // Проверяем, есть ли у пользователя соответсвующее полномочие
         if (permissionStore.hasPermission(type, action)) {
-            next();
+            return true;  // Продолжаем маршрут
         } else {
-            next('/noAccess');
+            return { path: '/noAccess' };  // Если полномочий нет, перенаправляем на страницу "Нет доступа"
         }
-    } else {
-        next();
     }
 
+    // Проверка авторизации
     if (to.matched.some(record => record.meta.requiresAuth)) {
         if (!isAuthenticated()) {
-          next({ path: '/auth', query: { redirect: to.fullPath } });
-        } else {
-          next();
+            return {
+                path: '/auth',
+                query: { redirect: to.fullPath }
+            };
         }
-    } else {
-        next();
     }
+
+    // Разрешаем навигацию
+    return true;
 });
+
 
 export default router;

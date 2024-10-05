@@ -25,7 +25,7 @@
                     <p>ФИО: {{ selectedInfraUserDetails.fullName }}</p>
                     <p>Email: {{ selectedInfraUserDetails.email }}</p>
                     <p>Должность: {{ selectedInfraUserDetails.positionName }}</p>
-                    <p>Местоположение: {{ selectedInfraUserLocation.roomName }}</p>
+                    <p v-if="selectedInfraUserLocation">Местоположение: {{ selectedInfraUserLocation.roomName }}</p>
                 </div>
             </div>
             <Divider v-if="selectedInfraUserDetails" class="my-4"/>
