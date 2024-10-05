@@ -47,15 +47,17 @@ import InputGroupAddon from 'primevue/inputgroupaddon';
 import Password from 'primevue/password';
 
 import { scheduleTokenRefresh } from '@/utils/TokenService.js';
+import { usePermissionStore } from '@/stores/permissions.js';
 import axiosInstance from '@/utils/axios.js';
 
 import ThemeSwitcher from '@/components/Utils/ThemeSwitcher.vue';
 import WelcomeLogin from '@/components/Utils/WelcomeLogin.vue';
 
+const permissionStore = usePermissionStore();
+
 const login = ref('');
 const password = ref('');
 const errorMessage = ref('');
-const router = useRouter();
 const toast = useToast();
 
 const isLoading = ref(false);
@@ -79,8 +81,7 @@ const auth = async () => {
         localStorage.setItem('userId', response.data.userId);
 
         scheduleTokenRefresh(response.data.refreshTokenExpired);
-        
-        // router.push({ name: 'HomePage', query: { message: 'success', summary: 'Успешно', detail: 'Вы вошли в личный кабинет' } });
+        await permissionStore.fetchPermissions();        
 
     } catch (error) {
         errorMessage.value = 'Login failed: ' + (error.response ? error.response.data.message : error.message);
