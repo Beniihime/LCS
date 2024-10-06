@@ -294,7 +294,7 @@ const fetchRoles = async () => {
 
 h3 {
     color: var(--p-text-color);
-    transition: all 0.5s ease;
+    transition: all 0.5s;
 }
 main {
     display: flex;
@@ -313,7 +313,7 @@ main {
 .search {
     border-radius: 12pt;
     font-size: 18px;
-    transition: all 0.5s ease;
+    transition: all 0.5s;
 }
 .text-nowrap {
     white-space: nowrap;

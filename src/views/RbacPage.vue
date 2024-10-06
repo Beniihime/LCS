@@ -283,7 +283,7 @@ p {
 }
 .card {
     border-radius: 18px;
-    transition: all 0.5s ease;
+    transition: all 0.5s;
     background-color: var(--p-bg-color-2);
     color: var(--p-text-color);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -351,7 +351,7 @@ main {
 .search {
     border-radius: 12pt;
     font-size: 16pt;
-    transition: all 0.5s ease;
+    transition: all 0.5s;
     width: 100%; 
 }
 .statistics {
@@ -359,7 +359,7 @@ main {
     padding: 20px;
     border-radius: 18px;
     border: 1px solid var(--p-grey-4);
-    transition: all 0.5s ease;
+    transition: all 0.5s;
 }
 .statistics-title {
     font-size: 1.8rem;
@@ -373,7 +373,7 @@ main {
     border-radius: 18px;
     color: var(--p-text-color);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transition: all 0.5s ease;
+    transition: all 0.5s;
 }
 .stat-card:hover {
     scale: 1.02;

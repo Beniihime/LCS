@@ -67,7 +67,7 @@ th.p-datatable-header-cell {
 
 #app {
   background-color: var(--p-bg-color-1);
-  transition: all 0.5s ease;
+  transition: all 0.5s;
 }
 .logout-button:hover {
   svg.logout path {
@@ -83,12 +83,12 @@ body {
 
 svg.logout path {
   stroke: var(--p-text-color);
-  transition: all 0.5s ease;
+  transition: all 0.5s;
 }
 
 svg.lcs {
   fill: var(--p-text-color);
-  transition: all 0.5s ease;
+  transition: all 0.5s;
 }
 
 .p-password-input {
@@ -104,7 +104,7 @@ svg.lcs {
 }
 
 .p-divider-horizontal {
-  transition: all 0.5s ease !important;
+  transition: all 0.5s !important;
 }
 
 :root {

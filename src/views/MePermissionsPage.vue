@@ -194,7 +194,7 @@ onMounted(async () => {
 .search {
     border-radius: 12pt;
     font-size: 16pt;
-    transition: all 0.5s ease;
+    transition: all 0.5s;
     width: 100%; 
 }
 .back-btn {

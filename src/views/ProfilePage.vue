@@ -8,7 +8,7 @@
                     <img src="../assets/backgrounds/profBack.png" alt="Profile Header" class="header-image"/>
                 </div>
                 <div class="avatar-wrapper">
-                    <Avatar :image="srcAvatar" size="large" shape="circle" style="transition: all 0.5s ease;"/>
+                    <Avatar :image="srcAvatar" size="large" shape="circle" style="transition: all 0.5s;"/>
                     <div class="avatar-overlay" @click="triggerFileUpload">
                         <div class="upload-button pi pi-camera" />
                         <input 
@@ -210,7 +210,7 @@ main {
     justify-content: center;
     align-items: center;
     display: flex;
-    transition: all 0.5s ease;
+    transition: all 0.5s;
 }
 .avatar-overlay {
     position: absolute;
@@ -251,7 +251,7 @@ main {
     background-color: var(--p-grey-6);
     border-radius: 24px;
     border: 2px solid var(--p-grey-4);
-    transition: all 0.5s ease;
+    transition: all 0.5s;
     width: 100%;
     position: relative;
 }
@@ -259,7 +259,7 @@ main {
     border-radius: 24px;
     border: 2px solid var(--p-grey-4);
     padding: 30px;
-    transition: all 0.5s ease;
+    transition: all 0.5s;
 }
 .service-card .call-card {
     padding: 20px;
@@ -268,13 +268,13 @@ main {
     border-radius: 10px;
     background-color: var(--p-grey-5);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.5s ease;
+    transition: all 0.5s;
 }
 .service-card {
     background-color: var(--p-grey-6);
     border-radius: 24px;
     border: 2px solid var(--p-grey-4);
-    transition: all 0.5s ease;
+    transition: all 0.5s;
     width: 100%;
     padding: 30px;
 }

@@ -238,7 +238,7 @@ form {
 .brand h2 {
     color: var(--p-text-color);
     font-weight: 800;
-    transition: all 0.5s ease;
+    transition: all 0.5s;
 }
 
 .forgot-password {

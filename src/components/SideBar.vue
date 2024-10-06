@@ -207,7 +207,7 @@ onBeforeMount(async () => {
 <style scoped>
 .profile {
     border: 2px solid transparent;
-    transition: all 0.5s ease;
+    transition: all 0.5s;
     border-radius: 12px;
     padding: 5px;
     color: var(--p-text-color);
@@ -219,7 +219,7 @@ onBeforeMount(async () => {
     background-color: var(--p-blue-500-low-op);
 }
 .logoLCS {
-    transition: all 0.5s ease;
+    transition: all 0.5s;
 }
 .logoLCS:hover {
     transform: scale(1.05);
@@ -228,7 +228,7 @@ onBeforeMount(async () => {
     font-family: 'SF Pro Rounded';
     font-size: 14pt;
     line-height: normal;
-    transition: all 0.5s ease;
+    transition: all 0.5s;
 }
 .logout-button {
     width: 100%;
@@ -236,7 +236,7 @@ onBeforeMount(async () => {
     background-color: transparent;
     padding: 12px 18px 12px 8px;
     border-radius: 12px;
-    transition: all 0.5s ease;
+    transition: all 0.5s;
 }
 .logout-button:hover {
     background-color: var(--p-blue-500-low-op);
@@ -250,13 +250,13 @@ onBeforeMount(async () => {
     color: white;
     font-weight: 700;
     font-family: 'SF Pro Rounded';
-    transition: all 0.5s ease;
+    transition: all 0.5s;
 }
 .split {
     border: solid 2px var(--p-separator-opaque);
     border-radius: 2pt;
     margin-top: auto;
-    transition: all 0.5s ease;
+    transition: all 0.5s;
 }
 .sidebar-container {
     height: 100vh;
@@ -284,7 +284,7 @@ onBeforeMount(async () => {
     margin-block: 20px;
     font-size: 22px;
     color: var(--p-text-color);
-    transition: all 0.5s ease;
+    transition: all 0.5s;
 }
 .menucrumb {
     font-family: 'SF Pro Rounded';
@@ -306,7 +306,7 @@ onBeforeMount(async () => {
     width: 100%;
     height: 42pt;
     border-radius: 12pt;
-    transition: all 0.5s ease;
+    transition: all 0.5s;
     text-decoration: none;
     color: var(--p-text-color);
     border: 2px solid transparent;
@@ -323,7 +323,7 @@ onBeforeMount(async () => {
 .search {
     border-radius: 12pt;
     font-size: 14pt;
-    transition: all 0.5s ease;
+    transition: all 0.5s;
     width: 100%; 
 }
 .searchBar {
@@ -338,7 +338,7 @@ onBeforeMount(async () => {
     margin: 10pt;
     padding: 18pt;
     border-radius: 18pt;
-    transition: all 0.5s ease;
+    transition: all 0.5s;
     border: 2px solid var(--p-grey-4);
 }
 </style>

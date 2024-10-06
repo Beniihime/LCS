@@ -76,7 +76,7 @@ main {
     padding: 20px;
     border-radius: 18px;
     border: 1px solid var(--p-grey-4);
-    transition: all 0.5s ease;
+    transition: all 0.5s;
 }
 .card-text {
     font-size: 1.2rem;
@@ -86,7 +86,7 @@ main {
 }
 .card {
     border-radius: 18px;
-    transition: all 0.5s ease;
+    transition: all 0.5s;
     background-color: var(--p-bg-color-2);
     color: var(--p-text-color);
     display: flex;

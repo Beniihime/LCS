@@ -187,19 +187,19 @@ onMounted(() => {
     border-radius: 10px;
     background-color: var(--p-grey-5);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.5s ease;
+    transition: all 0.5s;
     cursor: pointer;
 }
 .service-card {
     background-color: var(--p-grey-6);
     border-radius: 24px;
     border: 2px solid var(--p-grey-4);
-    transition: all 0.5s ease;
+    transition: all 0.5s;
     width: 100%;
     padding: 30px;
 }
 .slide-fade-enter-active, .slide-fade-leave-active {
-    transition: all 0.5s ease;
+    transition: all 0.5s;
 }
 .slide-fade-enter-from, .slide-fade-leave-to {
     transform: translateY(20px);
