@@ -93,7 +93,7 @@ main {
     flex-direction: column;
     justify-content: space-between;
     height: 100%;
-    border: 2px solid var(--p-grey-4);
+    border: 0;
 }
 .card-body {
     padding: 28px;

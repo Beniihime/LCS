@@ -179,7 +179,7 @@ label {
     font-size: 14pt;
     transition: all 0.5s;
     position: absolute;
-    top: 10px;
+    top:10px;
     right: 15px;
 }
 </style>
