@@ -96,16 +96,13 @@ const email = ref('');
 const selectedRoles = ref([]);
 const visible = ref(false);
 const roles = ref([]);
+const userPriority = ref(null);
 
 const toast = useToast();
 
 onMounted(async () => {
-    try {
-        const response = await axiosInstance.get('/api/rbac/roles');
-        roles.value = response.data;
-    } catch (error) {
-        console.error('Ошибка при получении ролей: ', error);
-    }
+    await fetchCurrentUserPriority();
+    await updateRolesList();
 });
 
 const checkLoginAndEmail = async () => {
@@ -142,7 +139,8 @@ const createUser = async () => {
             middleName: middleName.value,
             lastName: lastName.value,
             email: email.value,
-            roleIds: roleIds
+            roleIds: roleIds,
+            
         };
 
         await axiosInstance.post('/api/users', payload);
@@ -166,6 +164,30 @@ const createUser = async () => {
         }));
     }
 }
+
+const fetchCurrentUserPriority = async () => {
+    try {
+        const response = await axiosInstance.get('/api/users/me/info');
+        const userData = response.data;
+        
+        // Предполагаем, что приоритет определяется по первой роли
+        userPriority.value = userData.roles[0]?.priority;
+    } catch (error) {
+        console.error('Ошибка при получении приоритета пользователя: ', error);
+    }
+};
+
+const updateRolesList = async () => {
+    try {
+        const response = await axiosInstance.get('/api/rbac/roles');
+        const allRoles = response.data;
+
+        // Фильтруем роли по приоритету
+        roles.value = allRoles.filter(role => role.priority > userPriority.value);
+    } catch (error) {
+        console.error('Ошибка при получении ролей: ', error);
+    }
+};
 </script>
 
 <style scoped>
