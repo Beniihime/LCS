@@ -117,48 +117,69 @@ const props = defineProps({
 
 const updateProfile = async () => {
     try {
-        const response = await axiosInstance.get('/api/users/checking/occupy-login', {
-            params: { login: login.value }
-        });
-        
-        if (response.data) {
-            toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Логин уже занят', life: 3000 });
-        } else {
-            await axiosInstance.patch('/api/users/me/login', login.value);
-            
-            if (shouldChangePassword.value && newPassword.value && oldPassword.value) {
-                const passwordResponse = await axiosInstance.patch('/api/users/me/password', {
-                    newPassword: newPassword.value,
-                    oldPassword: oldPassword.value
-                });
 
-                if (!passwordResponse.data) {
-                    throw new Error("Ошибка при обновлении пароля");
-                }
-            }
-
-            if (shouldChangeEmail.value && newEmail.value) {
-                const emailResponse = await axiosInstance.get('/api/users/checking/occupy-email', {
-                    params: { email: newEmail.value }
-                });
-                
-                if (emailResponse.data) {
-                    toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Email уже занят', life: 3000 });
-                } else {
-                    await axiosInstance.patch('/api/users/me/email', newEmail.value);
-                }
-            }
-
-            showEditDialog.value = false;
-            window.dispatchEvent(new CustomEvent('toast', {
-                detail: { 
-                    severity: 'success', 
-                    summary: 'Успех', 
-                    detail: 'Данные успешно обновлены для',
-                    userName: `${ props.firstName } ${ props.lastName }`
-                }
-            }));
+        // Если логин и пароли не введены, показываем уведомление
+        if (!login.value && !shouldChangePassword.value && !shouldChangeEmail.value) {
+            toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Введите логин, пароль или email для изменения', life: 3000 });
+            return;  // Прерываем выполнение, если не введены данные
         }
+
+        // Проверяем, было ли введено значение для логина
+        if (login.value) {
+            const response = await axiosInstance.get('/api/users/checking/occupy-login', {
+                params: { login: login.value }
+            });
+            
+            if (response.data) {
+                toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Логин уже занят', life: 3000 });
+                return;  // Прерываем выполнение, если логин уже занят
+            } else {
+                await axiosInstance.patch('/api/users/me/login', login.value);
+            }
+        }
+        
+        // Если нужно изменить пароль и заполнены оба поля
+        if (shouldChangePassword.value && newPassword.value && oldPassword.value) {
+            const passwordResponse = await axiosInstance.patch('/api/users/me/password', {
+                newPassword: newPassword.value,
+                oldPassword: oldPassword.value
+            });
+
+            if (!passwordResponse.data) {
+                throw new Error("Ошибка при обновлении пароля");
+            }
+        } else if (shouldChangePassword.value && (!newPassword.value || !oldPassword.value)) {
+            toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Введите старый и новый пароль', life: 3000 });
+            return;
+        }
+
+        // Если нужно изменить email и введен новый email
+        if (shouldChangeEmail.value && newEmail.value) {
+            const emailResponse = await axiosInstance.get('/api/users/checking/occupy-email', {
+                params: { email: newEmail.value }
+            });
+            
+            if (emailResponse.data) {
+                toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Email уже занят', life: 3000 });
+            } else {
+                await axiosInstance.patch('/api/users/me/email', newEmail.value);
+            }
+        } else if (shouldChangeEmail.value && !newEmail.value) {
+            toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Введите новый Email', life: 3000 });
+            return;
+        }
+
+        // Закрываем диалог и показываем успешное уведомление
+        showEditDialog.value = false;
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: { 
+                severity: 'success', 
+                summary: 'Успех', 
+                detail: 'Данные успешно обновлены',
+                userName: `${ props.firstName } ${ props.lastName }`
+            }
+        }));
+
     } catch (error) {
         console.error('Ошибка при обновлении данных: ', error);
     }
