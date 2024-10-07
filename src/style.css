@@ -107,6 +107,11 @@ svg.lcs {
   transition: all 0.5s !important;
 }
 
+/* Убираем стрелку у popover */
+.p-popover::before, .p-popover::after {
+  display: none !important;
+}
+
 :root {
   --p-bg-color-1: rgba(255,255,255,1.0);
   --p-bg-color-2: rgba(242,242,247,1.0);
@@ -142,8 +147,6 @@ svg.lcs {
   --p-avatar-lg-width: 110px !important;
   --p-avatar-border-radius: 18px !important;
 
-  --p-popover-background: var(--p-grey-6) !important;
-  --p-popover-arrow-offset: 13rem !important;
   --p-popover-content-padding: 15px 8px !important;
   --p-popover-border-radius: 18px !important;
 
@@ -155,6 +158,7 @@ svg.lcs {
   --p-grey-4: #D1D1D6;
   --p-grey-5: #E5E5EA;
   --p-grey-6: #F2F2F7;
+  --p-grey-7: #F2F2F7;
 
 }
 
@@ -175,6 +179,7 @@ svg.lcs {
   --p-grey-4: #3A3A3C;
   --p-grey-5: #2C2C2E;
   --p-grey-6: #1C1C1E;
+  --p-grey-7: #2C2C2E;
 
   --p-red: #FF453A;
 }

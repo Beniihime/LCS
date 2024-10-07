@@ -79,27 +79,14 @@
                 <template #empty>Не найдено.</template>
                 <template #loading>Данные загружаются. Подождите.</template>
 
-                <Column field="firstName" header="Имя" sortable style="min-width: 12rem;">
+                <Column field="firstName" header="ФИО" sortable style="max-width: 20rem;">
                     <template #body="{ data }">
                         <span class="text-nowrap">
-                            {{ data.firstName }}
+                            {{ data.firstName }} {{ data.lastName }} {{ data.middleName }}
                         </span>
                     </template>
                 </Column>
-                <Column field="lastName" header="Фамилия" sortable  style="min-width: 12rem;">
-                    <template #body="{ data }">
-                        <span class="text-nowrap">
-                            {{ data.lastName }}
-                        </span>
-                    </template>
-                </Column>
-                <Column field="middleName" header="Отчество" sortable  style="min-width: 12rem;">
-                    <template #body="{ data }">
-                        <span class="text-nowrap">
-                            {{ data.middleName }}
-                        </span>
-                    </template>
-                </Column>
+                
                 <Column field="email" header="E-mail" style="min-width: 12rem;">
                     <template #body="{ data }">
                         <span class="text-nowrap">
@@ -107,26 +94,35 @@
                         </span>
                     </template>
                 </Column>
-                <Column field="roles" header="Роли" style="min-width: 12rem;">
+                <Column field="roles" header="Роли" style="max-width: 12rem;">
                     <template #body="{ data }">
-                        <div class="roles-grid">
-                            <Chip class="py-1 px-1">
-                                <span 
-                                    v-for="role in data.roles" 
-                                    :key="role.id" 
-                                    class="roleType"
-                                    :class="['roleType', role.type === 'Custom' ? 'custom-role-type' : '']"
-                                >
-                                    {{ role.type.charAt(0) }}
-                                </span>
-                                <span 
-                                    v-for="role in data.roles" 
-                                    :key="role.id" 
-                                    class="role-label"
-                                >
-                                    {{ role.title }}
-                                </span>
-                            </Chip>
+                        <div class="">
+                            <div class="role-label-container">
+                                <!-- Показываем первую роль -->
+                                <Chip v-if="data.roles.length > 0" class="role-label">
+                                    <span v-if="data.roles.length > 0" class="roleType" :class="getRoleTypeClass(data.roles[0])">
+                                        {{ data.roles[0].type.charAt(0) }}
+                                    </span>
+                                    <span>{{ data.roles[0].title }}</span>
+                                </Chip>
+                                
+                                <!-- Если ролей больше одной, показываем Popover для дополнительных ролей -->
+                                <Button v-if="data.roles.length > 1" rounded text class="p-2 ms-2" icon="pi pi-ellipsis-h" @click="(event) => togglePopover($refs['popover' + data.id], event)" />
+
+                                <Popover :ref="'popover' + data.id">
+                                    <div class="roles-container">
+                                        <div v-for="(role, index) in data.roles.slice(1)" :key="role.id" class="role-list-item">
+                                            <Chip class="role-label">
+                                                <span class="roleType" :class="getRoleTypeClass(role)">
+                                                    {{ role.type.charAt(0) }}
+                                                </span>
+                                                <span>{{ role.title }}</span>
+                                            </Chip>
+                                        </div>
+                                    </div>
+                                    
+                                </Popover>
+                            </div>
                         </div>
                     </template>
                 </Column>
@@ -155,7 +151,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, nextTick  } from 'vue';
 import axiosInstance from '@/utils/axios.js';
 
 import { FilterMatchMode } from '@primevue/core/api';
@@ -167,6 +163,7 @@ import Select from 'primevue/select';
 import MultiSelect from 'primevue/multiselect';
 import Button from 'primevue/button';
 import Chip from 'primevue/chip';
+import Popover from 'primevue/popover';
 
 import CreateUser from '@/components/Users/CreateUser.vue';
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
@@ -207,6 +204,21 @@ const statusOptions = [
     { label: 'Активен', value: false },
     { label: 'Заблокирован', value: true },
 ];
+
+const togglePopover = (popoverRef, event) => {
+    nextTick(() => {
+        if (popoverRef) {
+            popoverRef.toggle(event);
+        } else {
+            console.error("Popover reference is null");
+        }
+    });
+};
+
+// Классы для отображения ролей в зависимости от их типа
+const getRoleTypeClass = (role) => {
+    return role.type === 'Custom' ? 'custom-role-type' : 'default-role-type';
+}
 
 const displayedRowsCount = computed(() => {
     const start = (currentPage.value - 1) * rowsPerPage.value;
@@ -339,6 +351,27 @@ main {
     flex-wrap: wrap;
     gap: 5px;
 }
+.filters {
+    margin-bottom: 20px;
+}
+.filter-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.roles-container {
+    display: flex;
+    flex-direction: column;
+}
+.role-list-item {
+    margin-bottom: 8px; /* Отступ между элементами */
+}
+
+.role-label {
+    font-size: 1rem;
+    font-weight: 500;
+}
 .roleType {
     background-color: var(--p-blue-500);
     border-radius: 50%;
@@ -352,21 +385,5 @@ main {
 }
 .custom-role-type {
     background-color: var(--p-purple-500);
-}
-.role-label {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-weight: 500;
-}
-.filters {
-    margin-bottom: 20px;
-}
-.filter-group {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    align-items: center;
 }
 </style>
