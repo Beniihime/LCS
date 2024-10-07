@@ -42,7 +42,7 @@ const checkLinkStatus = async () => {
         const response = await axiosInstance.get(`/api/infra-manager/db/users/${selectedLKSUser.value.id}/status`);
 
         if (response.data.personalAccountUserId && response.data.infraManagerUserId) {
-            isLinkExists.value = true;
+            isLinked.value = true;
             window.dispatchEvent(new CustomEvent('toast', {
                 detail: { 
                     severity: 'info', 
