@@ -183,7 +183,6 @@ const logout = async () => {
     localStorage.removeItem('userId');
     await permissionStore.clearPermissions();
     await permissionStore.$reset();
-    // await permissionStore.state.isLoaded = false;
     
     router.push('/auth');
 };
@@ -214,7 +213,6 @@ onBeforeMount(async () => {
     text-decoration: none;
 }
 .profile:hover {
-    border: 2px solid var(--p-blue-500);
     cursor: pointer;
     background-color: var(--p-blue-500-low-op);
 }
@@ -316,9 +314,8 @@ onBeforeMount(async () => {
     color: var(--p-blue-500);
 }
 .active-link {
-    box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.25);
     color: var(--p-blue-500);
-    border: 2px solid var(--p-blue-500);
+    background-color: var(--p-blue-500-low-op);
 }
 .search {
     border-radius: 12pt;

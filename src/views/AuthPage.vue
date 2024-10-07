@@ -53,8 +53,6 @@ import axiosInstance from '@/utils/axios.js';
 import ThemeSwitcher from '@/components/Utils/ThemeSwitcher.vue';
 import WelcomeLogin from '@/components/Utils/WelcomeLogin.vue';
 
-const permissionStore = usePermissionStore();
-
 const login = ref('');
 const password = ref('');
 const errorMessage = ref('');
@@ -81,7 +79,6 @@ const auth = async () => {
         localStorage.setItem('userId', response.data.userId);
 
         scheduleTokenRefresh(response.data.refreshTokenExpired);
-        await permissionStore.fetchPermissions();        
 
     } catch (error) {
         errorMessage.value = 'Login failed: ' + (error.response ? error.response.data.message : error.message);

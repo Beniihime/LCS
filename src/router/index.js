@@ -81,16 +81,23 @@ const router = createRouter({
 router.beforeEach(async (to, from) => {
     const permissionStore = usePermissionStore();
 
+     // Если пользователь авторизован, загружаем полномочия
+    if (isAuthenticated() && !permissionStore.isLoaded) {
+        try {
+            await permissionStore.fetchPermissions();  // Дожидаемся загрузки полномочий
+        } catch (error) {
+            console.error('Ошибка при загрузке полномочий:', error);
+            return { path: '/noAccess' };
+        }
+    }
+
     if (to.path === '/auth' && isAuthenticated()) {
         return { path: '/' };  // Перенаправляем на главную страницу
     }
     
-    // Если маршрут требует полномочий
+    // Проверка полномочий, если маршрут требует их
     if (to.meta.permission) {
-        
         const { type, action } = to.meta.permission;
-        
-        // Проверяем, есть ли у пользователя соответсвующее полномочие
         if (permissionStore.hasPermission(type, action)) {
             return true;  // Продолжаем маршрут
         } else {
@@ -108,8 +115,7 @@ router.beforeEach(async (to, from) => {
         }
     }
 
-    // Разрешаем навигацию
-    return true;
+    return true; // Разрешаем навигацию
 });
 
 router.afterEach((to) => {
