@@ -17,17 +17,17 @@
             <!-- Модальное окно для подробной информации -->
             <Dialog v-model:visible="isDialogVisible" modal :style="{ 'max-width': '70rem' }" @hide="closeDialog">
                 <template v-if="selectedCall">
-                    <h3 class="dialog-title">Заявка №{{ selectedCall.number }}</h3>
-                    <Divider />
+                  <h3 class="dialog-title">Заявка №{{ selectedCall.number }}</h3>
+                  <Divider class="my-4"/>
                     
-                    <div class="call-details">
+                  <div class="call-details">
                     <!-- Основная информация -->
                     <div class="details-section">
                         <h4><i class="pi pi-info-circle"></i> Основная информация</h4>
-                        <p v-if="selectedCall.fullName"><strong>Заявка:</strong> {{ selectedCall.fullName }}</p>
-                        <p v-if="selectedCall.description"><strong>Описание:</strong> {{ selectedCall.description }}</p>
-                        <p v-if="selectedCall.solution"><strong>Решение:</strong> {{ selectedCall.solution }}</p>
-                        <p v-if="selectedCall.serviceCategoryName"><strong>Категория сервиса:</strong> {{ selectedCall.serviceCategoryName }}</p>
+                        <p v-if="selectedCall.fullName"><strong>Заявка:</strong> <span v-html="selectedCall.fullName"></span></p>
+                        <p v-if="selectedCall.description"><strong>Описание:</strong> <span v-html="selectedCall.description"></span></p>
+                        <p v-if="selectedCall.solution"><strong>Решение:</strong> <span v-html="selectedCall.solution"></span></p>
+                        <p v-if="selectedCall.serviceCategoryName"><strong>Категория сервиса:</strong> <span v-html="selectedCall.serviceCategoryName"></span></p>
                     </div>
 
                     <!-- Даты -->
@@ -44,36 +44,33 @@
                     <!-- Сервис -->
                     <div class="details-section">
                         <h4><i class="pi pi-cog"></i> Сервис</h4>
-                        <p v-if="selectedCall.serviceName"><strong>Сервис:</strong> {{ selectedCall.serviceName }}</p>
-                        <p v-if="selectedCall.servicePlaceName"><strong>Место сервиса:</strong> {{ selectedCall.servicePlaceName }}</p>
-                        <p v-if="selectedCall.serviceItemName"><strong>Элемент сервиса:</strong> {{ selectedCall.serviceItemName }}</p>
-                        <p v-if="selectedCall.serviceAttendanceName"><strong>Исполнитель:</strong> {{ selectedCall.serviceAttendanceName }}</p>
+                        <p v-if="selectedCall.serviceName"><strong>Сервис:</strong> <span v-html="selectedCall.serviceName"></span></p>
+                        <p v-if="selectedCall.servicePlaceName"><strong>Место сервиса:</strong> <span v-html="selectedCall.servicePlaceName"></span></p>
+                        <p v-if="selectedCall.serviceItemName"><strong>Элемент сервиса:</strong> <span v-html="selectedCall.serviceItemName"></span></p>
+                        <p v-if="selectedCall.serviceAttendanceName"><strong>Исполнитель:</strong> <span v-html="selectedCall.serviceAttendanceName"></span></p>
                     </div>
 
                     <!-- Статусы и приоритет -->
                     <div class="details-section">
                         <h4><i class="pi pi-exclamation-circle"></i> Статус и приоритет</h4>
-                        <p v-if="selectedCall.callType"><strong>Тип заявки:</strong> {{ selectedCall.callType }}</p>
-                        <p v-if="selectedCall.entityStateName"><strong>Статус:</strong> {{ selectedCall.entityStateName }}</p>
-                        <p v-if="selectedCall.receiptTypeName"><strong>Тип приема:</strong> {{ selectedCall.receiptTypeName }}</p>
-                        <p v-if="selectedCall.urgencyName"><strong>Срочность:</strong> {{ selectedCall.urgencyName }}</p>
-                        <p v-if="selectedCall.influenceName"><strong>Влияние:</strong> {{ selectedCall.influenceName }}</p>
-                        <p v-if="selectedCall.priorityName"><strong>Приоритет:</strong> {{ selectedCall.priorityName }}</p>
+                        <p v-if="selectedCall.callType"><strong>Тип заявки:</strong> <span v-html="selectedCall.callType"></span></p>
+                        <p v-if="selectedCall.entityStateName"><strong>Статус:</strong> <span v-html="selectedCall.entityStateName"></span></p>
+                        <p v-if="selectedCall.receiptTypeName"><strong>Тип приема:</strong> <span v-html="selectedCall.receiptTypeName"></span></p>
+                        <p v-if="selectedCall.urgencyName"><strong>Срочность:</strong> <span v-html="selectedCall.urgencyName"></span></p>
+                        <p v-if="selectedCall.influenceName"><strong>Влияние:</strong> <span v-html="selectedCall.influenceName"></span></p>
+                        <p v-if="selectedCall.priorityName"><strong>Приоритет:</strong> <span v-html="selectedCall.priorityName"></span></p>
                     </div>
 
                     <!-- Ответственные -->
                     <div class="details-section">
-                      <h4><i class="pi pi-user"></i> Ответственные</h4>
-                      <p v-if="selectedCall.initiatorFullName"><strong>Инициатор:</strong> {{ selectedCall.initiatorFullName }}</p>
-                      <p v-if="selectedCall.clientFullName"><strong>Клиент:</strong> {{ selectedCall.clientFullName }}</p>
-                      <p v-if="selectedCall.ownerFullName"><strong>Владелец:</strong> {{ selectedCall.ownerFullName }}</p>
-                      <p v-if="selectedCall.executorFullName"><strong>Исполнитель:</strong> {{ selectedCall.executorFullName }}</p>
-                      <p v-if="selectedCall.accomplisherFullName"><strong>Выполнивший:</strong> {{ selectedCall.accomplisherFullName }}</p>
+                        <h4><i class="pi pi-user"></i> Ответственные</h4>
+                        <p v-if="selectedCall.initiatorFullName"><strong>Инициатор:</strong> <span v-html="selectedCall.initiatorFullName"></span></p>
+                        <p v-if="selectedCall.clientFullName"><strong>Клиент:</strong> <span v-html="selectedCall.clientFullName"></span></p>
+                        <p v-if="selectedCall.ownerFullName"><strong>Владелец:</strong> <span v-html="selectedCall.ownerFullName"></span></p>
+                        <p v-if="selectedCall.executorFullName"><strong>Исполнитель:</strong> <span v-html="selectedCall.executorFullName"></span></p>
+                        <p v-if="selectedCall.accomplisherFullName"><strong>Выполнивший:</strong> <span v-html="selectedCall.accomplisherFullName"></span></p>
                     </div>
-                </div>
-
-                    
-                    
+                  </div>
                 </template>
             </Dialog>
         </div>
@@ -85,7 +82,6 @@ import { ref, onMounted } from 'vue';
 import axiosInstance from '@/utils/axios.js';
 
 import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
 import Divider from 'primevue/divider';
 
 const lastCalls = ref([]);  // Список последних заявок
@@ -181,17 +177,14 @@ onMounted(() => {
 
 <style scoped>
 .service-card .call-card {
-    padding: 20px;
+    padding: 32px;
     margin-bottom: 20px;
-    border: 1px solid var(--p-grey-3);
     border-radius: 10px;
-    background-color: var(--p-grey-5);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: var(--p-grey-7);
     transition: all 0.5s;
     cursor: pointer;
 }
 .service-card {
-    background-color: var(--p-grey-6);
     border-radius: 24px;
     border: 2px solid var(--p-grey-4);
     transition: all 0.5s;
@@ -217,9 +210,8 @@ onMounted(() => {
 }
 .details-section {
   padding: 20px;
-  border: 1px solid var(--p-grey-3);
   border-radius: 10px;
-  background-color: var(--p-grey-8);
+  background-color: var(--p-grey-6);
 }
 .details-section h4 {
   margin-top: 0;

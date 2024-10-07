@@ -44,19 +44,7 @@
             <Divider v-if="selectedInfraUserDetails" class="my-4"/>
             <div v-if="lastCalls.length" class="row my-4">
                 <div class="col">
-                    <h4 class="mb-3"><strong>Последние 10 заявок</strong></h4>
-                    <div class="card-grid">
-                        <Card v-for="call in lastCalls" :key="call.id" class="call-card">
-                            <template #title>
-                                <span class="title">Заявка №{{ call.number }}</span>
-                            </template>
-                            <template #content>
-                                <p><strong>Краткое описание:</strong> {{ call.callSummaryName }}</p>
-                                <p><strong>Описание:</strong> {{ call.description }}</p>
-                                <p><strong>Сервис:</strong>{{ call.serviceItemAttendanceFullName }}</p>
-                            </template>
-                        </Card>
-                    </div>
+                    <InfraManagerCalls v-if="selectedInfraUserDetails" />
                 </div>
             </div>
         </Dialog>
@@ -71,8 +59,9 @@ import Dialog from 'primevue/dialog';
 import Divider from 'primevue/divider';
 import Button from 'primevue/button';
 import AutoComplete from 'primevue/autocomplete';
-import Card from 'primevue/card';
 import Tree from 'primevue/tree';
+
+import InfraManagerCalls from '@/components/InfraManager/InfraManagerCalls.vue';
 
 const showSearchInfraUser = ref(false);
 
