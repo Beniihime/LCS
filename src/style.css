@@ -1,21 +1,16 @@
-@font-face {
+/* @font-face {
   font-family: "SF Pro Rounded";
   src: url('@/assets/fonts/SFProRoundedRegular.woff') format("woff"),
        url('@/assets/fonts/SFProRoundedRegular.woff2') format("woff2");
-}
-
+} */
 @font-face {
-  font-family: 'SF Mono Heavy';
-  font-style: normal;
-  font-weight: normal;
-  src: url('@/assets/fonts/SFMonoHeavy.woff') format('woff');
-}
-
-@font-face {
-  font-family: 'SF Mono Bold';
-  font-style: normal;
-  font-weight: normal;
-  src: url('@/assets/fonts/SFMonoBold.woff') format('woff');
+  font-family: "SF Pro Rounded";
+  src: url("https://db.onlinewebfonts.com/t/ead4092f880f75ff0883ced1856b2c37.eot");
+  src: url("https://db.onlinewebfonts.com/t/ead4092f880f75ff0883ced1856b2c37.eot?#iefix")format("embedded-opentype"),
+  url("https://db.onlinewebfonts.com/t/ead4092f880f75ff0883ced1856b2c37.woff2")format("woff2"),
+  url("https://db.onlinewebfonts.com/t/ead4092f880f75ff0883ced1856b2c37.woff")format("woff"),
+  url("https://db.onlinewebfonts.com/t/ead4092f880f75ff0883ced1856b2c37.ttf")format("truetype"),
+  url("https://db.onlinewebfonts.com/t/ead4092f880f75ff0883ced1856b2c37.svg#SF Pro Rounded Regular")format("svg");
 }
 
 nav.p-datatable-paginator-bottom {
@@ -46,7 +41,9 @@ div.p-selectbutton button.p-togglebutton {
   background-color: var(--p-grey-4);
   border: none;
 }
-
+.p-tree {
+  transition: all 0.5s;
+}
 textarea.p-textarea {
   background-color: var(--p-inputtext-background);
 }
@@ -100,11 +97,13 @@ svg.lcs {
 }
 .p-inputgroupaddon {
   transition-duration: 0.5s !important;
-  transition-timing-function: ease !important;
 }
 
-.p-divider-horizontal {
-  transition: all 0.5s !important;
+.p-divider {
+  transition: all 0.5s;
+}
+.p-menu {
+  transition: all 0.5s;
 }
 
 /* Убираем стрелку у popover */
@@ -118,6 +117,8 @@ svg.lcs {
   --p-bg-color-3: rgba(255,255,255,1.0);
   --p-text-color: rgba(0,0,0,1.0);
 
+  --p-color-trans: rgba(0, 0, 0, 0.0);
+
   --p-red-500: rgb(255, 101, 93) !important;
   --p-red-400: rgb(235, 66, 57) !important;
 
@@ -125,7 +126,7 @@ svg.lcs {
   --p-blue-400: rgb(13, 124, 184) !important;
   --p-blue-500-low-op: rgba(100,179,221,0.2) !important;
 
-  --p-separator-opaque: rgba(198, 198, 200, 0.30);
+  --p-separator-opaque: rgba(198, 198, 200, 0.30) !important;
   --p-inputtext-background: var(--p-bg-color-3) !important;
   --p-multiselect-background: var(--p-bg-color-3) !important;
   --p-select-background: var(--p-bg-color-3) !important;
@@ -143,14 +144,21 @@ svg.lcs {
   --p-tooltip-gutter: 0rem !important;
   --p-tooltip-background: var(--p-blue-500) !important;
 
+  --p-tree-background: var(--p-bg-color-3) !important;
+
   --p-avatar-lg-height: 110px !important;
   --p-avatar-lg-width: 110px !important;
   --p-avatar-border-radius: 18px !important;
+
+  --p-dialog-background: var(--p-bg-color-1) !important;
 
   --p-popover-content-padding: 15px 8px !important;
   --p-popover-border-radius: 18px !important;
 
   --p-checkbox-background: var(--p-bg-color-3) !important;
+
+  --p-floatlabel-on-active-background: var(--p-color-trans) !important; 
+  --p-floatlabel-active-color: var(--p-text-color) !important; 
 
   --p-grey-1: #8E8E93;
   --p-grey-2: #AEAEB2;
@@ -172,6 +180,7 @@ svg.lcs {
   --p-divider-border-color: #38383A !important;
   --p-button-primary-background: var(--p-blue-700) !important;
   --p-datatable-header-cell-selected-color: var(--p-blue-700) !important;
+  --p-tree-background: var(--p-bg-color-1) !important;
 
   --p-grey-1: #8E8E93;
   --p-grey-2: #636366;
