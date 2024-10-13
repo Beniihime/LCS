@@ -34,14 +34,10 @@ const router = useRouter();
 const handleVideoEnded = () => {
   // Плавное исчезновение видео после его завершения
   isTransitioning.value = true;
-  
-  setTimeout(() => {
-    // Переход на HomePage, когда видео завершено
-    router.push({
+  router.push({
       name: 'HomePage', 
       query: { message: 'success', summary: 'Успешно', detail: 'Вы вошли в личный кабинет' }
     });
-  }, 120); // Задержка на 1 секунду для плавного исчезновения видео
 };
 </script>
   
