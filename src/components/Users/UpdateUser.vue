@@ -4,13 +4,13 @@
         <Dialog v-model:visible="visible" modal header="Изменить информацию" :style="{ 'max-width': '30rem' }">
             <div class="row my-4">
                 <div class="col">
-                    <FloatLabel>
+                    <FloatLabel variant="on">
                         <InputText v-model="firstName" class="form-input"/>
                         <label for="firstName">Имя</label>
                     </FloatLabel>
                 </div>
                 <div class="col">
-                    <FloatLabel>
+                    <FloatLabel variant="on">
                         <InputText v-model="lastName" class="form-input"/>
                         <label for="lastName">Фамилия</label>
                     </FloatLabel>
@@ -18,8 +18,8 @@
             </div>
             <div class="row mb-3">
                 <div class="col">
-                    <FloatLabel>
-                        <InputText v-model="middleName" class="form-input"/>
+                    <FloatLabel variant="on">
+                        <InputText id="middleName" v-model="middleName" class="form-input"/>
                         <label for="middleName">Отчество</label>
                     </FloatLabel>
                 </div>
@@ -27,21 +27,21 @@
             <Divider class="my-4 py-1"/>
             <div class="row mb-4">
                 <div class="col">
-                    <FloatLabel>
+                    <FloatLabel variant="on">
                         <InputText v-model="login" class="form-input"/>
                         <label for="login">Логин</label>
                     </FloatLabel>
                 </div>
                 <div class="col">
-                    <FloatLabel>
-                        <InputText v-model="email" class="form-input"/>
+                    <FloatLabel variant="on">
+                        <InputText id="email" v-model="email" class="form-input"/>
                         <label for="email">E-mail</label>
                     </FloatLabel>
                 </div>
             </div>
             <div class="row mb-3">
                 <div class="col">
-                    <FloatLabel>
+                    <FloatLabel variant="on">
                         <MultiSelect 
                             v-model="selectedRoles" 
                             display="chip" 
@@ -70,14 +70,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import axiosInstance from '@/utils/axios.js';
-
-import Button from 'primevue/button';
-import Dialog from 'primevue/dialog';
-import InputText from 'primevue/inputtext';
-import Divider from 'primevue/divider';
-import MultiSelect from 'primevue/multiselect';
-import FloatLabel from 'primevue/floatlabel';
-
 import { useToast } from 'primevue/usetoast';
 
 const toast = useToast();
@@ -228,7 +220,7 @@ onMounted(async () => {
 
 <style scoped>
 label {
-    font-size: 16px;
+   font-size: 16px;
 }
 .form-input {
     font-size: 16px;
