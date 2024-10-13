@@ -71,15 +71,8 @@
 
 <script setup>
 import { ref, computed, onBeforeMount } from 'vue';
-import InputText from 'primevue/inputtext';
-import Button from 'primevue/button';
 import LogoutSvg from '@/assets/logout.svg';
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
 import axiosInstance from '@/utils/axios.js';
-import ConfirmDialog from 'primevue/confirmdialog';
-import Badge from 'primevue/badge';
-import Avatar from 'primevue/avatar';
 
 import Lcs from '@/assets/logo/lcs.svg';
 

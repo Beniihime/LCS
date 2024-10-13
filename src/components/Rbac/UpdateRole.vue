@@ -35,14 +35,6 @@ import { ref, onMounted } from "vue";
 import axiosInstance from '@/utils/axios.js';
 import { useToast } from 'primevue/usetoast';
 
-import Button from 'primevue/button';
-import Dialog from 'primevue/dialog';
-import InputText from 'primevue/inputtext';
-import Divider from 'primevue/divider';
-import FloatLabel from 'primevue/floatlabel';
-import Textarea from 'primevue/textarea';
-import Select from 'primevue/select';
-
 const visible = ref(false);
 const currentRole = ref({
     id: null,

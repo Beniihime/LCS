@@ -54,13 +54,6 @@ import { useRoleStore } from '@/stores/roleStore';
 import axiosInstance from '@/utils/axios.js';
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 
-import ToggleSwitch from 'primevue/toggleswitch';
-import Divider from 'primevue/divider';
-import Button from 'primevue/button';
-import InputText from 'primevue/inputtext';
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
-
 const searchQuery = ref('');
 const loading = ref(false);
 const roleStore = useRoleStore();

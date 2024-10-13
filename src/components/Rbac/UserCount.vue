@@ -36,9 +36,6 @@ import { ref, onMounted } from 'vue';
 import axiosInstance from '@/utils/axios.js';
 import qs from 'qs';
 
-import Dialog from 'primevue/dialog';
-import Chip from 'primevue/chip';
-
 const props = defineProps({
     roleId: {
         type: Number,

@@ -156,14 +156,6 @@ import axiosInstance from '@/utils/axios.js';
 
 import { FilterMatchMode } from '@primevue/core/api';
 import qs from 'qs';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
-import InputText from 'primevue/inputtext';
-import Select from 'primevue/select';
-import MultiSelect from 'primevue/multiselect';
-import Button from 'primevue/button';
-import Chip from 'primevue/chip';
-import Popover from 'primevue/popover';
 
 import CreateUser from '@/components/Users/CreateUser.vue';
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
@@ -345,11 +337,6 @@ main {
 .active {
     border: 1px solid var(--p-green-500);
     color: var(--p-green-500);
-}
-.roles-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
 }
 .filters {
     margin-bottom: 20px;

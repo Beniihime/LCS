@@ -14,11 +14,8 @@
 </template>
 
 <script setup>
-
 import { ref, watch, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
-
-import SelectButton from 'primevue/selectbutton';
 
 const themeOptions = ref([
     { icon: 'pi pi-sun', label: 'Светлая', value: 'light' },

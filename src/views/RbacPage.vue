@@ -137,12 +137,8 @@ import UserCount from '@/components/Rbac/UserCount.vue';
 import { useRoleStore } from '@/stores/roleStore';
 import { usePermissionStore } from '@/stores/permissions.js';
 
-import Button from 'primevue/button';
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
-import InputText from 'primevue/inputtext';
 import { useConfirm } from "primevue/useconfirm";
-import Divider from 'primevue/divider';
+
 
 const loading = ref(true);
 const roles = ref([]);
@@ -282,11 +278,11 @@ p {
     width: 100%;
 }
 .card {
+    border: none;
     border-radius: 18px;
     transition: all 0.5s;
     background-color: var(--p-bg-color-2);
     color: var(--p-text-color);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -338,7 +334,7 @@ main {
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    padding: 20px;
+    padding: 20px 8rem;
     overflow: hidden;
     color: var(--p-text-color);
 }
@@ -358,7 +354,7 @@ main {
     background: var(--p-bg-color-2);
     padding: 20px;
     border-radius: 18px;
-    border: 1px solid var(--p-grey-4);
+    border: none;
     transition: all 0.5s;
 }
 .statistics-title {
@@ -372,18 +368,17 @@ main {
     padding: 20px;
     border-radius: 18px;
     color: var(--p-text-color);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transition: all 0.5s;
 }
 .stat-card:hover {
     scale: 1.02;
 }
 .stat-number {
-    font-size: 3rem;
+    font-size: 2.5rem;
     font-weight: bold;
 }
 .stat-label {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
     opacity: 0.8;
 }
 .bi {

@@ -83,15 +83,6 @@
 <script setup>
 import { ref } from 'vue';
 import axiosInstance from '@/utils/axios.js';
-
-import Dialog from 'primevue/dialog';
-import Divider from 'primevue/divider';
-import Popover from 'primevue/popover';
-import Button from 'primevue/button';
-import FloatLabel from 'primevue/floatlabel';
-import InputText from 'primevue/inputtext';
-import Password from 'primevue/password';
-import Checkbox from 'primevue/checkbox'; 
 import { useToast } from 'primevue/usetoast';
 
 const op = ref();

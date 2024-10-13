@@ -58,14 +58,6 @@ import { useRouter } from 'vue-router';
 import axiosInstance from '@/utils/axios.js';
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 
-import ToggleSwitch from 'primevue/toggleswitch';
-import Divider from 'primevue/divider';
-import Button from 'primevue/button';
-import InputText from 'primevue/inputtext';
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
-import Chip from 'primevue/chip';
-
 const searchQuery = ref('');
 
 const loading = ref(true);

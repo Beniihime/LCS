@@ -78,13 +78,6 @@
 import { ref, onMounted } from "vue";
 import axiosInstance from '@/utils/axios.js';
 
-import Dialog from 'primevue/dialog';
-import InputText from 'primevue/inputtext';
-import Button from 'primevue/button';
-import Password from 'primevue/password';
-import Divider from 'primevue/divider';
-import MultiSelect from 'primevue/multiselect';
-import FloatLabel from 'primevue/floatlabel';
 import { useToast } from 'primevue/usetoast';
 
 const pass = ref('');

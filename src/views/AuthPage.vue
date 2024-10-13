@@ -38,16 +38,8 @@
 <script setup>
 import { ref } from 'vue';
 import { useToast } from 'primevue/usetoast';
-import { useRouter } from 'vue-router';
-
-import Button from 'primevue/button';
-import InputGroup from 'primevue/inputgroup';
-import InputText from 'primevue/inputtext';
-import InputGroupAddon from 'primevue/inputgroupaddon';
-import Password from 'primevue/password';
 
 import { scheduleTokenRefresh } from '@/utils/TokenService.js';
-import { usePermissionStore } from '@/stores/permissions.js';
 import axiosInstance from '@/utils/axios.js';
 
 import ThemeSwitcher from '@/components/Utils/ThemeSwitcher.vue';
@@ -186,12 +178,12 @@ main {
 }
 
 .login-page::before {
-   background-image: url('/src/assets/backgrounds/lp_bg_light.png'); /* Светлое изображение */
+   background-image: url('/src/assets/backgrounds/lp_bg_light.webp'); /* Светлое изображение */
    opacity: 1; /* Показываем светлую картинку по умолчанию */
 }
 
 .login-page::after {
-   background-image: url('/src/assets/backgrounds/lp_bg_dark.png'); /* Темное изображение */
+   background-image: url('/src/assets/backgrounds/lp_bg_dark.webp'); /* Темное изображение */
 }
 
 /* Когда включена темная тема */
