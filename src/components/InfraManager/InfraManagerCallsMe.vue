@@ -5,8 +5,11 @@
             <h2>Последние заявки</h2>
             <Divider />
 
-            <div class="microservice-card">
-                <div v-for="call in lastCalls" :key="call.id" class="call-card" @click="openCallDetails(call.id)">
+            <!-- Кнопка для загрузки последних заявок -->
+            <Button :label="isCallsVisible ? 'Скрыть заявки' : 'Показать заявки'" class="mb-3" severity="secondary"  @click="fetchCallsInfo"/>
+
+            <div class="microservice-card" v-if="isCallsVisible && lastCalls.length">
+                <div  v-for="call in lastCalls" :key="call.id" class="call-card" @click="openCallDetails(call.id)">
                     <h4>Заявка №{{ call.number }}</h4>
                     <p>{{ call.callSummaryName }}</p>
                     <p><strong>Описание:</strong> {{ call.description }}</p>
@@ -85,22 +88,15 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import axiosInstance from '@/utils/axios.js';
-
-// Пропс для передачи ID пользователя
-const props = defineProps({
-  userId: {
-    type: String,
-    required: true
-  }
-});
 
 const lastCalls = ref([]);  // Список последних заявок
 const isDialogVisible = ref(false);  // Видимость модального окна
 const selectedCall = ref(null);  // Выбранная заявка
+const isCallsVisible = ref(false);
 
-const timelineEvents = ref([]);
+const timelineEvents = ref([]); 
 
 // Получение цвета статуса
 const getStatusSeverity = (status) => {
@@ -138,28 +134,11 @@ const getStatusIcon = (status) => {
   }
 }
 
-// Функция для получения последних заявок по ID пользователя
-const fetchUserCalls = async () => {
-    try {
-        const callsResponse = await axiosInstance.get(`/api/infra-manager/users/${props.userId}/calls`);
-        lastCalls.value = callsResponse.data;
-    } catch (error) {
-        console.error('Ошибка при загрузке информации о заявке: ', error);
-    }
-
-}
-
-// Отслеживаем изменение userId и перезапрашиваем заявки
-watch(() => props.userId, async (newUserId) => {
-    if (newUserId) {
-        await fetchUserCalls();
-    }
-}, { immediate: true })
 
 // Открыть модальное окно с информацией по заявке
 const openCallDetails = async (callId) => {
   try {
-    const response = await axiosInstance.get(`/api/infra-manager/calls/${callId}`);
+    const response = await axiosInstance.get(`/api/infra-manager/users/me/calls/${callId}`);
     const callData = response.data;
 
     timelineEvents.value = [
@@ -214,7 +193,7 @@ const openCallDetails = async (callId) => {
       executorFullName: executor.data.fullName || '',
       accomplisherFullName: accomplisher.data.fullName || '',
     };
-
+    console.log('Timeline Events:', timelineEvents.value);
     // Открываем модальное окно
     isDialogVisible.value = true;
   } catch (error) {
@@ -234,7 +213,20 @@ const formatDate = (timestamp) => {
   return date.toLocaleDateString();
 };
 
-
+// Загрузить последние заявки или скрыть их по повторному нажатию
+const fetchCallsInfo = async () => {
+  if (isCallsVisible.value) {
+    isCallsVisible.value = false;
+  } else {
+    try {
+      const callsResponse = await axiosInstance.get('/api/infra-manager/users/me/calls');
+      lastCalls.value = callsResponse.data;
+      isCallsVisible.value = true; 
+    } catch (error) {
+      console.error('Ошибка при загрузке информации о заявке: ', error);
+    }
+  }
+}
 </script>
 
 <style scoped>
@@ -288,8 +280,8 @@ const formatDate = (timestamp) => {
   font-size: 1.4rem;
 }
 h2 {
-    margin-bottom: 5px;
-    font-size: 24px;
-    font-weight: bold;
+  margin-bottom: 5px;
+  font-size: 24px;
+  font-weight: bold;
 }
 </style>
