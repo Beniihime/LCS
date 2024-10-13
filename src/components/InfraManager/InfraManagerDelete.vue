@@ -1,8 +1,6 @@
 <template>
-    <div class="d-flex justify-content-center" @click="showDelete = true">
-        <Button label="Удалить привязку" class="button"/>
-
-        <Dialog v-model:visible="showDelete" modal header="Удалить привязку" :style="{ 'max-width': '50rem' }">
+    <div class="d-flex justify-content-center">
+        <Dialog v-model:visible="showDelete" modal header="Удаление связки" :style="{ 'max-width': '50rem' }">
             <div class="row mb-4">
                 <div class="col">
                     <h5>Пользователь ЛКС</h5>
@@ -23,15 +21,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, defineExpose } from 'vue';
 import axiosInstance from '@/utils/axios.js';
-
-import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
-import AutoComplete from 'primevue/autocomplete';
+import { useToast } from 'primevue/usetoast';
 
 const showDelete = ref(false);
 const isLinked = ref(false);
+const toast = useToast();
 
 // Данные для пользователей ЛКС
 const selectedLKSUser = ref(null);
@@ -43,21 +39,9 @@ const checkLinkStatus = async () => {
 
         if (response.data.personalAccountUserId && response.data.infraManagerUserId) {
             isLinked.value = true;
-            window.dispatchEvent(new CustomEvent('toast', {
-                detail: { 
-                    severity: 'info', 
-                    summary: 'InfraManager', 
-                    detail: `Связка для пользователя ${selectedLKSUser.value.fullName} существует`
-                }
-            }));
+            toast.add({ severity: 'info', summary: 'InfraManager', detail: `Связка для пользователя ${selectedLKSUser.value.fullName} существует`, life: 3000 });
         } else {
-            window.dispatchEvent(new CustomEvent('toast', {
-                detail: {
-                    severity: 'warn',
-                    summary: 'InfraManager',
-                    detail: `Связка для пользователя ${selectedLKSUser.value.fullName} не найдена`
-                }
-            }));
+            toast.add({ severity: 'warn', summary: 'InfraManager', detail: `Связка для пользователя ${selectedLKSUser.value.fullName} не найдена`, life: 3000 });
         }
     } catch (error) {
         console.error('Ошибка при проверки статуса связки: ', error);
@@ -109,6 +93,13 @@ const deleteLink = async () => {
         }
     }
 }
+
+// Добавляем метод для управления состоянием из родителя
+const openDialogDelete = () => {
+    showDelete.value = true;
+};
+
+defineExpose({ openDialogDelete });
 </script>
 
 <style scoped>

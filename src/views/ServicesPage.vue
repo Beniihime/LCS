@@ -17,28 +17,24 @@
                                     </div>
                                 </div>
                                 <div class="row">
-                                    <div class="col">
-                                        <InfraManagerCreate />
-                                    </div>
-                                    <div class="col">
-                                        <InfraManagerDelete />
-                                    </div>
-                                    <div class="col">
-                                        <InfraManagerSearchUsers />
+                                    <div class="col-auto">
+                                        <Menu :model="menuItems"/>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+                <InfraManagerCreate ref="infraCreateRef"/>
+                <InfraManagerDelete ref="infraDeleteRef"/>
+                <InfraManagerSearchUsers ref="infraSearchRef"/>
             </div>
         </div>
     </main>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, nextTick } from 'vue';
 
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import InfraManagerCreate from '@/components/InfraManager/InfraManagerCreate.vue';
@@ -47,11 +43,76 @@ import InfraManagerDelete from '@/components/InfraManager/InfraManagerDelete.vue
 
 const loading = ref(true);
 
-onMounted(() => {
-    setTimeout(() => {
-        loading.value = false;
-    }, 250);
-});
+const infraCreateRef = ref(null); // InfraManagerCreate
+const infraDeleteRef = ref(null); // InfraManagerDelete
+const infraSearchRef = ref(null); // InfraManagerSearchUsers
+
+const menuItems = ref([
+    {
+        label: 'Действия',
+        items: [
+            {
+                label: 'Связка пользователей',
+                icon: 'pi pi-link',
+                command: () => {
+                    showCreateDialog();
+                }
+            },
+            {
+                label: 'Удаление связи',
+                icon: 'pi pi-trash',
+                command: () => {
+                    showDeleteDialog();
+                }
+            },
+            {
+                label: 'Поиск пользоватлей',
+                icon: 'pi pi-user',
+                command: () => {
+                    showSearchDialog();
+                }
+            }
+        ]
+    }
+    
+])
+
+// Вызываем метод для открытия диалога в дочернем компоненте
+const showCreateDialog = () => {
+    nextTick(() => {
+        if (infraCreateRef.value) {
+            infraCreateRef.value.openDialogCreate();
+        } else {
+            console.error('openDialog method is not available.');
+        }
+    });
+};
+
+const showDeleteDialog = () => {
+    nextTick(() => {
+        if (infraDeleteRef.value) {
+            infraDeleteRef.value.openDialogDelete();
+        } else {
+            console.error('openDialog method is not available.');
+        }
+    });
+};
+
+const showSearchDialog = () => {
+    nextTick(() => {
+        if (infraSearchRef.value) {
+            infraSearchRef.value.openDialogSearch();
+        } else {
+            console.error('openDialog method is not available.');
+        }
+    });
+};
+
+// onMounted(() => {
+//     setTimeout(() => {
+//         loading.value = false;
+//     }, 250);
+// });
 
 </script>
 
@@ -67,19 +128,12 @@ main {
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    padding: 20px;
+    padding: 20px 8rem;
     overflow: hidden;
     color: var(--p-text-color);
 }
-.infra-manager {
-    background-color: var(--p-bg-color-2);
-    padding: 20px;
-    border-radius: 18px;
-    border: 1px solid var(--p-grey-4);
-    transition: all 0.5s;
-}
 .card-text {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     font-family: 'SF Pro Rounded', sans-serif;
     color: var(--p-grey-1);
     margin-top: 20px;
@@ -87,7 +141,7 @@ main {
 .card {
     border-radius: 18px;
     transition: all 0.5s;
-    background-color: var(--p-bg-color-2);
+    background-color: transparent;
     color: var(--p-text-color);
     display: flex;
     flex-direction: column;
@@ -96,7 +150,6 @@ main {
     border: 0;
 }
 .card-body {
-    padding: 28px;
     display: flex;
     flex-direction: column;
     flex-grow: 1;

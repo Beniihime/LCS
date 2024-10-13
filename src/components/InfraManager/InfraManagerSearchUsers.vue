@@ -1,8 +1,7 @@
 <template>
     <div class="d-flex justify-content-center">
-        <Button label="Поиск пользователей" class="button" @click="showSearchInfraUser = true"/>
 
-        <Dialog v-model:visible="showSearchInfraUser" modal header="Найти пользователя InfraManager" :style="{ 'max-width': '110rem', 'min-width': '35rem' }">
+        <Dialog v-model:visible="showSearchInfraUser" modal header="Поиск пользователей" :style="{ 'max-width': '110rem', 'min-width': '35rem' }">
             <div class="row mb-4">
                 <div class="col">
                     <h5>Пользователь InfraManager</h5>
@@ -38,13 +37,23 @@
                         @node-expand="onNodeExpand" 
                         @node-collapse="onNodeCollapse"
                         loadingMode="icon"
-                    />
+                    >
+                        <template #default="{ node }">
+                            <span>{{ node.label }}</span>
+                            <Tag 
+                                v-if="node.isAvailable !== undefined"
+                                :severity="node.isAvailable ? 'success' : 'danger'"
+                                :icon="node.isAvailable ? 'pi pi-check' : 'pi pi-times'"
+                                class="ms-2"
+                            />
+                        </template>
+                    </Tree>
                 </div>
             </div>
             <Divider v-if="selectedInfraUserDetails" class="my-4"/>
             <div v-if="lastCalls.length" class="row my-4">
                 <div class="col">
-                    <InfraManagerCalls v-if="selectedInfraUserDetails" />
+                    <InfraManagerCalls v-if="selectedInfraUserDetails" :userId="selectedInfraUser.id" />
                 </div>
             </div>
         </Dialog>
@@ -54,12 +63,6 @@
 <script setup>
 import { ref } from 'vue';
 import axiosInstance from '@/utils/axios.js';
-
-import Dialog from 'primevue/dialog';
-import Divider from 'primevue/divider';
-import Button from 'primevue/button';
-import AutoComplete from 'primevue/autocomplete';
-import Tree from 'primevue/tree';
 
 import InfraManagerCalls from '@/components/InfraManager/InfraManagerCalls.vue';
 
@@ -132,9 +135,11 @@ const transformServicesToTree = (services) => {
         children: category.services.map(service => ({
             key: `service-${service.id}`,
             label: service.name,
+            isAvailable: service.isAvailable,
             children: service.items.map(item => ({
                 key: `item-${item.id}`,
-                label: item.name
+                label: item.name,
+                isAvailable: item.isAvailable
             }))
         }))
     }));
@@ -160,31 +165,18 @@ const clearInfraUserSelection = () => {
     servicesTree.value = [];
     expandedKeys.value = {};
 };
+
+// Добавляем метод для управления состоянием из родителя
+const openDialogSearch = () => {
+    showSearchInfraUser.value = true;
+};
+
+defineExpose({ openDialogSearch });
 </script>
 
 <style scoped>
-.button {
-    width: 100%;
-    border-radius: 12px;
-    color: white;
-    font-size: 1.2rem;
-}
 p {
     margin-bottom: 5px;
     font-size: 1.1rem;
-}
-.card-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1rem;
-}
-.call-card {
-    padding: 1rem;
-    border: 1px solid var(--p-grey-3);
-    border-radius: 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-.title {
-    font-size: 2rem;
 }
 </style>

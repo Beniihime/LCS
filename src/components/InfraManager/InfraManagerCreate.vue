@@ -1,8 +1,8 @@
 <template>
     <div class="d-flex justify-content-center">
-        <Button label="Связать пользователей" class="button" @click="showCreateInfra = true"/>
+        <!-- <Button label="Связать пользователей" class="button" @click="showCreateInfra = true"/> -->
 
-        <Dialog v-model:visible="showCreateInfra" modal header="Связать пользователей" :style="{ 'max-width': '50rem' }">
+        <Dialog v-model:visible="showCreateInfra" modal header="Связка пользователей" :style="{ 'max-width': '50rem' }">
             <div class="row mb-4">
                 <div class="col">
                     <h5>Пользователь ЛКС</h5>
@@ -46,13 +46,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, defineExpose } from 'vue';
 import axiosInstance from '@/utils/axios.js';
-
-import Dialog from 'primevue/dialog';
-import Divider from 'primevue/divider';
-import Button from 'primevue/button';
-import AutoComplete from 'primevue/autocomplete';
 
 const showCreateInfra = ref(false);
 
@@ -158,6 +153,13 @@ const createLink = async () => {
         }
     }
 }
+
+// Добавляем метод для управления состоянием из родителя
+const openDialogCreate = () => {
+    showCreateInfra.value = true;
+};
+
+defineExpose({ openDialogCreate });
 </script>
 
 <style scoped>
