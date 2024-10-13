@@ -5,7 +5,7 @@
             <div class="profile-card">
                 <div class="profile-header">
                     <EditProfile :firstName="firstName" :lastName="lastName" />
-                    <img src="../assets/backgrounds/profBack.png" alt="Profile Header" class="header-image"/>
+                    <img src="../assets/backgrounds/profBack.webp" alt="Profile Header" class="header-image"/>
                 </div>
                 <div class="avatar-wrapper">
                     <Avatar :image="srcAvatar" size="large" shape="circle" style="transition: all 0.5s;"/>
@@ -59,7 +59,7 @@
             </div>
 
             <div class="infra-profile-card mt-3" v-if="infraManagerUser">
-                <h2>Профиль InfraManager</h2>
+                <h2>InfraManager</h2>
                 <Divider class="my-3"/>
 
                 <div class="infra-info">
@@ -92,12 +92,12 @@
 
             <!-- Сообщение, если связки с InfraManager нет -->
             <div class="infra-profile-card mt-3" v-else>
-                <h2>Профиль InfraManager отсутствует</h2>
+                <h2>InfraManager отсутствует</h2>
                 <Divider class="my-4"/>
-                <p>Связь с аккаунтом InfraManager не установлена.</p>
+                <p>Связь с InfraManager не установлена.</p>
             </div>
-
-            <InfraManagerCalls v-if="infraManagerUser"/>
+            <InfraManagerServices v-if="infraManagerUser"/>
+            <InfraManagerCallsMe v-if="infraManagerUser"/>
         </div>
     </main>
 </template>
@@ -106,16 +106,13 @@
 import { ref, onMounted } from 'vue';
 import axiosInstance from '@/utils/axios.js';
 
-import Avatar from 'primevue/avatar';
-import Divider from 'primevue/divider';
-
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import EditProfile from '@/components/Utils/EditProfile.vue';
-import InfraManagerCalls from '../components/InfraManager/InfraManagerCalls.vue';
+import InfraManagerCallsMe from '@/components/InfraManager/InfraManagerCallsMe.vue';
+import InfraManagerServices from '@/components/InfraManager/InfraManagerServices.vue';
 
 const srcAvatar = ref(null);
 const loading = ref(true);
-const bio = ref('');
 const fileInput = ref(null);
 
 const firstName = ref('');

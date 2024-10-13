@@ -41,14 +41,16 @@ main {
 }
 .content-wrap {
     flex-grow: 1;
-    padding: 20px;
+    padding: 20px 8rem;
     color: var(--p-text-color);
+    transition: all 0.5s;
 }
 
 h2 {
     margin-bottom: 20px;
     font-size: 2rem;
     color: var(--p-text-color);
+    transition: all 0.5s;
 }
 
 /* Оформление карточек уведомлений */
@@ -59,11 +61,11 @@ h2 {
 }
 
 .notification-card {
-    background-color: var(--p-grey-4);
+    background-color: var(--p-grey-7);
     border-radius: 10px;
     padding: 15px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
+    transition: all 0.5s;
 }
 
 .notification-card:hover {
@@ -85,11 +87,13 @@ h2 {
 .notification-timestamp {
     font-size: 0.9rem;
     color: var(--p-grey-1);
+    transition: all 0.5s;
 }
 
 .notification-detail {
     font-size: 1rem;
     color: var(--p-text-color);
+    transition: all 0.5s;
 }
 
 .notification-detail p {
