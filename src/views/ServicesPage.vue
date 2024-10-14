@@ -108,11 +108,11 @@ const showSearchDialog = () => {
     });
 };
 
-// onMounted(() => {
-//     setTimeout(() => {
-//         loading.value = false;
-//     }, 250);
-// });
+onMounted(() => {
+    setTimeout(() => {
+        loading.value = false;
+    }, 250);
+});
 
 </script>
 

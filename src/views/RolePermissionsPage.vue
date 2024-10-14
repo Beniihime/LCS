@@ -20,14 +20,27 @@
             <h3>Выбранная роль</h3>
             <div class="card h-100">
                 <div class="card-body">
-                    <h5 class="card-title">{{ roleStore.roleTitle }}</h5>
-                    <p class="card-text">{{ roleStore.roleType }}</p>
+                    <Chip class="role-label">
+                        <span class="roleType" :class="getRoleTypeClass()">
+                            {{ roleStore.roleType.charAt(0) }}
+                        </span>
+                        <span>{{ roleStore.roleTitle }}</span>
+                    </Chip>
                     <p class="card-text">{{ roleStore.roleDescription }}</p>
                 </div>
             </div>
             <Divider />
             <div v-for="resource in filteredResources" :key="resource.id" class="mt-4">
-                <h3 class="resource-title">{{ resource.title }}<span class="resourse-type ms-4">{{ resource.type }}</span></h3>
+                <h3 class="resource-title d-flex align-items-center">
+                    {{ resource.title }}
+                    <Tag :value="resource.type" severity="info" class="mx-2"/>
+                    <Tag 
+                        v-if="!resource.permissions.some(permission => permission.isCustomizable)" 
+                        value="Нет регулируемых полномочий" 
+                        severity="warn" 
+                        icon="pi pi-exclamation-triangle"
+                    />
+                </h3>
                 <div class="resource-info">
                     <p class="resource-description">{{ resource.description }}</p>
                 </div>
@@ -36,10 +49,15 @@
                         <h3 class="permission-title">{{ permission.title }}</h3>
                         <p class="permission-description">{{ permission.description }}</p>
                     </div>
-                    <ToggleSwitch
-                        v-model="permission.enabled"
-                        @update:model-value="togglePermission(roleStore.roleId, permission.id, $event)"
-                    />
+                    <div v-if="permission.isCustomizable">
+                        <ToggleSwitch
+                            v-model="permission.enabled"
+                            @update:model-value="togglePermission(roleStore.roleId, permission.id, $event)"
+                        />
+                    </div>
+                    <div v-else v-if="permission.enabled">
+                        <Tag value="Установлено" severity="success" icon="pi pi-check"/>
+                    </div>
                 </div>
                 <Divider />
             </div>
@@ -144,10 +162,8 @@ const updatePermissionStatus = (permissionId, isActive) => {
 };
 
 const filteredResources = computed(() => {
-    // Фильтруем ресурсы по параметру isCustomizable
     const customizableResources = allPermissions.value.map(resource => ({
         ...resource,
-        permissions: resource.permissions.filter(permission => permission.isCustomizable)
     }));
 
     if (!searchQuery.value) {
@@ -164,6 +180,11 @@ const filteredResources = computed(() => {
     })).filter(resource => resource.permissions.length > 0); // Возвращаем только те ресурсы, которые содержат полномочия после фильтрации
 });
 
+// Классы для отображения ролей в зависимости от их типа
+const getRoleTypeClass = () => {
+    return roleStore.roleType === 'Custom' ? 'custom-role-type' : 'default-role-type';
+}
+
 onMounted(async () => {
     await fetchAllPermissions();
     await fetchRolePermissions();
@@ -171,8 +192,11 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.p-chip {
+    background: transparent;
+}
 .permissions-wrapper {
-    padding: 20px;
+    padding: 1.25rem 8rem;
     color: var(--p-text-color);
 }
 .search {
@@ -188,15 +212,13 @@ onMounted(async () => {
 .card {
     border-radius: 18px;
     transition: transform 0.3s ease;
-    background-color: var(--p-bg-color-2);
+    background-color: var(--p-grey-7);
     color: var(--p-text-color);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     height: 100%;
-}
-.card:hover {
-    transform: scale(1.02);
+    transition: all 0.5s;
 }
 .card-body {
     padding: 28px;
@@ -207,14 +229,14 @@ onMounted(async () => {
 .card-title {
     font-size: 1.5rem;
     margin-bottom: 10px;
-    font-family: 'SF Pro Rounded', sans-serif;
+    font-family: 'SF Pro Rounded';
     color: var(--p-text-color);
 }
 .card-text {
     font-size: 1.2rem;
     font-family: 'SF Pro Rounded', sans-serif;
     color: var(--p-grey-1);
-    margin-top: 5px;
+    margin-top: 10px;
 }
 .resourse-type {
     color: var(--p-grey-1);
@@ -227,10 +249,11 @@ onMounted(async () => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px;
+    padding: 20px;
     border-radius: 18px;
-    background-color: var(--p-grey-6);
+    background-color: var(--p-grey-7);
     margin-bottom: 10px;
+    transition: all 0.5s;
 }
 .permission-info {
     display: flex;
@@ -242,5 +265,23 @@ onMounted(async () => {
 .permission-description {
     font-size: 0.9rem;
     color: var(--p-grey-1);
+}
+.role-label {
+    font-size: 1.5rem;
+    font-weight: 400;
+}
+.roleType {
+    background-color: var(--p-blue-500);
+    border-radius: 50%;
+    font-size: 28px;
+    color: white;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.custom-role-type {
+    background-color: var(--p-purple-500);
 }
 </style>

@@ -1,16 +1,9 @@
-/* @font-face {
-  font-family: "SF Pro Rounded";
-  src: url('@/assets/fonts/SFProRoundedRegular.woff') format("woff"),
-       url('@/assets/fonts/SFProRoundedRegular.woff2') format("woff2");
-} */
 @font-face {
   font-family: "SF Pro Rounded";
-  src: url("https://db.onlinewebfonts.com/t/ead4092f880f75ff0883ced1856b2c37.eot");
-  src: url("https://db.onlinewebfonts.com/t/ead4092f880f75ff0883ced1856b2c37.eot?#iefix")format("embedded-opentype"),
-  url("https://db.onlinewebfonts.com/t/ead4092f880f75ff0883ced1856b2c37.woff2")format("woff2"),
-  url("https://db.onlinewebfonts.com/t/ead4092f880f75ff0883ced1856b2c37.woff")format("woff"),
-  url("https://db.onlinewebfonts.com/t/ead4092f880f75ff0883ced1856b2c37.ttf")format("truetype"),
-  url("https://db.onlinewebfonts.com/t/ead4092f880f75ff0883ced1856b2c37.svg#SF Pro Rounded Regular")format("svg");
+  src: url("https://db.onlinewebfonts.com/t/ead4092f880f75ff0883ced1856b2c37.woff2")format("woff2"),
+  url("https://db.onlinewebfonts.com/t/ead4092f880f75ff0883ced1856b2c37.woff")format("woff");
+  font-weight: 400;
+  font-display: swap;
 }
 
 nav.p-datatable-paginator-bottom {
@@ -166,7 +159,7 @@ svg.lcs {
   --p-grey-4: #D1D1D6;
   --p-grey-5: #E5E5EA;
   --p-grey-6: #F2F2F7;
-  --p-grey-7: #F2F2F7;
+  --p-grey-7: #F0F0F08A;
 
 }
 

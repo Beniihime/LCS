@@ -179,8 +179,8 @@ const fetchMeInfo = async () => {
     loading.value = false;
 }
 
-onMounted(() => {
-    fetchMeInfo();
+onMounted(async () => {
+    await fetchMeInfo();
 })
 
 </script>
@@ -203,7 +203,7 @@ main {
     border: 6px solid var(--p-grey-6);
     border-radius: 50%;
     overflow: hidden;
-    background-color: var(--p-grey-2);
+    background-color: var(--p-grey-6);
     justify-content: center;
     align-items: center;
     display: flex;

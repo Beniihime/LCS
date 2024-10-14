@@ -6,17 +6,12 @@ import { visualizer } from "rollup-plugin-visualizer";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [vue(), svgLoader(), mkcert(), visualizer()],
-  server: {
-    host: "0.0.0.0",
-    https: true,
-  },
-  resolve: { 
-    alias: { 
-      '@': '/src',
-      '~': '/public'
-    } 
-  },
+  plugins: [
+    vue(),
+    svgLoader(),
+    mkcert(),
+    visualizer(),
+  ],
   build: {
     rollupOptions: {
       output: {
@@ -27,6 +22,17 @@ export default defineConfig({
         }
       }
     },
-    // chunkSizeWarningLimit: 1600,
-  }
-})
+    chunkSizeWarningLimit: 1000,
+  },
+  server: {
+    host: "0.0.0.0",
+    https: true,
+  },
+  resolve: { 
+    alias: { 
+      '@': '/src',
+      '~': '/public'
+    } 
+  },
+});
+
