@@ -1,5 +1,6 @@
 <template>
     <main>
+        <WelcomeScreen :visible="loading" />
         <div class="content-wrap">
             <DataTable
                 :value="calls"
@@ -30,7 +31,7 @@
                 </template>
 
                 <template #empty>Не найдено.</template>
-                
+
                 <Column field="documentCount" header="" sortable style="min-width: 50px;">
                     <template #body="{ data }">
                         <OverlayBadge :value="data.documentCount" :severity="data.documentCount ? 'danger' : 'secondary'">
@@ -150,6 +151,7 @@ import axiosInstance from '@/utils/axios.js';
 
 import InfraManagerCallsMe from '@/components/InfraManager/InfraManagerCallsMe.vue';
 import InfraManagerServices from '@/components/InfraManager/InfraManagerServices.vue';
+import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 
 const loading = ref(true);
 
