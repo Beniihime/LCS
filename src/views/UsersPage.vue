@@ -46,7 +46,6 @@
                 scrollHeight="765px"
                 :rows="rowsPerPage"
                 :totalRecords="totalRecords"
-                :globalFilterFields="['firstName', 'lastName','middleName', 'email']"
                 @page="onPage"
             >
                 <template #header>

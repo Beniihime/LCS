@@ -85,14 +85,16 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, defineExpose } from 'vue';
 import axiosInstance from '@/utils/axios.js';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
 
 // Пропс для передачи ID пользователя
 const props = defineProps({
   userId: {
     type: String,
-    required: true
   }
 });
 
@@ -234,7 +236,7 @@ const formatDate = (timestamp) => {
   return date.toLocaleDateString();
 };
 
-
+defineExpose({ openCallDetails });
 </script>
 
 <style scoped>
@@ -273,7 +275,7 @@ const formatDate = (timestamp) => {
 .details-section {
   padding: 20px;
   border-radius: 10px;
-  background-color: var(--p-grey-5);
+  background-color: var(--p-grey-7);
 }
 .details-section h4 {
   margin-top: 0;

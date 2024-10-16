@@ -49,6 +49,11 @@ const routes = [
                 name: 'Services',
                 meta: { permission: { type: 'InfraManager', action: 'Read' }, requiresAuth: true  }
             },
+            {
+                path: "/requests",
+                component: () => import('@/views/RequestsPage.vue'),
+                name: 'Requests'
+            }
         ]
     }, 
     { 
