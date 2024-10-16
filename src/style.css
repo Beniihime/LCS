@@ -64,7 +64,9 @@ th.p-datatable-header-cell {
     stroke: var(--p-blue-500);
   }
 }
-
+.removed-row {
+  background-color: rgba(255, 0, 0, 0.2) !important;
+}
 body {
   font-family: 'SF Pro Rounded' !important;
   font-weight: 400 !important;
