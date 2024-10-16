@@ -33,6 +33,21 @@
                     </router-link>
                 </div>
             </div>
+            <div class="general">Пользователь</div>
+            <div class="menu" v-for="item in menuItems">
+                <router-link 
+                    :key="item.path" 
+                    :to="item.path" 
+                    class="menu-item" 
+                    active-class="active-link"
+                    v-if="checkPermission(item.path) && showRequestsMenu"
+                >
+                    <i :class="item.icon"></i>
+                    <div class="menucrumb">
+                        <span>{{ item.name }}</span>
+                    </div>
+                </router-link>
+            </div>
             <div class="split mb-4"></div>
             <ThemeSwitcher />
             <router-link class="profile" to="/profile" active-class="active-link">
@@ -98,7 +113,7 @@ const email = ref('');
 const initials = ref('');
 const fullName = ref('');
 const searchQuery = ref('');
-const menuItems = [
+const menuItemsAdmin = [
     {
         name: 'Пользователи',
         path: '/users',
@@ -118,11 +133,19 @@ const menuItems = [
         name: 'Микросервисы',
         path: '/services',
         icon: 'pi pi-desktop'
-    }
+    },
 ];
 
+const menuItems = [
+    {
+        name: 'Заявки',
+        path: '/requests',
+        icon: 'pi pi-pen-to-square'
+    }
+]
+
 const filteredMenuItems = computed(() => {
-    return menuItems.filter(item =>
+    return menuItemsAdmin.filter(item =>
         item.name.toLowerCase().startsWith(searchQuery.value.toLowerCase())
     );
 });
@@ -180,6 +203,8 @@ const logout = async () => {
     router.push('/auth');
 };
 
+const showRequestsMenu = ref(false);
+
 onBeforeMount(async () => {
     try {
         const response = await axiosInstance.get('/api/users/me/info');
@@ -189,6 +214,14 @@ onBeforeMount(async () => {
 
         fullName.value = `${firstName.value} ${lastName.value}`.trim();
         initials.value = getInitials(firstName.value, lastName.value);
+
+        const userId = response.data.id;
+        const statusResponse = await axiosInstance.get(`/api/infra-manager/db/users/${userId}/status`);
+        if (statusResponse.data.personalAccountUserId && statusResponse.data.infraManagerUserId) {
+            showRequestsMenu.value = true;
+        } else {
+            showRequestsMenu.value = false;
+        }
     } catch (error) {
         console.error('Ошибка при получении информации о пользователе: ', error);
     }

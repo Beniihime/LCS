@@ -96,8 +96,8 @@
                 <Divider class="my-4"/>
                 <p>Связь с InfraManager не установлена.</p>
             </div>
-            <InfraManagerServices v-if="infraManagerUser"/>
-            <InfraManagerCallsMe v-if="infraManagerUser"/>
+            <!-- <InfraManagerServices v-if="infraManagerUser"/>
+            <InfraManagerCallsMe v-if="infraManagerUser"/> -->
         </div>
     </main>
 </template>

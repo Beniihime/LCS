@@ -1,37 +1,42 @@
 <template>
     <div>
-        <div class="service-card mt-3">
-            <h2>Доступные сервисы</h2>
-            <Divider />
+        <Button class="toggle-button" label="Доступные сервисы" @click="fetchServices"/>
+        <Dialog v-model:visible="isDialogVisible" modal :style="{ 'max-width': '80rem' }" @hide="closeDialog">
+            <div class="service-card mt-3">
+                <h2>Доступные сервисы</h2>
+                <Divider />
 
-            <div class="row">
-                <div class="col">
-                    <Tree 
-                        :value="servicesTree" 
-                        :expanded-keys="expandedKeys" 
-                        @node-expand="onNodeExpand" 
-                        @node-collapse="onNodeCollapse"
-                        loadingMode="icon"
-                    >
-                        <template #default="{ node }">
-                            <span>{{ node.label }}</span>
-                            <Tag 
-                                v-if="node.isAvailable !== undefined"
-                                :severity="node.isAvailable ? 'success' : 'danger'"
-                                :icon="node.isAvailable ? 'pi pi-check' : 'pi pi-times'"
-                                class="ms-2"
-                            />
-                        </template>
-                    </Tree>
+                <div class="row">
+                    <div class="col">
+                        <Tree 
+                            :value="servicesTree" 
+                            :expanded-keys="expandedKeys" 
+                            @node-expand="onNodeExpand" 
+                            @node-collapse="onNodeCollapse"
+                            loadingMode="icon"
+                        >
+                            <template #default="{ node }">
+                                <span>{{ node.label }}</span>
+                                <Tag 
+                                    v-if="node.isAvailable !== undefined"
+                                    :severity="node.isAvailable ? 'success' : 'danger'"
+                                    :icon="node.isAvailable ? 'pi pi-check' : 'pi pi-times'"
+                                    class="ms-2"
+                                />
+                            </template>
+                        </Tree>
+                    </div>
                 </div>
             </div>
-        </div>
+        </Dialog>
     </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import axiosInstance from '@/utils/axios.js';
+
+const isDialogVisible = ref(false);  // Видимость модального окна
 
 const servicesTree = ref([]); // Данные для дерева сервисов
 const expandedKeys = ref({}); // Раскрытые узлы дерева
@@ -60,6 +65,7 @@ const fetchServices = async () => {
 
 // Преобразование данных сервисов в формат дерева
 const transformServicesToTree = (services) => {
+    isDialogVisible.value = true;
     return services.map(category => ({
         key: `category-${category.id}`,
         label: category.name,
@@ -75,11 +81,6 @@ const transformServicesToTree = (services) => {
         }))
     }));
 };
-
-
-onMounted(async () => {
-    await fetchServices();
-})
 </script>
 
 <style scoped>
@@ -96,5 +97,9 @@ h2 {
     font-size: 24px;
     font-weight: bold;
 }
-
+.toggle-button {
+    border-radius: 12px;
+    font-size: 14pt;
+    transition: all 0.5s;
+}
 </style>

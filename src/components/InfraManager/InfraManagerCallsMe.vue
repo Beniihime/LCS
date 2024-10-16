@@ -227,6 +227,8 @@ const fetchCallsInfo = async () => {
     }
   }
 }
+
+defineExpose({ openCallDetails });
 </script>
 
 <style scoped>
