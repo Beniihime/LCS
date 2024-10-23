@@ -10,10 +10,11 @@
                 scrollable
                 removableSort
                 stripedRows
-                style="max-width: 86rem;"
-                scrollHeight="875px"
+                style="max-width: 96rem;"
+                scrollHeight="84vh"
                 @page="onPage"
                 :rowClass="rowClass"
+                @row-click="(event) => openCallDetails(event.data.id)"
             >
                 <template #header>
                     <div class="row justify-content-between align-items-center">
@@ -39,14 +40,14 @@
                         </OverlayBadge>
                     </template>
                 </Column>
-                <Column field="number" header="#" sortable style="min-width: 50px">
+                <Column field="number" header="#" sortable style="min-width: 50px" class="openCall">
                     <template #body="{ data }">
-                        <div @click="openCallDetails(data.id)" class="openCall" v-if="!data.removed">
-                            {{ data.number }}
-                        </div>
-                        <div v-else style="cursor: not-allowed;">
-                            {{ data.number }}
-                        </div>
+                        {{ data.number }}
+                    </template>
+                </Column>
+                <Column field="entityStateName" header="Статус" style="min-width: 100px;">
+                    <template #body="{ data }">
+                        <Tag :value="data.entityStateName" :severity="getStatusSeverity(data.entityStateName)" :icon="getStatusIcon(data.entityStateName)"/>
                     </template>
                 </Column>
                 <Column field="initiatorFullName" header="Инициатор" sortable style="min-width: 200px">
@@ -113,11 +114,6 @@
                 <Column field="utcDateClosed" header="Дата закрытия" style="min-width: 290px">
                     <template #body="{ data }">
                         {{ formatDate(data.utcDateClosed) }}
-                    </template>
-                </Column>
-                <Column field="entityStateName" header="Статус" style="min-width: 100px;">
-                    <template #body="{ data }">
-                        <Tag :value="data.entityStateName" :severity="getStatusSeverity(data.entityStateName)" :icon="getStatusIcon(data.entityStateName)" />
                     </template>
                 </Column>
 
@@ -220,7 +216,7 @@ const formatDate = (dateStr) => {
 }
 
 const rowClass = (data) => {
-    return [{ 'removed-row': data.removed }];
+    return [{ 'removed-row': data.removed , 'not-allowed': data.removed, 'pointer': !data.removed }];
 };
 
 // Загрузка заявок (по страницам)
@@ -314,7 +310,7 @@ main {
 }
 .content-wrap {
     flex-grow: 1;
-    padding: 10pt 5rem;
+    padding: 10pt 1px;
     color: var(--p-text-color);
     transition: all 0.5s;
 }
@@ -324,5 +320,10 @@ main {
 }
 .pi {
     font-size: 2rem;
+}
+.search {
+    border-radius: 12pt;
+    font-size: 18px;
+    transition: all 0.5s;
 }
 </style>

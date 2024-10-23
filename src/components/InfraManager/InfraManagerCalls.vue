@@ -265,7 +265,6 @@ defineExpose({ openCallDetails });
 .dialog-title {
   text-align: center;
   margin-bottom: 20px;
-  font-size: 1.5em;
 }
 .call-details {
   display: grid;
@@ -279,7 +278,6 @@ defineExpose({ openCallDetails });
 }
 .details-section h4 {
   margin-top: 0;
-  font-size: 1.2em;
 }
 .details-section p {
   margin: 5px 0;
@@ -291,7 +289,6 @@ defineExpose({ openCallDetails });
 }
 h2 {
     margin-bottom: 5px;
-    font-size: 24px;
     font-weight: bold;
 }
 </style>

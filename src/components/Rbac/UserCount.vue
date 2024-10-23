@@ -134,7 +134,6 @@ onMounted(async () => {
     display: inline-block;
     padding: 4px 8px;
     border-radius: 12px;
-    font-size: 1rem;
     font-weight: 500;
 }
 </style>

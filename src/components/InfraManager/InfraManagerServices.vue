@@ -3,7 +3,7 @@
         <Button class="toggle-button" label="Доступные сервисы" @click="fetchServices"/>
         <Dialog v-model:visible="isDialogVisible" modal :style="{ 'max-width': '80rem' }" @hide="closeDialog">
             <div class="service-card mt-3">
-                <h2>Доступные сервисы</h2>
+                <h3>Доступные сервисы</h3>
                 <Divider />
 
                 <div class="row">
@@ -94,12 +94,10 @@ const transformServicesToTree = (services) => {
 
 h2 {
     margin-bottom: 5px;
-    font-size: 24px;
     font-weight: bold;
 }
 .toggle-button {
     border-radius: 12px;
-    font-size: 14pt;
     transition: all 0.5s;
 }
 </style>

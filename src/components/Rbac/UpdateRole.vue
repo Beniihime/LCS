@@ -104,7 +104,6 @@ label {
     font-size: 16px;
 }
 .form-input {
-    font-size: 16px;
     width: 100%;
 }
 .edit-btn {

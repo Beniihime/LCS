@@ -45,9 +45,10 @@
                             removableSort
                             stripedRows
                             style="max-width: 81rem;"
-                            scrollHeight="620px"
+                            scrollHeight="59vh"
                             @page="onPage"
                             :rowClass="rowClass"
+                            @row-click="(event) => openCallDetails(event.data.id)"
                         >
                             <template #header>
                                 <div class="d-flex justify-content-between align-items-center">
@@ -70,8 +71,6 @@
 
                             <Column field="documentCount" header="" sortable style="min-width: 50px;">
                                 <template #body="{ data }">
-                                    <!-- {{ data.documentCount }} -->
-                                    <!-- <i class="pi pi-file"></i> -->
                                     <OverlayBadge :value="data.documentCount" :severity="data.documentCount ? 'danger' : 'secondary'">
                                         <i class="pi pi-file" style="font-size: 2rem" />
                                     </OverlayBadge>
@@ -79,12 +78,12 @@
                             </Column>
                             <Column field="number" header="#" sortable style="min-width: 50px">
                                 <template #body="{ data }">
-                                    <div @click="openCallDetails(data.id)" class="openCall" v-if="!data.removed">
-                                        {{ data.number }}
-                                    </div>
-                                    <div v-else style="cursor: not-allowed;">
-                                        {{ data.number }}
-                                    </div>
+                                    {{ data.number }}
+                                </template>
+                            </Column>
+                            <Column field="entityStateName" header="Статус" style="min-width: 100px;">
+                                <template #body="{ data }">
+                                    <Tag :value="data.entityStateName" :severity="getStatusSeverity(data.entityStateName)" :icon="getStatusIcon(data.entityStateName)" />
                                 </template>
                             </Column>
                             <Column field="initiatorFullName" header="Инициатор" sortable style="min-width: 200px">
@@ -151,11 +150,6 @@
                             <Column field="utcDateClosed" header="Дата закрытия" style="min-width: 290px">
                                 <template #body="{ data }">
                                     {{ formatDate(data.utcDateClosed) }}
-                                </template>
-                            </Column>
-                            <Column field="entityStateName" header="Статус" style="min-width: 100px;">
-                                <template #body="{ data }">
-                                    <Tag :value="data.entityStateName" :severity="getStatusSeverity(data.entityStateName)" :icon="getStatusIcon(data.entityStateName)" />
                                 </template>
                             </Column>
 
@@ -270,7 +264,7 @@ const formatDate = (dateStr) => {
 }
 
 const rowClass = (data) => {
-    return [{ 'removed-row': data.removed }];
+    return [{ 'removed-row': data.removed , 'not-allowed': data.removed, 'pointer': !data.removed }];
 };
 
 const searchUsers = async (event) => {

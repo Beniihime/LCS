@@ -11,8 +11,8 @@
                 <InputIcon class="pi pi-search" />
                 <InputText class="search" v-model="searchQuery" placeholder="Поиск..."/>
             </IconField>
-            <div class="general">Администрирование</div>
             <div class="menu">
+                <div class="general mt-4" v-if="hasPermission('User', 'Read')">Администрирование</div>
                 <div v-for="item in filteredMenuItems">
                     <router-link 
                         :key="item.path" 
@@ -20,6 +20,24 @@
                         class="menu-item" 
                         active-class="active-link"
                         v-if="checkPermission(item.path)"
+                    >
+                        
+                        <i :class="item.icon"></i>
+                        <div class="menucrumb">
+                            <span>{{ item.name }}</span>
+                        </div>
+                    </router-link>
+                </div>
+            </div>
+            <div class="menu">
+                <div class="general mt-4" v-if="menuItems">Сервисы</div>
+                <div v-for="item in menuItems">
+                    <router-link 
+                        :key="item.path" 
+                        :to="item.path" 
+                        class="menu-item" 
+                        active-class="active-link"
+                        v-if="checkPermission(item.path) && showRequestsMenu"
                     >
                         <i :class="item.icon"></i>
                         <div class="menucrumb">
@@ -32,21 +50,6 @@
                         </div>
                     </router-link>
                 </div>
-            </div>
-            <div class="general">Пользователь</div>
-            <div class="menu" v-for="item in menuItems">
-                <router-link 
-                    :key="item.path" 
-                    :to="item.path" 
-                    class="menu-item" 
-                    active-class="active-link"
-                    v-if="checkPermission(item.path) && showRequestsMenu"
-                >
-                    <i :class="item.icon"></i>
-                    <div class="menucrumb">
-                        <span>{{ item.name }}</span>
-                    </div>
-                </router-link>
             </div>
             <div class="split mb-4"></div>
             <ThemeSwitcher />
@@ -120,11 +123,6 @@ const menuItemsAdmin = [
         icon: 'pi pi-user'
     },
     {
-        name: 'Уведомления',
-        path: '/notif',
-        icon: 'pi pi-bell'
-    },
-    {
         name: 'Роли',
         path: '/rbac',
         icon: 'pi pi-sitemap'
@@ -141,7 +139,12 @@ const menuItems = [
         name: 'Заявки',
         path: '/requests',
         icon: 'pi pi-pen-to-square'
-    }
+    },
+    {
+        name: 'Уведомления',
+        path: '/notif',
+        icon: 'pi pi-bell'
+    },
 ]
 
 const filteredMenuItems = computed(() => {
@@ -305,14 +308,12 @@ onBeforeMount(async () => {
 .general {
     font-family: 'SF Pro Rounded';
     font-weight: bold;
-    margin-block: 20px;
     font-size: 22px;
     color: var(--p-text-color);
     transition: all 0.5s;
 }
 .menucrumb {
     font-family: 'SF Pro Rounded';
-    font-size: 14pt;
     padding-left: 48pt;
     display: flex;
     align-items: center;
@@ -345,7 +346,6 @@ onBeforeMount(async () => {
 }
 .search {
     border-radius: 12pt;
-    font-size: 14pt;
     transition: all 0.5s;
     width: 100%; 
 }

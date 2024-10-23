@@ -110,7 +110,6 @@ label {
     transition: all 0.5s;
 }
 .form-input {
-    font-size: 16px;
     width: 100%;
 }
 .save-btn {

@@ -43,7 +43,7 @@
                 stripedRows 
                 removableSort 
                 scrollable
-                scrollHeight="765px"
+                scrollHeight="74vh"
                 :rows="rowsPerPage"
                 :totalRecords="totalRecords"
                 @page="onPage"
@@ -125,7 +125,7 @@
                         </div>
                     </template>
                 </Column>
-                <Column field="isBlocked" header="Статус" style="min-width: 5rem;">
+                <Column field="isBlocked" header="Статус" style="min-width: 4rem;">
                     <template #body="{ data }">
                         <span :class="['status-label', data.isBlocked ? 'blocked' : 'active']">
                             <i class="pi" :class="data.isBlocked ? 'pi-times-circle' : 'pi-check-circle'"></i>
@@ -310,7 +310,7 @@ main {
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    padding: 20px;
+    padding: 10pt 1px;
     overflow: hidden;
 }
 .search {
