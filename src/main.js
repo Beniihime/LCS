@@ -43,6 +43,12 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Timeline from 'primevue/timeline';
 import OverlayBadge from 'primevue/overlaybadge';
+import Skeleton from 'primevue/skeleton';
+import Tabs from 'primevue/tabs';
+import Tab from 'primevue/tab';
+import TabList from 'primevue/tablist';
+import TabPanel from 'primevue/tabpanel';
+import TabPanels from 'primevue/tabpanels';
 
 const app = createApp(App);
 const pinia = createPinia()
@@ -92,6 +98,12 @@ app.component('DataTable', DataTable);
 app.component('Column', Column);
 app.component('Timeline', Timeline);
 app.component('OverlayBadge', OverlayBadge);
+app.component('Skeleton', Skeleton);
+app.component('Tabs', Tabs);
+app.component('Tab', Tab);
+app.component('TabList', TabList);
+app.component('TabPanel', TabPanel);
+app.component('TabPanels', TabPanels);
 
 
 app.use(pinia)

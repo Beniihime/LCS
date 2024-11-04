@@ -1,6 +1,5 @@
 <template>
     <div class="d-flex justify-content-center">
-        <Button icon="pi pi-cog" outlined @click="fetchUserData" class="upd-btn"/>
         <Dialog v-model:visible="visible" modal header="Изменить информацию" :style="{ 'max-width': '30rem' }">
             <div class="row my-4">
                 <div class="col">
@@ -86,28 +85,31 @@ const selectedRoles = ref([]);
 const roles = ref([]);
 const userPriority = ref(null);
 
+const Iduser = ref('');
 const firstName = ref('');
 const lastName = ref('');
 const middleName = ref('');
 const login = ref('');
+const isBlocked = ref(null);
 const email = ref('');
 
 const originalLogin = ref('');
 const originalEmail = ref('');
 
 
-const fetchUserData = async () => {
+const fetchUserData = async (userId) => {
     visible.value = true;
-
+    Iduser.value = userId;
     try {
-        const response = await axiosInstance.get(`/api/users/${ props.userId }`);
+        const response = await axiosInstance.get(`/api/users/${ Iduser.value }`);
         const userData = response.data;
-
+        
         firstName.value = userData.firstName;
         lastName.value = userData.lastName;
         middleName.value = userData.middleName;
         login.value = userData.login;
         email.value = userData.email;
+        isBlocked.value = userData.isBlocked;
         
         selectedRoles.value = userData.roles.map(role => role.id);
         originalLogin.value = userData.login;
@@ -115,7 +117,7 @@ const fetchUserData = async () => {
 
         userPriority.value = userData.roles[0]?.priority;
     } catch (error) {
-        console.error('Ошибка при получении данных: ', error);
+        console.debug('Ошибка при получении данных: ', error);
     }
 };
 
@@ -127,7 +129,7 @@ const updateRolesList = async () => {
         // Фильтруем роли по приоритету
         roles.value = allRoles.filter(role => role.priority > userPriority.value);
     } catch (error) {
-        console.error('Ошибка при получении ролей: ', error);
+        console.debug('Ошибка при получении ролей: ', error);
     }
 };
 
@@ -172,7 +174,7 @@ const updateUserData = async () => {
             roleIds: selectedRoles.value
         };
 
-        await axiosInstance.put(`/api/users/${ props.userId }`, updatedUser);
+        await axiosInstance.put(`/api/users/${ Iduser.value }`, updatedUser);
 
         visible.value = false;
         window.dispatchEvent(new CustomEvent('toast', {
@@ -180,19 +182,19 @@ const updateUserData = async () => {
                 severity: 'success', 
                 summary: 'Пользователи', 
                 detail: 'Вы обновили данные пользователя',
-                userName: `${ firstName.value} ${lastName.value }` 
+                userName: `${ firstName.value } ${ lastName.value }` 
             }
         }));
 
         props.refreshTable(props.filters);
     } catch (error) {
-        console.error('Ошибка при обновлении данных пользователя: ', error);
+        console.debug('Ошибка при обновлении данных пользователя: ', error);
         window.dispatchEvent(new CustomEvent('toast', {
             detail: { 
                 severity: 'error', 
                 summary: 'Пользователи',
                 detail: 'Ошибка при обновлении данных пользователя',
-                userName: `${ firstName.value} ${ lastName.value }`
+                userName: `${ firstName.value } ${ lastName.value }`
             }
         }));
     }
@@ -200,21 +202,22 @@ const updateUserData = async () => {
 
 const toggleUserBlock = async () => {
     try {
-        const endpoint = props.isBlocked ? 'unblock' : 'block'
-        await axiosInstance.patch(`/api/users/${ props.userId }/${ endpoint }`);
+        const endpoint = isBlocked.value ? 'unblock' : 'block';
+        await axiosInstance.patch(`/api/users/${ Iduser.value }/${ endpoint }`);
         props.refreshTable(props.filters);
     } catch (error) {
-        console.error(`Ошибка при ${ props.isBlocked ? 'разблокировке' : 'блокировке' } пользователя: `, error);
+        console.debug(`Ошибка при ${ isBlocked.value ? 'разблокировке' : 'блокировке' } пользователя: `, error);
     }
 }
 
-const blockButtonLabel = computed(() => (props.isBlocked ? 'Разблокировать' : 'Заблокировать'));
-const blockButtonSeverity = computed(() => (props.isBlocked ? 'success' : 'danger'));
+const blockButtonLabel = computed(() => (isBlocked.value ? 'Разблокировать' : 'Заблокировать'));
+const blockButtonSeverity = computed(() => (isBlocked.value ? 'success' : 'danger'));
 
 onMounted(async () => {
     await updateRolesList();
 });
 
+defineExpose({ fetchUserData });
 
 </script>
 

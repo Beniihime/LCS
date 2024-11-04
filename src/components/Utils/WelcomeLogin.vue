@@ -35,7 +35,7 @@ const handleVideoEnded = () => {
   // Плавное исчезновение видео после его завершения
   isTransitioning.value = true;
   router.push({
-      name: 'HomePage', 
+      name: 'Dashboard', 
       query: { message: 'success', summary: 'Успешно', detail: 'Вы вошли в личный кабинет' }
     });
 };

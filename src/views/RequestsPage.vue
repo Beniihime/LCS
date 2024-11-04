@@ -3,6 +3,7 @@
         <WelcomeScreen :visible="loading" />
         <div class="content-wrap">
             <DataTable
+                v-if="!loading"
                 :value="calls"
                 paginator
                 :rows="rowsPerPage"
@@ -10,23 +11,24 @@
                 scrollable
                 removableSort
                 stripedRows
+                rowHover
                 style="max-width: 96rem;"
-                scrollHeight="84vh"
+                scrollHeight="80vh"
                 @page="onPage"
                 :rowClass="rowClass"
+                :rowStyle="rowStyle"
                 @row-click="(event) => openCallDetails(event.data.id)"
             >
                 <template #header>
                     <div class="row justify-content-between align-items-center">
                         <div class="col d-flex justify-content-start">
-                            <!-- <Button class="toggle-button" label="Доступные сервисы"/> -->
                             <InfraManagerServices />
                         </div>
                         <div class="col d-flex justify-content-center">
                             <h3 class="title m-0">Ваши заявки</h3>
                         </div>
                         <div class="col d-flex justify-content-end">
-                            <Button rounded icon="pi pi-plus" outlined/>
+                            <Button rounded icon="pi pi-plus" outlined @click="redirect"/>
                         </div>
                     </div>
                 </template>
@@ -42,7 +44,7 @@
                 </Column>
                 <Column field="number" header="#" sortable style="min-width: 50px" class="openCall">
                     <template #body="{ data }">
-                        {{ data.number }}
+                        <div v-tooltip="{ value: data.description, showDelay: 1000, hideDelay: 300 }">{{ data.number }}</div>
                     </template>
                 </Column>
                 <Column field="entityStateName" header="Статус" style="min-width: 100px;">
@@ -71,7 +73,7 @@
                     </template>
                 </Column>
 
-                <Column field="serviceAttendanceFullName" header="Исполнитель сервиса" sortable style="min-width: 150px">
+                <Column field="serviceAttendanceFullName" header="Выполнил" sortable style="min-width: 150px">
                     <template #body="{ data }">
                         {{ data.serviceAttendanceFullName }}
                     </template>
@@ -119,7 +121,7 @@
 
                 <template #paginatorstart>
                     <div class="d-flex justify-content-between align-items-center">
-                        <div>Всего заявок: {{ displayedRowsCount }}</div>
+                        <div>Всего заявок: {{ totalRecords }}</div>
                     </div>
                 </template>
                 <template #paginatorend>
@@ -136,6 +138,8 @@
                     </div>
                 </template>
             </DataTable>
+
+            <Skeleton v-else width="100%" height="90vh" class="skeleton-table" />
         </div>
         <InfraManagerCallsMe ref="callDetailsRef" class="position-absolute opacity-0" style="z-index: -999;"/>
     </main>
@@ -151,13 +155,13 @@ import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 
 const loading = ref(true);
 
-const selectedUser = ref(null);
 const calls = ref([]);  // Все загруженные заявки
 const currentPage = ref(1);  // Текущая страница
 const rowsPerPage = ref(10);  // Количество строк на странице
 const totalRecords = ref(0);  // Общее количество заявок
-const totalEntities = ref(0);  // Общее количество заявок для серверной пагинации
 const totalPages = ref(0);
+const loadedPages = ref(10);
+const tooltipContent = ref("");
 
 const rowsPerPageOptions = [
     { label: '5', value: 5 },
@@ -182,6 +186,10 @@ const getStatusSeverity = (status) => {
     default:
       return null;
   }
+}
+
+const redirect = () => {
+    window.location.href="https://sibadi.org/it-services/?login=yes";
 }
 
 // Получение иконки статуса
@@ -221,76 +229,55 @@ const rowClass = (data) => {
 
 // Загрузка заявок (по страницам)
 const fetchCalls = async () => {
-    loading.value = true;
-    calls.value = [];
-
     try {
+        loading.value = true;
         const response = await axiosInstance.get('/api/infra-manager/users/me/calls', {
             params: {
-                take: 100,
+                page: 1,
+                pageSize: rowsPerPage.value * 10,
             },
         });
 
-        const newCalls = response.data.calls || response.data;
-        calls.value = newCalls;  // Сохраняем все загруженные заявки
-        totalEntities.value = response.data.length;  // Общее количество заявок
-        totalRecords.value = response.data.total || newCalls.length;
-        totalPages.value = Math.ceil(totalRecords.value / rowsPerPage.value);
+        if (response.data?.entities) {
+            calls.value = response.data.entities;
+            totalRecords.value = response.data.countAllEntities;
+            totalPages.value = response.data.countAllPages;
+        }
+
+        loading.value = false;
     } catch (error) {
-        console.error('Ошибка при загрузке заявок:', error);
-    } finally {
-        loading.value = false;  // Завершение загрузки
-    }
-};
-
-// При изменении страницы
-const onPage = (event) => {
-    currentPage.value = event.page + 1;
-    rowsPerPage.value = event.rows;
-
-    totalPages.value = Math.ceil(totalRecords.value / rowsPerPage.value);
-
-    // Проверяем, если изменилось количество строк на странице, начинаем с первой страницы
-    if (currentPage.value > totalPages.value) {
-        currentPage.value = 1;
-    }
-
-    // Проверяем, находимся ли на последней странице
-    if (currentPage.value === totalPages.value) {
-        fetchNextCalls();  // Загружаем данные только если на последней странице
-    }
-};
-
-const fetchNextCalls = async () => {
-    loading.value = true;
-
-    try {
-        const response = await axiosInstance.get('/api/infra-manager/users/me/calls', {
-            params: {
-                skip: calls.value.length,  // Пропускаем уже загруженные
-                take: 100,  // Загружаем количество данных, равное количеству строк на странице
-                initiatorIdOrClientId: selectedUser.value?.id || undefined,
-            },
-        });
-
-        const newCalls = response.data.calls || response.data;
-        calls.value.push(...newCalls);  // Добавляем новые заявки к уже загруженным
-        totalRecords.value += newCalls.length; 
-
-        totalPages.value = Math.ceil(totalRecords.value / rowsPerPage.value);
-    } catch (error) {
-        console.error('Ошибка при загрузке следующих заявок:', error);
-    } finally {
+        console.debug('Ошибка при загрузке: ', error);
         loading.value = false;
     }
 };
 
-// Вычисляем количество отображаемых строк
-const displayedRowsCount = computed(() => {
-    const start = (currentPage.value - 1) * rowsPerPage.value;
-    const end = start + rowsPerPage.value;
-    return calls.value.slice(start, end).length;
-});
+const loadMorePages = async () => {
+    try {
+        const response = await axiosInstance.get('/api/infra-manager/users/me/calls', {
+            params: {
+                page: loadedPages.value / 10 + 1,
+                pageSize: rowsPerPage.value * 10,
+            },
+        });
+
+        if (response.data?.entities) {
+            calls.value.push(...response.data.entities);
+            loadedPages.value += 10;
+        }
+    } catch (erorr) {
+        console.debug('Ошибка при загрузке: ', error);
+    }
+}
+
+// При изменении страницы
+const onPage = async (event) => {
+    currentPage.value = event.page + 1;
+    rowsPerPage.value = event.rows;
+
+    if (currentPage.value === loadedPages.value) {
+        await loadMorePages();
+    }
+};
 
 const callDetailsRef = ref(null); // Ссылка на дочерний компонент InfraManagerCalls
 
@@ -310,6 +297,7 @@ main {
 }
 .content-wrap {
     flex-grow: 1;
+    align-content: center;
     padding: 10pt 1px;
     color: var(--p-text-color);
     transition: all 0.5s;
@@ -325,5 +313,9 @@ main {
     border-radius: 12pt;
     font-size: 18px;
     transition: all 0.5s;
+}
+.skeleton-table {
+  border-radius: 18px;
+  background-color: var(--p-grey-3);
 }
 </style>

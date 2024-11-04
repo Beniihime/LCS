@@ -53,6 +53,11 @@ const routes = [
                 path: "/requests",
                 component: () => import('@/views/RequestsPage.vue'),
                 name: 'Requests'
+            },
+            {
+                path: "/overview",
+                component: () => import('@/views/DashboardPage.vue'),
+                name: 'Dashboard'
             }
         ]
     }, 
@@ -91,13 +96,13 @@ router.beforeEach(async (to, from) => {
         try {
             await permissionStore.fetchPermissions();  // Дожидаемся загрузки полномочий
         } catch (error) {
-            console.error('Ошибка при загрузке полномочий:', error);
+            console.debug('Ошибка при загрузке полномочий:', error);
             return { path: '/noAccess' };
         }
     }
 
     if (to.path === '/auth' && isAuthenticated()) {
-        return { path: '/' };  // Перенаправляем на главную страницу
+        return { path: '/overview' };  // Перенаправляем на главную страницу
     }
     
     // Проверка полномочий, если маршрут требует их

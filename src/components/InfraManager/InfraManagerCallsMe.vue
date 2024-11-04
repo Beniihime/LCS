@@ -18,68 +18,122 @@
             </div>
 
             <!-- Модальное окно для подробной информации -->
-            <Dialog v-model:visible="isDialogVisible" modal :style="{ 'max-width': '70rem' }" @hide="closeDialog">
-                <template v-if="selectedCall">
+            <Dialog v-model:visible="isDialogVisible" modal :style="{ 'min-width': '60rem', 'max-width': '100rem' }" @hide="closeDialog">
+                <template v-if="errorOccurred">
+                  <div class="error-message">
+                    <p>Произошла ошибка при загрузке данных</p>
+                  </div>
+                </template>
+
+                <template v-else-if="selectedCall">
                   <h3 class="dialog-title">Заявка №{{ selectedCall.number }}</h3>
-                  <Divider class="my-4"/>
-                    
+
+                  <Tabs value="0">
+                    <TabList>
+                      <Tab value="0" as="div">
+                        <i class="pi pi-cog"></i>
+                        <span class="ms-2">Общее</span>
+                      </Tab>
+                      <Tab value="1" as="div">
+                        <i class="pi pi-folder"></i>
+                        <span class="ms-2">Файлы</span>
+                      </Tab>
+                      <Tab value="2" as="div">
+                        <i class="pi pi-thumbs-up"></i>
+                        <span class="ms-2">Согласование</span>
+                      </Tab>
+                    </TabList>
+
+                    <TabPanels>
+                      <TabPanel value="0">
+                        <div class="call-details">
+                          <!-- Основная информация -->
+                          <div class="details-section">
+                              <h4><i class="pi pi-info-circle"></i> Основная информация</h4>
+                              <p v-if="selectedCall.fullName"><strong>Заявка:</strong> <span v-html="selectedCall.fullName"></span></p>
+                              <p v-if="selectedCall.description"><strong>Описание:</strong> <span v-html="selectedCall.description"></span></p>
+                              <p v-if="selectedCall.solution"><strong>Решение:</strong> <span class="override-color" v-html="selectedCall.solution"></span></p>
+                              <p v-if="selectedCall.serviceCategoryName"><strong>Категория сервиса:</strong> <span v-html="selectedCall.serviceCategoryName"></span></p>
+                          </div>
+
+                          <!-- Даты -->
+                          <div class="details-section">
+                              <h4><i class="pi pi-calendar"></i> Даты</h4>
+                              <Timeline :value="timelineEvents" class="mb-3">
+                                <template #opposite="slotProps">
+                                  <small>{{ formatDate(slotProps.item.date) }}</small>
+                                </template>
+                                <template #content="slotProps">
+                                  <span>{{ slotProps.item.label }}</span>
+                                </template>
+                              </Timeline>
+                              <p v-if="selectedCall.utcDatePromised"><strong>Дата обещанного выполнения:</strong> {{ formatDate(selectedCall.utcDatePromised) }}</p>
+                              <p v-if="selectedCall.utcDateModified"><strong>Дата последнего изменения:</strong> {{ formatDate(selectedCall.utcDateModified) }}</p>
+                          </div>
+
+                          <!-- Сервис -->
+                          <div class="details-section">
+                              <h4><i class="pi pi-cog"></i> Сервис</h4>
+                              <p v-if="selectedCall.serviceName"><strong>Сервис:</strong> <span v-html="selectedCall.serviceName"></span></p>
+                              <p v-if="selectedCall.servicePlaceName"><strong>Место сервиса:</strong> <span v-html="selectedCall.servicePlaceName"></span></p>
+                              <p v-if="selectedCall.serviceItemName"><strong>Элемент сервиса:</strong> <span v-html="selectedCall.serviceItemName"></span></p>
+                              <p v-if="selectedCall.serviceAttendanceName"><strong>Исполнитель:</strong> <span v-html="selectedCall.serviceAttendanceName"></span></p>
+                          </div>
+
+                          <!-- Статусы и приоритет -->
+                          <div class="details-section">
+                              <h4><i class="pi pi-exclamation-circle"></i> Статус и приоритет</h4>
+                              <p v-if="selectedCall.callType"><strong>Тип заявки:</strong> <span v-html="selectedCall.callType"></span></p>
+                              <p v-if="selectedCall.entityStateName">
+                                <strong>Статус:</strong> 
+                                <Tag :value="selectedCall.entityStateName" :severity="getStatusSeverity(selectedCall.entityStateName)" :icon="getStatusIcon(selectedCall.entityStateName)" class="ms-3"/>
+                              </p>
+                              <p v-if="selectedCall.receiptTypeName"><strong>Тип приема:</strong> <span v-html="selectedCall.receiptTypeName"></span></p>
+                              <p v-if="selectedCall.urgencyName"><strong>Срочность:</strong> <span v-html="selectedCall.urgencyName"></span></p>
+                              <p v-if="selectedCall.influenceName"><strong>Влияние:</strong> <span v-html="selectedCall.influenceName"></span></p>
+                              <p v-if="selectedCall.priorityName"><strong>Приоритет:</strong> <span v-html="selectedCall.priorityName"></span></p>
+                          </div>
+
+                          <!-- Ответственные -->
+                          <div class="details-section">
+                              <h4><i class="pi pi-user"></i> Ответственные</h4>
+                              <p v-if="selectedCall.initiatorFullName"><strong>Инициатор:</strong> <span v-html="selectedCall.initiatorFullName"></span></p>
+                              <p v-if="selectedCall.clientFullName"><strong>Клиент:</strong> <span v-html="selectedCall.clientFullName"></span></p>
+                              <p v-if="selectedCall.ownerFullName"><strong>Владелец:</strong> <span v-html="selectedCall.ownerFullName"></span></p>
+                              <p v-if="selectedCall.executorFullName"><strong>Исполнитель:</strong> <span v-html="selectedCall.executorFullName"></span></p>
+                              <p v-if="selectedCall.accomplisherFullName"><strong>Выполнивший:</strong> <span v-html="selectedCall.accomplisherFullName"></span></p>
+                          </div>
+                        </div>
+                      </TabPanel>
+                      <TabPanel value="1">
+                        <div v-if="documents.length > 0" class="documents-section">
+                          <div v-for="document in documents" :key="document.id" class="document-card">
+                            <div class="row align-items-center justify-content-between">
+                              <div class="col-auto">
+                                <h5>{{ document.name }}</h5>
+                                <p>Размер: {{ formatFileSize(document.size) }}</p>
+                                <p>Дата загрузки: {{ formatDate1(document.utcDateCreated) }}</p>
+                              </div>
+                              <div class="col-auto">
+                                <Button icon="pi pi-download" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <p v-else>Документы отсутствуют</p>
+                      </TabPanel>
+                    </TabPanels>
+                  </Tabs>
+                </template>
+
+                <template v-else>
                   <div class="call-details">
-                    <!-- Основная информация -->
-                    <div class="details-section">
-                        <h4><i class="pi pi-info-circle"></i> Основная информация</h4>
-                        <p v-if="selectedCall.fullName"><strong>Заявка:</strong> <span v-html="selectedCall.fullName"></span></p>
-                        <p v-if="selectedCall.description"><strong>Описание:</strong> <span v-html="selectedCall.description"></span></p>
-                        <p v-if="selectedCall.solution"><strong>Решение:</strong> <span v-html="selectedCall.solution"></span></p>
-                        <p v-if="selectedCall.serviceCategoryName"><strong>Категория сервиса:</strong> <span v-html="selectedCall.serviceCategoryName"></span></p>
-                    </div>
-
-                    <!-- Даты -->
-                    <div class="details-section">
-                        <h4><i class="pi pi-calendar"></i> Даты</h4>
-                        <Timeline :value="timelineEvents" class="mb-3">
-                          <template #opposite="slotProps">
-                            <small>{{ formatDate(slotProps.item.date) }}</small>
-                          </template>
-                          <template #content="slotProps">
-                            <span>{{ slotProps.item.label }}</span>
-                          </template>
-                        </Timeline>
-                        <p v-if="selectedCall.utcDatePromised"><strong>Дата обещанного выполнения:</strong> {{ formatDate(selectedCall.utcDatePromised) }}</p>
-                        <p v-if="selectedCall.utcDateModified"><strong>Дата последнего изменения:</strong> {{ formatDate(selectedCall.utcDateModified) }}</p>
-                    </div>
-
-                    <!-- Сервис -->
-                    <div class="details-section">
-                        <h4><i class="pi pi-cog"></i> Сервис</h4>
-                        <p v-if="selectedCall.serviceName"><strong>Сервис:</strong> <span v-html="selectedCall.serviceName"></span></p>
-                        <p v-if="selectedCall.servicePlaceName"><strong>Место сервиса:</strong> <span v-html="selectedCall.servicePlaceName"></span></p>
-                        <p v-if="selectedCall.serviceItemName"><strong>Элемент сервиса:</strong> <span v-html="selectedCall.serviceItemName"></span></p>
-                        <p v-if="selectedCall.serviceAttendanceName"><strong>Исполнитель:</strong> <span v-html="selectedCall.serviceAttendanceName"></span></p>
-                    </div>
-
-                    <!-- Статусы и приоритет -->
-                    <div class="details-section">
-                        <h4><i class="pi pi-exclamation-circle"></i> Статус и приоритет</h4>
-                        <p v-if="selectedCall.callType"><strong>Тип заявки:</strong> <span v-html="selectedCall.callType"></span></p>
-                        <p v-if="selectedCall.entityStateName">
-                          <strong>Статус:</strong> 
-                          <Tag :value="selectedCall.entityStateName" :severity="getStatusSeverity(selectedCall.entityStateName)" :icon="getStatusIcon(selectedCall.entityStateName)" class="ms-3"/>
-                        </p>
-                        <p v-if="selectedCall.receiptTypeName"><strong>Тип приема:</strong> <span v-html="selectedCall.receiptTypeName"></span></p>
-                        <p v-if="selectedCall.urgencyName"><strong>Срочность:</strong> <span v-html="selectedCall.urgencyName"></span></p>
-                        <p v-if="selectedCall.influenceName"><strong>Влияние:</strong> <span v-html="selectedCall.influenceName"></span></p>
-                        <p v-if="selectedCall.priorityName"><strong>Приоритет:</strong> <span v-html="selectedCall.priorityName"></span></p>
-                    </div>
-
-                    <!-- Ответственные -->
-                    <div class="details-section">
-                        <h4><i class="pi pi-user"></i> Ответственные</h4>
-                        <p v-if="selectedCall.initiatorFullName"><strong>Инициатор:</strong> <span v-html="selectedCall.initiatorFullName"></span></p>
-                        <p v-if="selectedCall.clientFullName"><strong>Клиент:</strong> <span v-html="selectedCall.clientFullName"></span></p>
-                        <p v-if="selectedCall.ownerFullName"><strong>Владелец:</strong> <span v-html="selectedCall.ownerFullName"></span></p>
-                        <p v-if="selectedCall.executorFullName"><strong>Исполнитель:</strong> <span v-html="selectedCall.executorFullName"></span></p>
-                        <p v-if="selectedCall.accomplisherFullName"><strong>Выполнивший:</strong> <span v-html="selectedCall.accomplisherFullName"></span></p>
-                    </div>
+                    <Skeleton width="530px" height="200px" class="mb-2"/>
+                    <Skeleton width="530px" height="200px" class="mb-2"/>
+                    <Skeleton width="530px" height="200px" class="mb-2"/>
+                    <Skeleton width="530px" height="200px" class="mb-2"/>
+                    <Skeleton width="530px" height="200px" class="mb-2"/>
+                    <Skeleton width="530px" height="200px" class="mb-2"/>
                   </div>
                 </template>
             </Dialog>
@@ -95,6 +149,8 @@ const lastCalls = ref([]);  // Список последних заявок
 const isDialogVisible = ref(false);  // Видимость модального окна
 const selectedCall = ref(null);  // Выбранная заявка
 const isCallsVisible = ref(false);
+const documents = ref([]); // Список документов для выбранной заявки
+const errorOccurred = ref(false);
 
 const timelineEvents = ref([]); 
 
@@ -115,6 +171,23 @@ const getStatusSeverity = (status) => {
       return null;
   }
 }
+
+// Функция для форматирования размера файла
+const formatFileSize = (size) => {
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+// Функция для загрузки документов
+const fetchDocuments = async (callId) => {
+  try {
+    const response = await axiosInstance.get(`/api/infra-manager/calls/${callId}/documents`);
+    documents.value = response.data;
+  } catch (error) {
+    console.error('Ошибка при загрузке документов:', error);
+  }
+};
 
 // Получение иконки статуса
 const getStatusIcon = (status) => {
@@ -137,6 +210,8 @@ const getStatusIcon = (status) => {
 
 // Открыть модальное окно с информацией по заявке
 const openCallDetails = async (callId) => {
+  isDialogVisible.value = true;
+  errorOccurred.value = false;
   try {
     const response = await axiosInstance.get(`/api/infra-manager/users/me/calls/${callId}`);
     const callData = response.data;
@@ -193,11 +268,12 @@ const openCallDetails = async (callId) => {
       executorFullName: executor.data.fullName || '',
       accomplisherFullName: accomplisher.data.fullName || '',
     };
-    console.log('Timeline Events:', timelineEvents.value);
-    // Открываем модальное окно
-    isDialogVisible.value = true;
+
+    await fetchDocuments(callId); // Загружаем документы для выбранной заявки
+
   } catch (error) {
-    console.error('Ошибка при загрузке информации о заявке:', error);
+    console.debug('Ошибка при загрузке информации о заявке:', error);
+    errorOccurred.value = true;
   }
 };
 
@@ -213,6 +289,19 @@ const formatDate = (timestamp) => {
   return date.toLocaleDateString();
 };
 
+const formatDate1 = (dateStr) => {
+    if (!dateStr) return ''; // Если дата пустая
+    const date = new Date(dateStr);
+    const options = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    };
+    return date.toLocaleDateString('ru-RU', options);
+}
+
 // Загрузить последние заявки или скрыть их по повторному нажатию
 const fetchCallsInfo = async () => {
   if (isCallsVisible.value) {
@@ -223,7 +312,7 @@ const fetchCallsInfo = async () => {
       lastCalls.value = callsResponse.data;
       isCallsVisible.value = true; 
     } catch (error) {
-      console.error('Ошибка при загрузке информации о заявке: ', error);
+      console.debug('Ошибка при загрузке информации о заявке: ', error);
     }
   }
 }
@@ -266,7 +355,12 @@ defineExpose({ openCallDetails });
 .details-section {
   padding: 20px;
   border-radius: 10px;
-  background-color: var(--p-grey-5);
+  background-color: var(--p-grey-7);
+  .pi {
+    margin-right: 10px;
+    color: var(--primary-color);
+    font-size: 1.4rem;
+  }
 }
 .details-section h4 {
   margin-top: 0;
@@ -274,13 +368,34 @@ defineExpose({ openCallDetails });
 .details-section p {
   margin: 5px 0;
 }
-.pi {
-  margin-right: 10px;
-  color: var(--primary-color);
-  font-size: 1.4rem;
-}
+
 h2 {
   margin-bottom: 5px;
   font-weight: bold;
+}
+.override-color * {
+  color: var(--p-text-color) !important;
+}
+.error-message {
+  color: var(--p-red-500); /* Цвет ошибки */
+  text-align: center;
+  padding: 20px;
+}
+.document-card {
+  padding: 16px;
+  border-radius: 10px;
+  background-color: var(--p-grey-7);
+  margin-bottom: 10px;
+}
+.document-card h5 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--p-text-color);
+}
+.document-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--p-text-color);
 }
 </style>

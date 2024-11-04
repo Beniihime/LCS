@@ -98,7 +98,7 @@ const fetchPermissions = async () => {
 
         userRole.value = userRoleData;
     } catch (error) {
-        console.error('Ошибка при загрузке полномочий:', error);
+        console.debug('Ошибка при загрузке полномочий:', error);
     } finally {
         loading.value = false;
     }
@@ -114,7 +114,7 @@ const togglePermission = async (resourceId, permissionId, isActive) => {
         }
         updatePermissionStatus(resourceId, permissionId, isActive);
     } catch (error) {
-        console.error('Ошибка при переключении полномочий: ', error);
+        console.debug('Ошибка при переключении полномочий: ', error);
     }
 };
 

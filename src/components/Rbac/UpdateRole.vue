@@ -71,7 +71,7 @@ const fetchPriorities = async () => {
         const response = await axiosInstance.get('/api/rbac/roles/priorities');
         priorities.value = response.data.map(value => ({ label: value, value }));
     } catch (error) {
-        console.error('Ошибка при получении приоритетов: ', error);
+        console.debug('Ошибка при получении приоритетов: ', error);
     }
 };
 
@@ -88,7 +88,7 @@ const updateRole = async () => {
 
         toast.add({ severity: 'success', summary: 'Успешно', detail: 'Роль обновлена', life: 3000 });
     } catch (error) {
-        console.error('Ошибка при обновлении роли: ', error);
+        console.debug('Ошибка при обновлении роли: ', error);
         toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Не удалось обновить роль', life: 3000 });
     }
 }

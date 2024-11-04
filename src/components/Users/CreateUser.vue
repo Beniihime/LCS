@@ -147,7 +147,7 @@ const createUser = async () => {
             }
         }));
     } catch (error) {
-        console.error('Ошибка при создании: ', error);
+        console.debug('Ошибка при создании: ', error);
         window.dispatchEvent(new CustomEvent('toast', {
             detail: { 
                 severity: 'error', 
@@ -166,7 +166,7 @@ const fetchCurrentUserPriority = async () => {
         // Предполагаем, что приоритет определяется по первой роли
         userPriority.value = userData.roles[0]?.priority;
     } catch (error) {
-        console.error('Ошибка при получении приоритета пользователя: ', error);
+        console.debug('Ошибка при получении приоритета пользователя: ', error);
     }
 };
 
@@ -178,7 +178,7 @@ const updateRolesList = async () => {
         // Фильтруем роли по приоритету
         roles.value = allRoles.filter(role => role.priority > userPriority.value);
     } catch (error) {
-        console.error('Ошибка при получении ролей: ', error);
+        console.debug('Ошибка при получении ролей: ', error);
     }
 };
 </script>

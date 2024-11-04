@@ -47,7 +47,7 @@ axiosInstance.interceptors.response.use(
                     return axiosInstance(originalRequest);
                 }
             } catch (refreshError) {
-                console.error('Ошибка при обновлении токена: ', refreshError);
+                console.debug('Ошибка при обновлении токена: ', refreshError);
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('refreshToken');
                 localStorage.removeItem('userId');

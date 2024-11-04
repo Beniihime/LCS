@@ -60,7 +60,7 @@ const fetchPriorities = async () => {
         const response = await axiosInstance.get('/api/rbac/roles/priorities');
         priorities.value = response.data.map(value => ({ label: value, value }));
     } catch (error) {
-        console.error('Ошибка при получении приоритетов: ', error);
+        console.debug('Ошибка при получении приоритетов: ', error);
     }
 };
 
@@ -69,7 +69,7 @@ const fetchUserPriority = async () => {
         const response = await axiosInstance.get('/api/users/me/info');
         userPriority.value = Math.max(...response.data.roles.map(role => role.priority));
     } catch (error) {
-        console.error('Ошибка при получении данных пользователя: ', error);
+        console.debug('Ошибка при получении данных пользователя: ', error);
     }
 };
 
@@ -89,7 +89,7 @@ const createRole = async () => {
 
         toast.add({ severity: 'success', summary: 'Успешно', detail: 'Роль создана', life: 3000 });
     } catch (error) {
-        console.error('Ошибка при создании роли: ', error);
+        console.debug('Ошибка при создании роли: ', error);
     }
 };
 

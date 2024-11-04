@@ -59,7 +59,7 @@ async function refreshAccessToken() {
         scheduleTokenRefresh(response.data.refreshTokenExpired);
 
     } catch (error) {
-        console.error('Failed to refresh token', error);
+        console.debug('Failed to refresh token', error);
     } finally {
         isRefreshing = false;
     }

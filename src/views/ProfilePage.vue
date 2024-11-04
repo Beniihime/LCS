@@ -58,44 +58,50 @@
                 </div>
             </div>
 
-            <div class="infra-profile-card mt-3" v-if="infraManagerUser">
-                <h2>InfraManager</h2>
-                <Divider class="my-3"/>
+            <div v-if="!loading" class="mt-3">
+                <div class="infra-profile-card" v-if="infraManagerUser">
+                    <h2>InfraManager</h2>
+                    <Divider class="my-3"/>
 
-                <div class="infra-info">
-                    <div class="row mb-3">
-                        <div class="col-auto align-items-center d-flex">
-                            <i class="pi pi-user"></i>
+                    <div class="infra-info">
+                        <div class="row mb-3">
+                            <div class="col-auto align-items-center d-flex">
+                                <i class="pi pi-user"></i>
+                            </div>
+                            <div class="col">
+                                <span>{{ infraFullName }}</span>
+                            </div>
                         </div>
-                        <div class="col">
-                            <span>{{ infraFullName }}</span>
+                        <div class="row mb-3">
+                            <div class="col-auto align-items-center d-flex">
+                                <i class="pi pi-envelope"></i>
+                            </div>
+                            <div class="col">
+                                <span>{{ infraEmail }}</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-auto align-items-center d-flex">
-                            <i class="pi pi-envelope"></i>
-                        </div>
-                        <div class="col">
-                            <span>{{ infraEmail }}</span>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-auto align-items-center d-flex">
-                            <i class="pi pi-sitemap"></i>
-                        </div>
-                        <div class="col">
-                            <span>{{ infraPosition }}</span>
+                        <div class="row">
+                            <div class="col-auto align-items-center d-flex">
+                                <i class="pi pi-sitemap"></i>
+                            </div>
+                            <div class="col">
+                                <span>{{ infraPosition }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Сообщение, если связки с InfraManager нет -->
-            <div class="infra-profile-card mt-3" v-else>
-                <h2>InfraManager отсутствует</h2>
-                <Divider class="my-4"/>
-                <p>Связь с InfraManager не установлена.</p>
+                <!-- Сообщение, если связки с InfraManager нет -->
+                <div class="infra-profile-card mt-3" v-else>
+                    <h2>InfraManager отсутствует</h2>
+                    <Divider class="my-4"/>
+                    <p>Связь с InfraManager не установлена.</p>
+                </div>
             </div>
+            <div v-else class="mt-3">
+                <Skeleton width="100%" height="200px" />
+            </div>
+            
             <!-- <InfraManagerServices v-if="infraManagerUser"/>
             <InfraManagerCallsMe v-if="infraManagerUser"/> -->
         </div>
@@ -173,7 +179,7 @@ const fetchMeInfo = async () => {
             lastCalls.value = callsResponse.data;
         }
     } catch (error) {
-        console.error('Ошибка при получении информации о пользователе: ', error);
+        console.debug('Ошибка при получении информации о пользователе: ', error);
     }
 
     loading.value = false;

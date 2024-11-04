@@ -44,7 +44,7 @@ const checkLinkStatus = async () => {
             toast.add({ severity: 'warn', summary: 'InfraManager', detail: `Связка для пользователя ${selectedLKSUser.value.fullName} не найдена`, life: 3000 });
         }
     } catch (error) {
-        console.error('Ошибка при проверки статуса связки: ', error);
+        console.debug('Ошибка при проверки статуса связки: ', error);
     }
 }
 
@@ -68,7 +68,7 @@ const searchLKSUsers = async (event) => {
                 id: user.id
             }));
     } catch (error) {
-        console.error('Ошибка при загрузке пользователей ЛКС:', error);
+        console.debug('Ошибка при загрузке пользователей ЛКС:', error);
     }
 };
 
@@ -89,7 +89,7 @@ const deleteLink = async () => {
 
             showDelete.value = false;
         } catch (error) {
-            console.error('Ошибка при удалении связи: ', error);
+            console.debug('Ошибка при удалении связи: ', error);
         }
     }
 }

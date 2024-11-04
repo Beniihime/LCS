@@ -51,7 +51,7 @@
                 </div>
             </div>
             <Divider v-if="selectedInfraUserDetails" class="my-4"/>
-            <div v-if="lastCalls.length" class="row my-4">
+            <div class="row my-4">
                 <div class="col">
                     <InfraManagerCalls v-if="selectedInfraUserDetails" :userId="selectedInfraUser.id" />
                 </div>
@@ -99,7 +99,7 @@ const searchInfraUsers = async (event) => {
             details: user.details
         }));
     } catch (error) {
-        console.error('Ошибка при загрузке пользователей:', error);
+        console.debug('Ошибка при загрузке пользователей:', error);
     }
 };
 
@@ -116,14 +116,20 @@ const onInfraUserSelect = async (event) => {
         selectedInfraUserLocation.value = userLocationResponse.data;
 
         // Запрос последних 10 заявок
-        const lastCallsResponse = await axiosInstance.get(`/api/infra-manager/users/${user.id}/calls`);
-        lastCalls.value = lastCallsResponse.data.slice(0, 10); // Ограничиваем последние 10 заявок
+        const lastCallsResponse = await axiosInstance.get(`/api/infra-manager/calls`, {
+            params: {
+                page: 1,
+                pageSize: 10,
+                InitiatorIdOrClientIdOrOwnerId: user.id,
+            }
+        });
+        lastCalls.value = lastCallsResponse.data;
 
         // Запрос доступных сервисов
         const servicesResponse = await axiosInstance.get(`/api/infra-manager/users/${user.id}/calls/services/available`);
         servicesTree.value = transformServicesToTree(servicesResponse.data); // Преобразуем в формат дерева
     } catch (error) {
-        console.error('Ошибка при загрузке информации о пользователе InfraManager:', error);
+        console.debug('Ошибка при загрузке информации о пользователе InfraManager:', error);
     }
 }
 

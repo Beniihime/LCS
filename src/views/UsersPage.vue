@@ -1,52 +1,22 @@
 <template>
     <main>
-        <div class="content-wrapper">
-            <div class="filters">
-                <h3>Фильтры</h3>
-                <div class="filter-group">
-                    <InputText 
-                        v-model="filters.fullName.value"
-                        placeholder="ФИО"
-                        class="search"
-                        style="max-width: 16rem;"
-                    />
-                    <InputText 
-                        v-model="filters.email.value"
-                        placeholder="E-mail"
-                        class="search"
-                        style="max-width: 16rem;"
-                    />
-                    <Select 
-                        v-model="filters.isBlocked.value" 
-                        :options="statusOptions" 
-                        optionLabel="label"
-                        placeholder="Статус"
-                        class="search"
-                        style="max-width: 16rem;"
-                    />
-                    <MultiSelect 
-                        v-model="filters.roleIds.value" 
-                        :options="roles"
-                        display="chip" 
-                        optionLabel="title" 
-                        placeholder="Роли"
-                        class="search"
-                        style="max-width: 16rem;"
-                    />
-                    <Button class="search" label="Применить фильтры" @click="applyFilters"/>
-                </div>
-            </div>
+        <div class="content-wrapper">                
             <WelcomeScreen :visible="loading" />
             <DataTable
+                v-if="!loading"
+                v-model:filters="filters"
                 :value="customers" 
                 paginator 
-                stripedRows 
-                removableSort 
+                filterDisplay="row" 
                 scrollable
-                scrollHeight="74vh"
+                style="max-width: 96rem;"
+                scrollHeight="80vh"
                 :rows="rowsPerPage"
+                :rowClass="rowClass"
+                @row-click="(event) => openDialog(event.data.id)"
                 :totalRecords="totalRecords"
                 @page="onPage"
+                :globalFilterFields="['fullName', 'email', 'roles', 'status']"
             >
                 <template #header>
                     <div class="d-flex justify-content-between align-items-center">
@@ -57,7 +27,7 @@
 
                 <template #paginatorstart>
                     <div class="d-flex justify-content-between align-items-center">
-                        <div>Всего пользователей: {{ displayedRowsCount }}</div>
+                        <div>Всего пользователей: {{ totalRecords }}</div>
                     </div>
                 </template>
 
@@ -78,81 +48,120 @@
                 <template #empty>Не найдено.</template>
                 <template #loading>Данные загружаются. Подождите.</template>
 
-                <Column field="firstName" header="ФИО" sortable style="max-width: 20rem;">
+                <Column field="fullName" header="ФИО" :showFilterMenu="false" style="min-width: 20rem;">
                     <template #body="{ data }">
                         <span class="text-nowrap">
                             {{ data.firstName }} {{ data.lastName }} {{ data.middleName }}
                         </span>
                     </template>
+                    <template #filter="{ filterModel, filterCallback }">
+                        <InputText 
+                            v-model="filterModel.value" 
+                            placeholder="Поиск по ФИО" 
+                            @input="filterCallback()" 
+                        />
+                    </template>
                 </Column>
                 
-                <Column field="email" header="E-mail" style="min-width: 12rem;">
+                <Column field="email" header="E-mail" :showFilterMenu="false" style="min-width: 12rem;">
                     <template #body="{ data }">
                         <span class="text-nowrap">
                             {{ data.email }}
                         </span>
                     </template>
+                    <template #filter="{ filterModel, filterCallback }">
+                        <InputText 
+                            v-model="filterModel.value" 
+                            placeholder="Поиск по E-mail" 
+                            @input="filterCallback()" 
+                        />
+                    </template>
                 </Column>
-                <Column field="roles" header="Роли" style="max-width: 12rem;">
+                <Column field="roleIds" header="Роли" :showFilterMenu="false" style="min-width: 12rem;">
                     <template #body="{ data }">
-                        <div class="">
-                            <div class="role-label-container">
-                                <!-- Показываем первую роль -->
-                                <Chip v-if="data.roles.length > 0" class="role-label">
-                                    <span v-if="data.roles.length > 0" class="roleType" :class="getRoleTypeClass(data.roles[0])">
-                                        {{ data.roles[0].type.charAt(0) }}
-                                    </span>
-                                    <span>{{ data.roles[0].title }}</span>
-                                </Chip>
-                                
-                                <!-- Если ролей больше одной, показываем Popover для дополнительных ролей -->
-                                <Button v-if="data.roles.length > 1" rounded text class="p-2 ms-2" icon="pi pi-ellipsis-h" @click="(event) => togglePopover($refs['popover' + data.id], event)" />
+                        <div class="role-label-container">
+                            <!-- Показываем первую роль -->
+                            <Chip v-if="data.roles.length > 0" class="role-label">
+                                <span v-if="data.roles.length > 0" class="roleType" :class="getRoleTypeClass(data.roles[0])">
+                                    {{ data.roles[0].type.charAt(0) }}
+                                </span>
+                                <span>{{ data.roles[0].title }}</span>
+                            </Chip>
+                            
+                            <!-- Если ролей больше одной, показываем Popover для дополнительных ролей -->
+                            <Button v-if="data.roles.length > 1" rounded text class="p-2 ms-2" icon="pi pi-ellipsis-h" @click.stop="(event) => togglePopover($refs['popover' + data.id], event)" />
 
-                                <Popover :ref="'popover' + data.id">
-                                    <div class="roles-container">
-                                        <div v-for="(role, index) in data.roles.slice(1)" :key="role.id" class="role-list-item">
-                                            <Chip class="role-label">
-                                                <span class="roleType" :class="getRoleTypeClass(role)">
-                                                    {{ role.type.charAt(0) }}
-                                                </span>
-                                                <span>{{ role.title }}</span>
-                                            </Chip>
-                                        </div>
+                            <Popover :ref="'popover' + data.id">
+                                <div class="roles-container">
+                                    <div v-for="(role, index) in data.roles.slice(1)" :key="role.id" class="role-list-item">
+                                        <Chip class="role-label">
+                                            <span class="roleType" :class="getRoleTypeClass(role)">
+                                                {{ role.type.charAt(0) }}
+                                            </span>
+                                            <span>{{ role.title }}</span>
+                                        </Chip>
                                     </div>
-                                    
-                                </Popover>
-                            </div>
+                                </div>
+                                
+                            </Popover>
                         </div>
                     </template>
+                    <!-- <template #filter="{ filterModel, filterCallback }">
+                        <MultiSelect 
+                            v-model="filterModel.value"
+                            :options="roles"
+                            placeholder="Выберите роли"
+                            optionLabel="title"
+                            optionValue="id"
+                            :maxSelectedLabels="1"
+                            @change="() => {
+                                console.log('Selected role IDs:', filterModel.value);
+                                filterCallback();
+                            }"
+                        />
+                    </template> -->
                 </Column>
-                <Column field="isBlocked" header="Статус" style="min-width: 4rem;">
+                <Column field="isBlocked" header="Статус" :showFilterMenu="false" style="min-width: 4rem;">
                     <template #body="{ data }">
-                        <span :class="['status-label', data.isBlocked ? 'blocked' : 'active']">
-                            <i class="pi" :class="data.isBlocked ? 'pi-times-circle' : 'pi-check-circle'"></i>
-                            {{ data.isBlocked ? 'Заблокирован' : 'Активен' }}
-                        </span>
+                        <Tag 
+                            :severity="data.isBlocked ? 'danger' : 'success'" 
+                            :value="data.isBlocked ? 'Заблокирован' : 'Активен'" 
+                            :icon="data.isBlocked ? 'pi pi-times' : 'pi pi-check'"
+                        />
+                    </template>
+                    <template #filter="{ filterModel, filterCallback }">
+                        <Select 
+                            v-model="filterModel.value" 
+                            :options="statusOptions"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Выберите статус" 
+                            @change="filterCallback()" 
+                        />
                     </template>
                 </Column>
-                <Column field="change" header="" style="min-width: 5rem;" v-if="hasPermission('User', 'Update')">
+                <Column field="change" header="" style="min-width: 0rem;" v-if="hasPermission('User', 'Update')">
                     <template #body="{ data }">
                         <UpdateUser 
                             :userId="data.id" 
                             :isBlocked="data.isBlocked" 
                             :refreshTable="fetchCustomers" 
                             :filters="filters"
+                            ref="updateUserRef"
                         />
                     </template>
                 </Column>
                 
             </DataTable>
+            
+            <Skeleton v-else width="100%" height="70vh" class="skeleton-table" />
         </div>
     </main>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, nextTick  } from 'vue';
+import { ref, onMounted, computed, toRaw, nextTick } from 'vue';
 import axiosInstance from '@/utils/axios.js';
-
 import { FilterMatchMode } from '@primevue/core/api';
 import qs from 'qs';
 
@@ -166,19 +175,18 @@ const totalRecords = ref(0);
 const loading = ref(true);
 const roles = ref([]);
 
-const permissionStore = usePermissionStore();
+const userPriority = ref(null);
 
+const permissionStore = usePermissionStore();
 const hasPermission = (type, action) => permissionStore.hasPermission(type, action);
 
+
 const filters = ref({
-    global: { value: '', matchMode: FilterMatchMode.CONTAINS },
-    firstName: { value: '', matchMode: FilterMatchMode.STARTS_WITH },
-    lastName: { value: '', matchMode: FilterMatchMode.STARTS_WITH },
-    middleName: { value: '', matchMode: FilterMatchMode.STARTS_WITH },
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    fullName: { value: '', matchMode: FilterMatchMode.CONTAINS },
     email: { value: '', matchMode: FilterMatchMode.STARTS_WITH },
-    isBlocked: { value: null, matchMode: FilterMatchMode.EQUALS },
     roleIds: { value: [], matchMode: FilterMatchMode.IN },
-    fullName: { value: '', matchMode: FilterMatchMode.STARTS_WITH }
+    isBlocked: { value: null, matchMode: FilterMatchMode.EQUALS },
 });
 
 const currentPage = ref(1);
@@ -201,93 +209,70 @@ const togglePopover = (popoverRef, event) => {
         if (popoverRef) {
             popoverRef.toggle(event);
         } else {
-            console.error("Popover reference is null");
+            console.debug("Popover reference is null");
         }
     });
 };
+
+const rowClass = (data) => {
+    return [{ 'pointer': !data.removed }];
+};
+
+const updateUserRef = ref(null); // Ссылка на дочерний компонент UpdateRole
+const openDialog = (id) => { nextTick(() => { updateUserRef.value?.fetchUserData(id); }); };
 
 // Классы для отображения ролей в зависимости от их типа
 const getRoleTypeClass = (role) => {
     return role.type === 'Custom' ? 'custom-role-type' : 'default-role-type';
 }
 
-const displayedRowsCount = computed(() => {
-    const start = (currentPage.value - 1) * rowsPerPage.value;
-    const end = start + rowsPerPage.value;
-    return customers.value.slice(start, end).length;
-});
-
-const onPage = (event) => {
+const onPage = async (event) => {
     currentPage.value = event.page + 1;
     rowsPerPage.value = event.rows;
 }
 
-const fetchCustomers = async (filters) => {
-    loading.value = true;
-    customers.value = [];
-    let page = 1;
-    let pageSize = rowsPerPage.value;
-    let totalFetched = 0;
-    let totalEntities = 0;
-
-    while (true) {
-        const params = {
-            page,
-            pageSize,
-            fullName: filters.fullName.value || undefined,
-            email: filters.email.value || undefined,
-            isBlocked: filters.isBlocked.value !== null ? filters.isBlocked.value.value : undefined,
-            roleIds: filters.roleIds.value.length > 0 ? filters.roleIds.value.map(role => role.id) : undefined
-        };
-        try {
-            const response = await axiosInstance.get('/api/users', { 
-                params,
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                },
-                paramsSerializer: params => {
-                    return qs.stringify(params, { arrayFormat: 'repeat' });
-                }
-                
-            });
-            
-            const newUsers = response.data.users;
-            totalEntities = response.data.countEntities;
-            customers.value.push(...newUsers);
-            totalFetched += newUsers.length;
-
-            if (totalFetched >= totalEntities) {
-                break;
+const fetchCustomers = async () => {
+    try {
+        const response = await axiosInstance.get('/api/users', { 
+            params: {
+                page: 1,
+                pageSize: rowsPerPage.value * 2,
+            },
+            paramsSerializer: params => {
+                return qs.stringify(params, { arrayFormat: 'repeat' });
             }
+        });
+        
+        customers.value = response.data.users.map((user) => ({
+            ...user,
+            fullName: `${user.firstName} ${user.lastName} ${user.middleName}`,
+            roleIds: user.roles.map(role => role.id)
+        }));
+        console.log("Data loaded:", customers.value);
+        totalRecords.value = response.data.countEntities;      
 
-            page += 1;
-        } catch (error) {
-            console.error('Ошибка при получении пользователей: ', error);
-            break;
-        }
+    } catch (error) {
+        console.debug('Ошибка при получении пользователей: ', error);
     }
-
-    totalRecords.value = totalEntities;
-    loading.value = false;
 };
 
-const applyFilters = () => {
-    currentPage.value = 1;
-    fetchCustomers(filters.value);
-}
 
 onMounted(async () => {
-    await fetchCustomers(filters.value);
-    await fetchRoles();
+    loading.value = true;
+    await Promise.all([fetchCustomers(), fetchRoles()]);
+    loading.value = false;
 });
 
 const fetchRoles = async () => {
     try {
         const response = await axiosInstance.get('/api/rbac/roles');
-            
-        roles.value = response.data;
+        const allRoles = response.data;            
+        // Фильтруем роли по приоритету
+        roles.value = allRoles
+            .filter(role => role.priority > userPriority.value)
+        console.log("Отфильтрованные роли:", roles.value);
     } catch (error) {
-        console.error('Ошибка при получении ролей: ', error);
+        console.debug('Ошибка при получении ролей: ', error);
     }
 };
 
@@ -307,11 +292,10 @@ main {
 }
 .content-wrapper {
     flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
+    align-content: center;
     padding: 10pt 1px;
-    overflow: hidden;
+    color: var(--p-text-color);
+    transition: all 0.5s;
 }
 .search {
     border-radius: 12pt;
@@ -371,5 +355,9 @@ main {
 }
 .custom-role-type {
     background-color: var(--p-purple-500);
+}
+.skeleton-table {
+  border-radius: 18px;
+  background-color: var(--p-grey-3);
 }
 </style>

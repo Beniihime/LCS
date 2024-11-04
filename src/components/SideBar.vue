@@ -3,7 +3,7 @@
     <div class="sidebar-container">
         <div class="rectangle">
             <div class="d-flex align-items-center justify-content-center">
-                <router-link to="/" class="logoLCS">
+                <router-link to="/overview" class="logoLCS">
                     <Lcs />
                 </router-link>
             </div>
@@ -11,23 +11,15 @@
                 <InputIcon class="pi pi-search" />
                 <InputText class="search" v-model="searchQuery" placeholder="Поиск..."/>
             </IconField>
-            <div class="menu">
-                <div class="general mt-4" v-if="hasPermission('User', 'Read')">Администрирование</div>
-                <div v-for="item in filteredMenuItems">
-                    <router-link 
-                        :key="item.path" 
-                        :to="item.path" 
-                        class="menu-item" 
-                        active-class="active-link"
-                        v-if="checkPermission(item.path)"
-                    >
-                        
-                        <i :class="item.icon"></i>
-                        <div class="menucrumb">
-                            <span>{{ item.name }}</span>
-                        </div>
-                    </router-link>
-                </div>
+            <div class="menu mt-4">
+                <router-link to="/overview" class="menu-item" active-class="active-link">
+                    <i class="pi pi-home"></i>
+                    <div class="menucrumb">Главная</div>
+                </router-link>
+                <router-link to="/notif" class="menu-item" active-class="active-link">
+                    <i class="pi pi-bell"></i>
+                    <div class="menucrumb">Уведомления</div>
+                </router-link>
             </div>
             <div class="menu">
                 <div class="general mt-4" v-if="menuItems">Сервисы</div>
@@ -51,6 +43,24 @@
                     </router-link>
                 </div>
             </div>
+            <div class="menu">
+                <div class="general mt-4" v-if="hasPermission('User', 'Read')">Администрирование</div>
+                <div v-for="item in filteredMenuItems">
+                    <router-link 
+                        :key="item.path" 
+                        :to="item.path" 
+                        class="menu-item" 
+                        active-class="active-link"
+                        v-if="checkPermission(item.path)"
+                    >
+                        
+                        <i :class="item.icon"></i>
+                        <div class="menucrumb">
+                            <span>{{ item.name }}</span>
+                        </div>
+                    </router-link>
+                </div>
+            </div>
             <div class="split mb-4"></div>
             <ThemeSwitcher />
             <router-link class="profile" to="/profile" active-class="active-link">
@@ -65,10 +75,14 @@
                     </div>
                     <div class="col">
                         <div class="middle">
-                            {{ fullName }} 
-                            <span class="email">
-                                {{ email }}
-                            </span>
+                            <div class="row">
+                                <div class="col">{{ fullName }}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col email">
+                                    {{ email }}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -139,11 +153,6 @@ const menuItems = [
         name: 'Заявки',
         path: '/requests',
         icon: 'pi pi-pen-to-square'
-    },
-    {
-        name: 'Уведомления',
-        path: '/notif',
-        icon: 'pi pi-bell'
     },
 ]
 
@@ -226,7 +235,7 @@ onBeforeMount(async () => {
             showRequestsMenu.value = false;
         }
     } catch (error) {
-        console.error('Ошибка при получении информации о пользователе: ', error);
+        console.debug('Ошибка при получении информации о пользователе: ', error);
     }
     
 });
@@ -253,7 +262,7 @@ onBeforeMount(async () => {
 }
 .middle {
     font-family: 'SF Pro Rounded';
-    font-size: 14pt;
+    font-size: 1.25rem;
     line-height: normal;
     transition: all 0.5s;
 }
@@ -273,7 +282,7 @@ onBeforeMount(async () => {
     color: var(--p-grey-1);
 }
 .initials-circle {
-    background-color: var(--p-button-primary-background);
+    background-color: var(--p-blue-500);
     color: white;
     font-weight: 700;
     font-family: 'SF Pro Rounded';
@@ -289,7 +298,6 @@ onBeforeMount(async () => {
     height: 100vh;
     display: flex;
     position: sticky;
-    top: 0;
     box-sizing: border-box;
 }
 .menu {
@@ -338,10 +346,10 @@ onBeforeMount(async () => {
 }
 .menu-item:hover {
     background-color: var(--p-blue-500-low-op);
-    color: var(--p-blue-500);
+    color: var(--p-text-color);
 }
 .active-link {
-    color: var(--p-blue-500);
+    color: var(--p-text-color);
     background-color: var(--p-blue-500-low-op);
 }
 .search {
@@ -357,11 +365,13 @@ onBeforeMount(async () => {
     display: flex;
     flex-direction: column;
     background-color: var(--p-bg-color-2);
+    background-image: linear-gradient(to bottom, var(--p-blue-300), var(--p-bg-color-2) 35%); /* основной цвет фона */
+    background-repeat: no-repeat;
+    background-size: cover;
     width: 256pt;
-    margin: 10pt;
-    padding: 18pt;
-    border-radius: 18pt;
+    margin-right: 1rem;
+    padding: 1.25rem;
     transition: all 0.5s;
-    border: 2px solid var(--p-grey-4);
+    border-right: 2px solid var(--p-grey-4);
 }
 </style>

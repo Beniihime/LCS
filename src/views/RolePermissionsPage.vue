@@ -85,7 +85,7 @@ const fetchAllPermissions = async () => {
         const response = await axiosInstance.get('/api/rbac/permissions');
         allPermissions.value = response.data; // Получаем все полномочия системы
     } catch (error) {
-        console.error('Ошибка при загрузке полномочий:', error);
+        console.debug('Ошибка при загрузке полномочий:', error);
     }
 };
 
@@ -95,7 +95,7 @@ const fetchRolePermissions = async () => {
         rolePermissions.value = response.data.resourcesWithPermissions; // Получаем полномочия роли
         updatePermissionsWithRoleStatus();
     } catch (error) {
-        console.error('Ошибка при загрузке полномочий роли:', error);
+        console.debug('Ошибка при загрузке полномочий роли:', error);
     } finally {
         loading.value = false; // Скрываем экран загрузки
     }
@@ -148,7 +148,7 @@ const togglePermission = async (roleId, permissionId, isActive) => {
         }
         updatePermissionStatus(permissionId, isActive);
     } catch (error) {
-        console.error('Ошибка при переключении полномочий: ', error);
+        console.debug('Ошибка при переключении полномочий: ', error);
     }
 };
 

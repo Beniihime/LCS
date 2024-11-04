@@ -172,7 +172,7 @@ const updateProfile = async () => {
         }));
 
     } catch (error) {
-        console.error('Ошибка при обновлении данных: ', error);
+        console.debug('Ошибка при обновлении данных: ', error);
     }
 }
 

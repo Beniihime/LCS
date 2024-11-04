@@ -2,7 +2,7 @@
     <div>
         <Button class="toggle-button" label="Доступные сервисы" @click="fetchServices"/>
         <Dialog v-model:visible="isDialogVisible" modal :style="{ 'max-width': '80rem' }" @hide="closeDialog">
-            <div class="service-card mt-3">
+            <div class="service-card">
                 <h3>Доступные сервисы</h3>
                 <Divider />
 
@@ -33,7 +33,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import axiosInstance from '@/utils/axios.js';
 
 const isDialogVisible = ref(false);  // Видимость модального окна
@@ -55,11 +55,12 @@ const onNodeCollapse = (event) => {
 
 // Запрос доступных сервисов
 const fetchServices = async () => {
+    const userId = localStorage.getItem('userId');
     try {
-        const servicesResponse = await axiosInstance.get(`/api/infra-manager/users/me/calls/services/available`);
+        const servicesResponse = await axiosInstance.get(`/api/infra-manager/users/${userId}/calls/services/available`);
         servicesTree.value = transformServicesToTree(servicesResponse.data); // Преобразуем в формат дерева
     } catch (error) {
-        console.error('Ошибка при загрузке информации о пользователе InfraManager:', error);
+        console.debug('Ошибка при загрузке информации о пользователе InfraManager:', error);
     }
 }
 
@@ -86,10 +87,9 @@ const transformServicesToTree = (services) => {
 <style scoped>
 .service-card {
     border-radius: 24px;
-    border: 2px solid var(--p-grey-4);
     transition: all 0.5s;
     width: 100%;
-    padding: 30px;
+    padding: 1px 20px;
 }
 
 h2 {

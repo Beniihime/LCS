@@ -15,7 +15,7 @@ export const usePermissionStore = defineStore('permissions', {
           this.permissions = response.data;
           this.isLoaded = true;  // Помечаем, что полномочия загружены
         } catch (error) {
-          console.error('Ошибка при загрузке полномочий:', error);
+          console.debug('Ошибка при загрузке полномочий:', error);
           throw error;  // Пробрасываем ошибку, чтобы обработать её в роутере
         }
       }

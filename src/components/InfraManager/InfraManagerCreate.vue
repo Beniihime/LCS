@@ -84,7 +84,7 @@ const searchLKSUsers = async (event) => {
                 id: user.id
             }));
     } catch (error) {
-        console.error('Ошибка при загрузке пользователей ЛКС:', error);
+        console.debug('Ошибка при загрузке пользователей ЛКС:', error);
     }
 };
 
@@ -104,7 +104,7 @@ const searchInfraUsers = async (event) => {
             details: user.details
         }));
     } catch (error) {
-        console.error('Ошибка при загрузке пользователей:', error);
+        console.debug('Ошибка при загрузке пользователей:', error);
     }
 };
 
@@ -120,7 +120,7 @@ const onInfraUserSelect = async (event) => {
         const userLocationResponse = await axiosInstance.get(`/api/infra-manager/users/${user.id}/client/info`);
         selectedInfraUserLocation.value = userLocationResponse.data;
     } catch (error) {
-        console.error('Ошибка при загрузке информации о пользователе InfraManager:', error);
+        console.debug('Ошибка при загрузке информации о пользователе InfraManager:', error);
     }
 }
 
@@ -149,7 +149,7 @@ const createLink = async () => {
 
             showCreateInfra.value = false;
         } catch (error) {
-            console.error('Ошибка при создании связи: ', error);
+            console.debug('Ошибка при создании связи: ', error);
         }
     }
 }

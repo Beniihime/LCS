@@ -76,7 +76,7 @@ const fetchUsers = async () => {
 
         users.value = response.data.users;
     } catch (error) {
-        console.error('Ошибка при получении пользователей: ', error);
+        console.debug('Ошибка при получении пользователей: ', error);
     }
 };
 
