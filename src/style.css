@@ -59,7 +59,6 @@ thead.p-datatable-thead {
   background-color: var(--p-bg-color-1);
   transition: all 0.5s;
   height: 100%;
-  overflow: hidden;
 }
 .logout-button:hover {
   svg.logout path {

@@ -1,9 +1,11 @@
 <template>
   <div class="layout">
-      <SideBar v-if="isAuthenticated" />
-      <div class="content">
+      <aside class="sidebar">
+          <SideBar v-if="isAuthenticated" />
+      </aside>
+      <main class="content">
           <router-view />
-      </div>
+      </main>
   </div>
 </template>
 
@@ -40,8 +42,17 @@ if (query.message) {
   display: flex;
 }
 
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh; /* Высота на весь экран для фиксированного положения */
+  overflow-y: auto; /* Скроллинг для боковой панели, если она длиннее экрана */
+  flex-shrink: 0; /* Предотвращает изменение ширины боковой панели */
+}
+
 .content {
-  flex-grow: 1;
+  flex: 1;
+  padding-left: 1rem;
   overflow-y: auto; /* Скроллинг для основного контента */
 }
 </style>

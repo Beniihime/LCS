@@ -298,7 +298,6 @@ onBeforeMount(async () => {
 .sidebar-container {
     height: 100vh;
     display: flex;
-    position: sticky;
     box-sizing: border-box;
 }
 .menu {
