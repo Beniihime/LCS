@@ -1,5 +1,5 @@
 <template>
-    <main>
+    <div class="content">
         <div class="content-wrapper">                
             <WelcomeScreen :visible="loading" />
             <DataTable
@@ -9,8 +9,8 @@
                 paginator 
                 filterDisplay="row" 
                 scrollable
-                style="max-width: 96rem;"
-                scrollHeight="80vh"
+                stripedRows
+                scrollHeight="83dvh"
                 :rows="rowsPerPage"
                 :rowClass="rowClass"
                 @row-click="(event) => openDialog(event.data.id)"
@@ -156,7 +156,7 @@
             
             <Skeleton v-else width="100%" height="70vh" class="skeleton-table" />
         </div>
-    </main>
+    </div>
 </template>
 
 <script setup>
@@ -248,7 +248,6 @@ const fetchCustomers = async () => {
             fullName: `${user.firstName} ${user.lastName} ${user.middleName}`,
             roleIds: user.roles.map(role => role.id)
         }));
-        console.log("Data loaded:", customers.value);
         totalRecords.value = response.data.countEntities;      
 
     } catch (error) {
@@ -270,7 +269,6 @@ const fetchRoles = async () => {
         // Фильтруем роли по приоритету
         roles.value = allRoles
             .filter(role => role.priority > userPriority.value)
-        console.log("Отфильтрованные роли:", roles.value);
     } catch (error) {
         console.debug('Ошибка при получении ролей: ', error);
     }
@@ -284,7 +282,7 @@ h3 {
     color: var(--p-text-color);
     transition: all 0.5s;
 }
-main {
+.content {
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -293,7 +291,7 @@ main {
 .content-wrapper {
     flex-grow: 1;
     align-content: center;
-    padding: 10pt 1px;
+    padding: 10px;
     color: var(--p-text-color);
     transition: all 0.5s;
 }

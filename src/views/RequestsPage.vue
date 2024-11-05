@@ -1,5 +1,5 @@
 <template>
-    <main>
+    <div class="content">
         <WelcomeScreen :visible="loading" />
         <div class="content-wrap">
             <DataTable
@@ -11,12 +11,9 @@
                 scrollable
                 removableSort
                 stripedRows
-                rowHover
-                style="max-width: 96rem;"
-                scrollHeight="80vh"
+                scrollHeight="83dvh"
                 @page="onPage"
                 :rowClass="rowClass"
-                :rowStyle="rowStyle"
                 @row-click="(event) => openCallDetails(event.data.id)"
             >
                 <template #header>
@@ -44,7 +41,7 @@
                 </Column>
                 <Column field="number" header="#" sortable style="min-width: 50px" class="openCall">
                     <template #body="{ data }">
-                        <div v-tooltip="{ value: data.description, showDelay: 1000, hideDelay: 300 }">{{ data.number }}</div>
+                        {{ data.number }}
                     </template>
                 </Column>
                 <Column field="entityStateName" header="Статус" style="min-width: 100px;">
@@ -105,17 +102,17 @@
                 </Column>
                 <Column field="utcDateRegistered" header="Дата регистрации" sortable style="min-width: 290px">
                     <template #body="{ data }">
-                        {{ formatDate(data.utcDateRegistered) }}
+                        {{ formatUTCToOmsk(data.utcDateRegistered) }}
                     </template>
                 </Column>
                 <Column field="utcDateModified" header="Дата изменения" style="min-width: 290px">
                     <template #body="{ data }">
-                        {{ formatDate(data.utcDateModified) }}
+                        {{ formatUTCToOmsk(data.utcDateModified) }}
                     </template>
                 </Column>
                 <Column field="utcDateClosed" header="Дата закрытия" style="min-width: 290px">
                     <template #body="{ data }">
-                        {{ formatDate(data.utcDateClosed) }}
+                        {{ formatUTCToOmsk(data.utcDateClosed) }}
                     </template>
                 </Column>
 
@@ -142,7 +139,7 @@
             <Skeleton v-else width="100%" height="90vh" class="skeleton-table" />
         </div>
         <InfraManagerCallsMe ref="callDetailsRef" class="position-absolute opacity-0" style="z-index: -999;"/>
-    </main>
+    </div>
 </template>
 
 <script setup>
@@ -161,7 +158,6 @@ const rowsPerPage = ref(10);  // Количество строк на стран
 const totalRecords = ref(0);  // Общее количество заявок
 const totalPages = ref(0);
 const loadedPages = ref(10);
-const tooltipContent = ref("");
 
 const rowsPerPageOptions = [
     { label: '5', value: 5 },
@@ -210,18 +206,25 @@ const getStatusIcon = (status) => {
   }
 }
 
-const formatDate = (dateStr) => {
-    if (!dateStr) return ''; // Если дата пустая
-    const date = new Date(dateStr);
-    const options = {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    };
-    return date.toLocaleDateString('ru-RU', options);
-}
+const formatUTCToOmsk = (utcString) => {
+  if (!utcString) return '';
+
+  // Добавляем 'Z', чтобы обозначить, что строка — в формате UTC
+  const date = new Date(`${utcString}Z`);
+
+  // Добавляем 6 часов для Омского времени
+  date.setHours(date.getUTCHours() + 6);
+
+  // Форматируем дату с учётом 24-часового формата и Омского времени
+  return new Intl.DateTimeFormat('ru-RU', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date);
+};
 
 const rowClass = (data) => {
     return [{ 'removed-row': data.removed , 'not-allowed': data.removed, 'pointer': !data.removed }];
@@ -246,7 +249,7 @@ const fetchCalls = async () => {
 
         loading.value = false;
     } catch (error) {
-        console.debug('Ошибка при загрузке: ', error);
+        console.error('Ошибка при загрузке: ', error);
         loading.value = false;
     }
 };
@@ -289,16 +292,16 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-main {
+.content {
     display: flex;
     flex-direction: column;
-    height: 100%;
     box-sizing: border-box;
+    height: 100vh;
 }
 .content-wrap {
     flex-grow: 1;
     align-content: center;
-    padding: 10pt 1px;
+    padding: 10px 10px;
     color: var(--p-text-color);
     transition: all 0.5s;
 }

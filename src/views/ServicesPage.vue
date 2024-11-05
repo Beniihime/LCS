@@ -44,7 +44,7 @@
                             scrollable
                             removableSort
                             stripedRows
-                            style="max-width: 75rem;"
+                            style="max-width: 95rem;"
                             scrollHeight="57vh"
                             @page="onPage"
                             :rowClass="rowClass"
@@ -139,17 +139,17 @@
                             </Column>
                             <Column field="utcDateRegistered" header="Дата регистрации" sortable style="min-width: 290px">
                                 <template #body="{ data }">
-                                    {{ formatDate(data.utcDateRegistered) }}
+                                    {{ formatUTCToOmsk(data.utcDateRegistered) }}
                                 </template>
                             </Column>
                             <Column field="utcDateModified" header="Дата изменения" style="min-width: 290px">
                                 <template #body="{ data }">
-                                    {{ formatDate(data.utcDateModified) }}
+                                    {{ formatUTCToOmsk(data.utcDateModified) }}
                                 </template>
                             </Column>
                             <Column field="utcDateClosed" header="Дата закрытия" style="min-width: 290px">
                                 <template #body="{ data }">
-                                    {{ formatDate(data.utcDateClosed) }}
+                                    {{ formatUTCToOmsk(data.utcDateClosed) }}
                                 </template>
                             </Column>
 
@@ -250,18 +250,25 @@ const getStatusIcon = (status) => {
   }
 }
 
-const formatDate = (dateStr) => {
-    if (!dateStr) return ''; // Если дата пустая
-    const date = new Date(dateStr);
-    const options = {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    };
-    return date.toLocaleDateString('ru-RU', options);
-}
+const formatUTCToOmsk = (utcString) => {
+  if (!utcString) return '';
+
+  // Добавляем 'Z', чтобы обозначить, что строка — в формате UTC
+  const date = new Date(`${utcString}Z`);
+
+  // Добавляем 6 часов для Омского времени
+  date.setHours(date.getUTCHours() + 6);
+
+  // Форматируем дату с учётом 24-часового формата и Омского времени
+  return new Intl.DateTimeFormat('ru-RU', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date);
+};
 
 const rowClass = (data) => {
     return [{ 'removed-row': data.removed , 'not-allowed': data.removed, 'pointer': !data.removed }];
@@ -287,6 +294,7 @@ const fetchCalls = async () => {
             params: {
                 page: 1,
                 pageSize: rowsPerPage.value * 10,
+                InitiatorIdOrClientIdOrOwnerId: selectedUser.value?.id || undefined,
             },
         });
 
@@ -295,7 +303,6 @@ const fetchCalls = async () => {
             totalRecords.value = response.data.countAllEntities;
             totalPages.value = response.data.countAllPages;
         }
-
         loading.value = false;
     } catch (error) {
         console.debug('Ошибка при загрузке: ', error);
@@ -309,6 +316,7 @@ const loadMorePages = async () => {
             params: {
                 page: loadedPages.value / 10 + 1,
                 pageSize: rowsPerPage.value * 10,
+                InitiatorIdOrClientIdOrOwnerId: selectedUser.value?.id || undefined,
             },
         });
 

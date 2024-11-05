@@ -2,7 +2,7 @@
     <SelectButton v-model="selectedTheme" optionValue="value" optionLabel="value" :options="themeOptions" class="mb-4" v-if="!isAuthPage">
         <template #option="slotProps">
             <i :class="slotProps.option.icon"></i>
-            <span>{{ slotProps.option.label }}</span>
+            <span class="label">{{ slotProps.option.label }}</span>
         </template>
     </SelectButton>
     <div class="col-lg-auto" @click="themeToggle" v-if="isAuthPage">

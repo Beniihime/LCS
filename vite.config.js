@@ -3,6 +3,7 @@ import vue from '@vitejs/plugin-vue';
 import svgLoader from 'vite-svg-loader';
 import mkcert from 'vite-plugin-mkcert';
 import { visualizer } from "rollup-plugin-visualizer";
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -11,6 +12,14 @@ export default defineConfig({
     svgLoader(),
     mkcert(),
     visualizer(),
+    viteStaticCopy({
+      targets: [
+        {
+          src: 'src/assets/icons',
+          dest: 'src/assets',
+        }
+      ]
+    })
   ],
   build: {
     rollupOptions: {

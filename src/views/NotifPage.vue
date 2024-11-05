@@ -64,12 +64,7 @@ h2 {
     background-color: var(--p-grey-7);
     border-radius: 10px;
     padding: 15px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     transition: all 0.5s;
-}
-
-.notification-card:hover {
-    transform: scale(1.01);
 }
 
 .notification-header {

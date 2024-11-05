@@ -229,6 +229,7 @@ onBeforeMount(async () => {
 
         const userId = response.data.id;
         const statusResponse = await axiosInstance.get(`/api/infra-manager/db/users/${userId}/status`);
+        localStorage.setItem("infraManagerUserId",statusResponse.data.infraManagerUserId);
         if (statusResponse.data.personalAccountUserId && statusResponse.data.infraManagerUserId) {
             showRequestsMenu.value = true;
         } else {
@@ -262,7 +263,7 @@ onBeforeMount(async () => {
 }
 .middle {
     font-family: 'SF Pro Rounded';
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     line-height: normal;
     transition: all 0.5s;
 }
@@ -303,9 +304,9 @@ onBeforeMount(async () => {
 .menu {
     display: flex;
     flex-direction: column;
-    gap: 10pt;
+    gap: 12px;
     .pi {
-        font-size: 18pt;
+        font-size: 1.25rem;
         position: absolute;
         left: 16pt;
         top: 50%;
@@ -316,7 +317,7 @@ onBeforeMount(async () => {
 .general {
     font-family: 'SF Pro Rounded';
     font-weight: bold;
-    font-size: 22px;
+    font-size: 18px;
     color: var(--p-text-color);
     transition: all 0.5s;
 }
@@ -337,8 +338,8 @@ onBeforeMount(async () => {
     display: flex;
     align-items: center;
     width: 100%;
-    height: 42pt;
-    border-radius: 12pt;
+    height: 50px;
+    border-radius: 12px;
     transition: all 0.5s;
     text-decoration: none;
     color: var(--p-text-color);
@@ -353,7 +354,7 @@ onBeforeMount(async () => {
     background-color: var(--p-blue-500-low-op);
 }
 .search {
-    border-radius: 12pt;
+    border-radius: 12px;
     transition: all 0.5s;
     width: 100%; 
 }
@@ -365,11 +366,10 @@ onBeforeMount(async () => {
     display: flex;
     flex-direction: column;
     background-color: var(--p-bg-color-2);
-    background-image: linear-gradient(to bottom, var(--p-blue-300), var(--p-bg-color-2) 35%); /* основной цвет фона */
+    background-image: linear-gradient(to bottom, var(--p-blue-100), var(--p-bg-color-2) 35%); /* основной цвет фона */
     background-repeat: no-repeat;
     background-size: cover;
-    width: 256pt;
-    margin-right: 1rem;
+    width: 300px;
     padding: 1.25rem;
     transition: all 0.5s;
     border-right: 2px solid var(--p-grey-4);

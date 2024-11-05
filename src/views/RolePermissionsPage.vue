@@ -3,7 +3,7 @@
         <WelcomeScreen :visible="loading" />
         <div class="permissions-wrapper">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="m-0">Полномочия роли</h1>
+                <h2 class="m-0">Полномочия роли</h2>
                 <Button class="back-btn m-0" icon="pi pi-arrow-left" label="Назад" @click="goBack" text />
             </div>
             <div class="searchField my-4">
@@ -11,36 +11,39 @@
                     <div class="col">
                         <IconField class="searchBar">
                             <InputIcon class="pi pi-search" />
-                            <InputText placeholder="Поиск" class="search" v-model="searchQuery" />
+                            <InputText placeholder="Поиск..." class="search" v-model="searchQuery" />
                         </IconField>
+                    </div>
+                    <div class="col-auto">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <Chip class="role-label">
+                                    <span class="roleType" :class="getRoleTypeClass()">
+                                        {{ roleStore.roleType.charAt(0) }}
+                                    </span>
+                                    <span>{{ roleStore.roleTitle }}</span>
+                                </Chip>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             <Divider />
-            <h3>Выбранная роль</h3>
-            <div class="card h-100">
-                <div class="card-body">
-                    <Chip class="role-label">
-                        <span class="roleType" :class="getRoleTypeClass()">
-                            {{ roleStore.roleType.charAt(0) }}
-                        </span>
-                        <span>{{ roleStore.roleTitle }}</span>
-                    </Chip>
-                    <p class="card-text">{{ roleStore.roleDescription }}</p>
-                </div>
-            </div>
-            <Divider />
             <div v-for="resource in filteredResources" :key="resource.id" class="mt-4">
-                <h3 class="resource-title d-flex align-items-center">
-                    {{ resource.title }}
-                    <Tag :value="resource.type" severity="info" class="mx-2"/>
-                    <Tag 
-                        v-if="!resource.permissions.some(permission => permission.isCustomizable)" 
-                        value="Нет регулируемых полномочий" 
-                        severity="warn" 
-                        icon="pi pi-exclamation-triangle"
-                    />
-                </h3>
+                <div class="row align-items-center">
+                    <div class="col-auto pe-0">
+                        <h3>{{ resource.title }}</h3>
+                    </div>
+                    <div class="col-auto pe-0"><Tag :value="resource.type" severity="info" class="mx-2"/></div>
+                    <div class="col-auto ps-0">
+                        <Tag 
+                            v-if="!resource.permissions.some(permission => permission.isCustomizable)" 
+                            value="Нет регулируемых полномочий" 
+                            severity="warn" 
+                            icon="pi pi-exclamation-triangle"
+                        />
+                    </div>
+                </div>
                 <div class="resource-info">
                     <p class="resource-description">{{ resource.description }}</p>
                 </div>
@@ -196,12 +199,11 @@ onMounted(async () => {
     background: transparent;
 }
 .permissions-wrapper {
-    padding: 1.25rem 8rem;
+    padding: 1.25rem 2rem;
     color: var(--p-text-color);
 }
 .search {
-    border-radius: 12pt;
-    font-size: 16pt;
+    border-radius: 12px;
     transition: all 0.5s;
     width: 100%; 
 }
@@ -215,16 +217,14 @@ onMounted(async () => {
     background-color: var(--p-grey-7);
     color: var(--p-text-color);
     display: flex;
+    border: none;
     flex-direction: column;
     justify-content: space-between;
     height: 100%;
     transition: all 0.5s;
 }
 .card-body {
-    padding: 28px;
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
+    padding: 5px;
 }
 .card-title {
     font-size: 1.5rem;
@@ -233,10 +233,10 @@ onMounted(async () => {
     color: var(--p-text-color);
 }
 .card-text {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-family: 'SF Pro Rounded', sans-serif;
     color: var(--p-grey-1);
-    margin-top: 10px;
+    margin: 0;
 }
 .resourse-type {
     color: var(--p-grey-1);
@@ -263,20 +263,20 @@ onMounted(async () => {
     font-size: 1.2rem;
 }
 .permission-description {
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: var(--p-grey-1);
 }
 .role-label {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 400;
 }
 .roleType {
     background-color: var(--p-blue-500);
     border-radius: 50%;
-    font-size: 28px;
+    font-size: 20px;
     color: white;
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     display: flex;
     justify-content: center;
     align-items: center;

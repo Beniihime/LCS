@@ -47,7 +47,7 @@
                             <h4><i class="pi pi-info-circle"></i> Основная информация</h4>
                             <p v-if="selectedCall.fullName"><strong>Заявка:</strong> <span v-html="selectedCall.fullName"></span></p>
                             <p v-if="selectedCall.description"><strong>Описание:</strong> <span v-html="selectedCall.description"></span></p>
-                            <p v-if="selectedCall.solution"><strong>Решение:</strong> <span v-html="selectedCall.solution"></span></p>
+                            <p v-if="selectedCall.solution"><strong>Решение:</strong> <span class="override-color" v-html="selectedCall.solution"></span></p>
                             <p v-if="selectedCall.serviceCategoryName"><strong>Категория сервиса:</strong> <span v-html="selectedCall.serviceCategoryName"></span></p>
                         </div>
 
@@ -56,14 +56,14 @@
                             <h4><i class="pi pi-calendar"></i> Даты</h4>
                             <Timeline :value="timelineEvents" class="mb-3">
                               <template #opposite="slotProps">
-                                <small>{{ formatDate(slotProps.item.date) }}</small>
+                                <small>{{ formatTimestampToOmsk(slotProps.item.date) }}</small>
                               </template>
                               <template #content="slotProps">
                                 <span>{{ slotProps.item.label }}</span>
                               </template>
                             </Timeline>
-                            <p v-if="selectedCall.utcDatePromised"><strong>Дата обещанного выполнения:</strong> {{ formatDate(selectedCall.utcDatePromised) }}</p>
-                            <p v-if="selectedCall.utcDateModified"><strong>Дата последнего изменения:</strong> {{ formatDate(selectedCall.utcDateModified) }}</p>
+                            <p v-if="selectedCall.utcDatePromised"><strong>Дата обещанного выполнения:</strong> {{ formatTimestampToOmsk(selectedCall.utcDatePromised) }}</p>
+                            <p v-if="selectedCall.utcDateModified"><strong>Дата последнего изменения:</strong> {{ formatTimestampToOmsk(selectedCall.utcDateModified) }}</p>
                         </div>
 
                         <!-- Сервис -->
@@ -107,16 +107,38 @@
                             <div class="col-auto">
                               <h5>{{ document.name }}</h5>
                               <p>Размер: {{ formatFileSize(document.size) }}</p>
-                              <p>Дата загрузки: {{ formatDate(document.utcDateCreated) }}</p>
+                              <p>Дата загрузки: {{ formatUTCToOmsk(document.utcDateCreated) }}</p>
                             </div>
                             <div class="col-auto">
-                              <Button icon="pi pi-download" />
+                              <!-- <Button icon="pi pi-download" /> -->
+                              <img :src="getIconPath(document.name)" alt="Document icon" class="document-icon" />
                             </div>
                           </div>
                         </div>
                       </div>
                       <p v-else>Документы отсутствуют</p>
                     </TabPanel>
+                    <TabPanel value="2">
+                        <div v-if="negotiations.length > 0">
+                          <div v-for="negotiation in negotiations" :key="negotiation.id" class="negotiation-card">
+                            <h5>Тема: {{ negotiation.theme }}</h5>
+                            <p><strong>Участник:</strong> {{ negotiation.fullName }}</p>
+                            <p><strong>Статус:</strong> {{ negotiation.statusString }}</p>
+                            <p><strong>Дата начала:</strong> {{ formatUTCToOmsk(negotiation.utcDateVoteStart) }}</p>
+                            <p><strong>Дата окончания:</strong> {{ formatUTCToOmsk(negotiation.utcDateVoteEnd) }}</p>
+
+                            <div v-if="negotiation.userList.length">
+                              <h6>Список пользователей:</h6>
+                              <ul>
+                                  <li v-for="user in negotiation.userList" :key="user.userId">
+                                      {{ user.userFullName }} - {{ user.positionName }} ({{ user.subdivisionName }})
+                                  </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                        <p v-else>Согласования отсутствуют</p>
+                      </TabPanel>
                   </TabPanels>
                 </Tabs>
                   
@@ -153,6 +175,7 @@ const isDialogVisible = ref(false);  // Видимость модального 
 const selectedCall = ref(null);  // Выбранная заявка
 const documents = ref([]); // Список документов для выбранной заявки
 const errorOccurred = ref(false);
+const negotiations = ref([]);
 
 const timelineEvents = ref([]);
 
@@ -207,6 +230,20 @@ const fetchDocuments = async (callId) => {
   } catch (error) {
     console.error('Ошибка при загрузке документов:', error);
   }
+};
+
+const getIconPath = (fileName) => {
+  const extension = fileName.split('.').pop().toLowerCase(); // Получаем расширение файла
+  return `../assets/icons/${extension}.png`; // Возвращаем путь к иконке
+};
+
+const fetchNegotiations = async (callId) => {
+    try {
+        const response = await axiosInstance.get(`/api/infra-manager/calls/${callId}/negotiations`);
+        negotiations.value = response.data;
+    } catch (error) {
+        console.error('Ошибка при загрузке данных о согласованиях:', error);
+    }
 };
 
 // Функция для получения последних заявок по ID пользователя
@@ -293,6 +330,8 @@ const openCallDetails = async (callId) => {
       executorFullName: executor.data.fullName || '',
       accomplisherFullName: accomplisher.data.fullName || '',
     };
+    // Загружаем данные о согласованиях
+    await fetchNegotiations(callId);
 
     await fetchDocuments(callId); // Загружаем документы для выбранной заявки
 
@@ -308,10 +347,38 @@ const closeDialog = () => {
   selectedCall.value = null;
 };
 
-// Форматировать дату
-const formatDate = (timestamp) => {
-  const date = new Date(timestamp * 1000);
-  return date.toLocaleDateString();
+const formatTimestampToOmsk = (timestamp) => {
+  if (!timestamp) return '';
+  const date = new Date(timestamp * 1000); // Умножаем на 1000, чтобы перевести из секунд в миллисекунды
+  return new Intl.DateTimeFormat('ru-RU', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'Asia/Omsk', // Часовой пояс Омска
+  }).format(date);
+};
+
+const formatUTCToOmsk = (utcString) => {
+  if (!utcString) return '';
+
+  // Добавляем 'Z', чтобы обозначить, что строка — в формате UTC
+  const date = new Date(`${utcString}Z`);
+
+  // Добавляем 6 часов для Омского времени
+  date.setHours(date.getUTCHours() + 6);
+
+  // Форматируем дату с учётом 24-часового формата и Омского времени
+  return new Intl.DateTimeFormat('ru-RU', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date);
 };
 
 defineExpose({ openCallDetails });
@@ -391,5 +458,17 @@ h2 {
   margin: 0;
   font-size: 0.9rem;
   color: var(--p-text-color);
+}
+.override-color * {
+  color: var(--p-text-color) !important;
+  background-color: transparent !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
+  text-decoration: none !important;
+}
+.document-icon {
+  width: 48px; 
+  height: 48px; 
 }
 </style>

@@ -55,9 +55,9 @@ const onNodeCollapse = (event) => {
 
 // Запрос доступных сервисов
 const fetchServices = async () => {
-    const userId = localStorage.getItem('userId');
+    const infraManagerUserId = localStorage.getItem('infraManagerUserId');
     try {
-        const servicesResponse = await axiosInstance.get(`/api/infra-manager/users/${userId}/calls/services/available`);
+        const servicesResponse = await axiosInstance.get(`/api/infra-manager/users/${infraManagerUserId}/calls/services/available`);
         servicesTree.value = transformServicesToTree(servicesResponse.data); // Преобразуем в формат дерева
     } catch (error) {
         console.debug('Ошибка при загрузке информации о пользователе InfraManager:', error);

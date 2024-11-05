@@ -1,10 +1,10 @@
 <template>
-    <div class="app-layout">
-      <SideBar v-if="isAuthenticated"/>
+  <div class="layout">
+      <SideBar v-if="isAuthenticated" />
       <div class="content">
-        <router-view />
+          <router-view />
       </div>
-    </div>
+  </div>
 </template>
 
 <script setup>
@@ -20,26 +20,28 @@ const route = useRoute();
 computed(() => isAuthenticated());
 
 const showMessage = (message, summary, detail) => {
-  if (message === 'success') {
-    toast.add({ severity: 'success', summary, detail, life: 3000 });
-  } else if (message === 'error') {
-    toast.add({ severity: 'error', summary, detail, life: 3000 });
-  }
+if (message === 'success') {
+  toast.add({ severity: 'success', summary, detail, life: 3000 });
+} else if (message === 'error') {
+  toast.add({ severity: 'error', summary, detail, life: 3000 });
+}
 };
 
 onMounted(() => {
-  const query = route.query;
-  if (query.message) {
-    showMessage(query.message, query.summary, query.detail);
-  }
+const query = route.query;
+if (query.message) {
+  showMessage(query.message, query.summary, query.detail);
+}
 });
 </script>
 
 <style scoped>
-.app-layout {
+.layout {
   display: flex;
 }
+
 .content {
   flex-grow: 1;
+  overflow-y: auto; /* Скроллинг для основного контента */
 }
 </style>
