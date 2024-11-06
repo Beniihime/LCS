@@ -80,12 +80,20 @@
                                 <span>{{ infraEmail }}</span>
                             </div>
                         </div>
-                        <div class="row">
+                        <div class="row mb-3">
                             <div class="col-auto align-items-center d-flex">
                                 <i class="pi pi-sitemap"></i>
                             </div>
                             <div class="col">
                                 <span>{{ infraPosition }}</span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-auto align-items-center d-flex">
+                                <i class="pi pi-map-marker"></i>
+                            </div>
+                            <div class="col">
+                                <span>{{ infraPlace }}</span>
                             </div>
                         </div>
                     </div>
@@ -134,6 +142,7 @@ const lastCalls = ref([]);
 const infraFullName = ref('');
 const infraEmail = ref('');
 const infraPosition = ref('');
+const infraPlace = ref('');
 
 const triggerFileUpload = () => {
   fileInput.value.click();
@@ -170,9 +179,11 @@ const fetchMeInfo = async () => {
 
             // Если есть связка, загружаем информацию о пользователе InfraManager
             const infraManagerInfo = await axiosInstance.get('/api/infra-manager/users/me');
+            const infraManagerClientInfo = await axiosInstance.get('/api/infra-manager/users/me/client/info');
             infraFullName.value = infraManagerInfo.data.fullName;
             infraEmail.value = infraManagerInfo.data.email;
             infraPosition.value = infraManagerInfo.data.positionName;
+            infraPlace.value = infraManagerClientInfo.data.roomName;
 
             // Загружаем последние 10 заявок
             const callsResponse = await axiosInstance.get('/api/infra-manager/users/me/calls');

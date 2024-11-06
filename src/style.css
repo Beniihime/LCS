@@ -6,6 +6,10 @@
   font-display: swap;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 nav.p-datatable-paginator-bottom {
   border: 0;
 }
@@ -20,8 +24,8 @@ div.p-datatable-header {
 div.p-paginator {
   background-color: var(--p-bg-color-2);
   border-radius: 0 0 18px 18px;
-  border-inline: 2px solid var(--p-grey-4);
-  border-bottom: 2px solid var(--p-grey-4);
+  border: 2px solid var(--p-grey-4);
+  border-top: 0;
 }
 
 .p-datatable-table-container {
@@ -159,8 +163,11 @@ svg.lcs {
 
   --p-avatar-lg-height: 110px !important;
   --p-avatar-lg-width: 110px !important;
+
+  --p-avatar-xl-width: 55px !important;
+  --p-avatar-xl-height: 55px !important;
   --p-avatar-border-radius: 18px !important;
-  --p-avatar-xl-font-size: 2rem !important;
+  --p-avatar-xl-font-size: 1.65rem !important;
 
   --p-dialog-background: var(--p-bg-color-1) !important;
 
@@ -211,5 +218,5 @@ svg.lcs {
   --p-red: #FF453A;
   --p-blue-500: rgb(68, 143, 255) !important;
   --p-blue-500-low-op: rgba(255, 255, 255, 0.14) !important;
-  --p-blue-100: rgba(84, 120, 161, 0.60) !important;
+  --p-blue-100: rgba(72, 149, 238, 0.6) !important;
 }

@@ -7,19 +7,8 @@
 </template>
 
 <script setup>
-import { ref, onBeforeMount } from 'vue';
-import axiosInstance from '@/utils/axios.js';
 
-const firstName = ref('');
-
-onBeforeMount(async () => {
-    try {
-        const response = await axiosInstance.get('/api/users/me/info');
-        firstName.value = response.data.firstName;
-    } catch (error) {
-        console.debug('Ошибка при получении информации о пользователе: ', error);
-    }
-});
+const firstName = localStorage.getItem('firstName');
 </script>
 
 <style scoped>

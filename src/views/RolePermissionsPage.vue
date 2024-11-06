@@ -47,21 +47,34 @@
                 <div class="resource-info">
                     <p class="resource-description">{{ resource.description }}</p>
                 </div>
-                <div v-for="permission in resource.permissions" :key="permission.id" class="permission-item">
-                    <div class="permission-info">
-                        <h3 class="permission-title">{{ permission.title }}</h3>
-                        <p class="permission-description">{{ permission.description }}</p>
-                    </div>
-                    <div v-if="permission.isCustomizable">
-                        <ToggleSwitch
-                            v-model="permission.enabled"
-                            @update:model-value="togglePermission(roleStore.roleId, permission.id, $event)"
-                        />
-                    </div>
-                    <div v-else v-if="permission.enabled">
-                        <Tag value="Установлено" severity="success" icon="pi pi-check"/>
+                <div class="w-100">
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-2">
+                        <div v-for="permission in resource.permissions" :key="permission.id" class="col">
+                            <div class="permission-item h-100">
+                                <div class="permission-info">
+                                    <h3 class="permission-title">{{ permission.title }}</h3>
+                                    <p class="permission-description">{{ permission.description }}</p>
+                                </div>
+                                <div v-if="permission.isCustomizable">
+                                    <ToggleSwitch
+                                        v-model="permission.enabled"
+                                        @update:model-value="togglePermission(roleStore.roleId, permission.id, $event)"
+                                    />
+                                </div>
+                                <div v-else v-if="permission.enabled">
+                                    <Tag value="Установлено" severity="success" icon="pi pi-check"/>
+                                </div>
+                                <div v-else>
+                                    <Tag value="Не установлено" severity="secondary" icon="pi pi-times"/>
+                                </div>
+                            </div>
+                            
+                        </div>
                     </div>
                 </div>
+               
+                
+                
                 <Divider />
             </div>
         </div>
@@ -199,7 +212,7 @@ onMounted(async () => {
     background: transparent;
 }
 .permissions-wrapper {
-    padding: 1.25rem 2rem;
+    padding: 1.25rem 8rem;
     color: var(--p-text-color);
 }
 .search {
@@ -248,12 +261,12 @@ onMounted(async () => {
 .permission-item {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
     padding: 20px;
-    border-radius: 18px;
+    border-radius: 12px;
     background-color: var(--p-grey-7);
-    margin-bottom: 10px;
     transition: all 0.5s;
+    box-sizing: border-box;
 }
 .permission-info {
     display: flex;

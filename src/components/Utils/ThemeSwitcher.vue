@@ -1,5 +1,5 @@
 <template>
-    <SelectButton v-model="selectedTheme" optionValue="value" optionLabel="value" :options="themeOptions" class="mb-4" v-if="!isAuthPage">
+    <SelectButton v-model="selectedTheme" optionValue="value" optionLabel="value" :options="themeOptions" class="mb-4" v-if="!isAuthPage && isSideBarCollapse === false">
         <template #option="slotProps">
             <i :class="slotProps.option.icon"></i>
             <span class="label">{{ slotProps.option.label }}</span>
@@ -11,11 +11,24 @@
             <span class="d-lg-none fs-6">{{ currentThemeLabel }}</span>
         </div>
     </div>
+    <div class="col-lg-auto" @click="themeToggle" v-if="isSideBarCollapse">
+        <div class="bt1" optionValue="value">
+            <i :class="`pi ${ iconClass }`" class="me-2 me-lg-0"></i>
+            <span class="d-lg-none fs-6">{{ currentThemeLabel }}</span>
+        </div>
+    </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, computed } from 'vue';
+import { ref, watch, onMounted, computed, defineProps } from 'vue';
 import { useRoute } from 'vue-router';
+
+const props = defineProps({
+    isSideBarCollapse: {
+        type: Boolean,
+        default: false
+    }
+});
 
 const themeOptions = ref([
     { icon: 'pi pi-sun', label: 'Светлая', value: 'light' },
@@ -75,7 +88,24 @@ function themeToggle() {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--p-bg-color-1);
+    background-color: var(--p-bg-color-2);
+    color: var(--p-text-color);
+    cursor: pointer;
+    z-index: 999;
+}
+
+.bt1 {
+    position: absolute;
+    bottom: 214px;
+    left: 32px;
+    width: 30px;
+    height: 30px;
+    padding: 22px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--p-grey-5);
     color: var(--p-text-color);
     cursor: pointer;
     z-index: 999;

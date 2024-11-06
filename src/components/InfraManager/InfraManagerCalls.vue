@@ -30,11 +30,11 @@
                       <i class="pi pi-cog"></i>
                       <span class="ms-2">Общее</span>
                     </Tab>
-                    <Tab value="1" as="div">
+                    <Tab value="1" as="div" :disabled="documents.length < 1">
                       <i class="pi pi-folder"></i>
                       <span class="ms-2">Файлы</span>
                     </Tab>
-                    <Tab value="2" as="div">
+                    <Tab value="2" as="div" :disabled="negotiations.length < 1">
                       <i class="pi pi-thumbs-up"></i>
                       <span class="ms-2">Согласование</span>
                     </Tab>
@@ -100,6 +100,7 @@
                         </div>
                       </div>
                     </TabPanel>
+
                     <TabPanel value="1">
                       <div v-if="documents.length > 0" class="documents-section">
                         <div v-for="document in documents" :key="document.id" class="document-card">
@@ -111,34 +112,40 @@
                             </div>
                             <div class="col-auto">
                               <!-- <Button icon="pi pi-download" /> -->
-                              <img :src="getIconPath(document.name)" alt="Document icon" class="document-icon" />
+                              <img :src="`/src/assets/icons/${ document.name.split('.').pop().toLowerCase() }.png`" alt="Document icon" class="document-icon" />
                             </div>
                           </div>
                         </div>
                       </div>
                       <p v-else>Документы отсутствуют</p>
                     </TabPanel>
+
                     <TabPanel value="2">
-                        <div v-if="negotiations.length > 0">
-                          <div v-for="negotiation in negotiations" :key="negotiation.id" class="negotiation-card">
-                            <h5>Тема: {{ negotiation.theme }}</h5>
+                      <div v-if="negotiations.length > 0" class="negotiations-container">
+                        <div v-for="negotiation in negotiations" :key="negotiation.id" class="negotiation-card">
+                          <h5 class="negotiation-title">
+                            <i class="pi pi-thumbs-up me-2"></i>Тема: {{ negotiation.theme }}
+                          </h5>
+                          <div class="negotiation-details">
                             <p><strong>Участник:</strong> {{ negotiation.fullName }}</p>
-                            <p><strong>Статус:</strong> {{ negotiation.statusString }}</p>
+                            <p><strong>Статус:</strong>
+                              <Tag :value="negotiation.statusString" :severity="getStatusSeverity(negotiation.statusString)" class="status-tag"/>
+                            </p>
                             <p><strong>Дата начала:</strong> {{ formatUTCToOmsk(negotiation.utcDateVoteStart) }}</p>
                             <p><strong>Дата окончания:</strong> {{ formatUTCToOmsk(negotiation.utcDateVoteEnd) }}</p>
-
-                            <div v-if="negotiation.userList.length">
-                              <h6>Список пользователей:</h6>
-                              <ul>
-                                  <li v-for="user in negotiation.userList" :key="user.userId">
-                                      {{ user.userFullName }} - {{ user.positionName }} ({{ user.subdivisionName }})
-                                  </li>
-                              </ul>
-                            </div>
+                          </div>
+                          <div v-if="negotiation.userList.length" class="user-list">
+                            <h6 class="user-list-title">Список пользователей:</h6>
+                            <ul>
+                              <div v-for="user in negotiation.userList" :key="user.userId" class="user-item">
+                                <i class="pi pi-user me-2"></i>{{ user.userFullName }} - {{ user.positionName }} ({{ user.subdivisionName }})
+                              </div>
+                            </ul>
                           </div>
                         </div>
-                        <p v-else>Согласования отсутствуют</p>
-                      </TabPanel>
+                      </div>
+                      <p v-else>Согласования отсутствуют</p>
+                    </TabPanel>
                   </TabPanels>
                 </Tabs>
                   
@@ -230,11 +237,6 @@ const fetchDocuments = async (callId) => {
   } catch (error) {
     console.error('Ошибка при загрузке документов:', error);
   }
-};
-
-const getIconPath = (fileName) => {
-  const extension = fileName.split('.').pop().toLowerCase(); // Получаем расширение файла
-  return `../assets/icons/${extension}.png`; // Возвращаем путь к иконке
 };
 
 const fetchNegotiations = async (callId) => {
@@ -470,5 +472,43 @@ h2 {
 .document-icon {
   width: 48px; 
   height: 48px; 
+}
+
+.negotiations-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.negotiation-card {
+  background-color: var(--p-grey-7);
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #007ad9;
+}
+.negotiation-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.negotiation-details p {
+  margin: 0.25rem 0;
+}
+.status-tag {
+  margin-left: 0.5rem;
+}
+
+.user-list {
+  margin-top: 1rem;
+}
+
+.user-list-title {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.user-item {
+  /* padding-left: 1rem; */
+  position: relative;
 }
 </style>
