@@ -3,27 +3,20 @@
     <div class="sidebar-container">
         <div class="rectangle">
             <div class="d-flex align-items-center justify-content-center">
-                <router-link to="/overview" class="logoLCS">
+                <div class="logoLCS">
                     <Lcs />
-                </router-link>
+                </div>
             </div>
             
-            <IconField class="searchBar">
-                <InputIcon class="pi pi-search" />
-                <InputText class="search" v-model="searchQuery" placeholder="Поиск..."/>
-            </IconField>
-            <div class="menu mt-4">
+            <div class="menu mt-4 mb-5">
                 <router-link to="/overview" class="menu-item" active-class="active-link">
                     <i class="pi pi-home"></i>
-                    <div class="menucrumb">Главная</div>
                 </router-link>
                 <router-link to="/notif" class="menu-item" active-class="active-link">
                     <i class="pi pi-bell"></i>
-                    <div class="menucrumb">Уведомления</div>
                 </router-link>
             </div>
-            <div class="menu">
-                <div class="general mt-4" v-if="menuItems">Сервисы</div>
+            <div class="menu mb-3">
                 <div v-for="item in menuItems">
                     <router-link 
                         :key="item.path" 
@@ -32,20 +25,14 @@
                         active-class="active-link"
                         v-if="checkPermission(item.path) && showRequestsMenu"
                     >
+                        <!-- <OverlayBadge v-if="item.path === '/notif' && notificationStore.unreadCount > 0" :value="notificationStore.unreadCount">
+                            
+                        </OverlayBadge> -->
                         <i :class="item.icon"></i>
-                        <div class="menucrumb">
-                            <span>{{ item.name }}</span>
-                            <Badge 
-                                v-if="item.path === '/notif' && notificationStore.unreadCount > 0"
-                                :value="notificationStore.unreadCount"
-                                class="p-badge ms-3"
-                            />
-                        </div>
                     </router-link>
                 </div>
             </div>
             <div class="menu">
-                <div class="general mt-4" v-if="hasPermission('User', 'Read')">Администрирование</div>
                 <div v-for="item in filteredMenuItems">
                     <router-link 
                         :key="item.path" 
@@ -56,17 +43,14 @@
                     >
                         
                         <i :class="item.icon"></i>
-                        <div class="menucrumb">
-                            <span>{{ item.name }}</span>
-                        </div>
+                        
                     </router-link>
                 </div>
             </div>
+            <Divider style="margin-top: auto;"/>
 
-            <Divider style="margin-top: auto;" />
+            <ThemeSwitcher :isSideBarCollapse="true"/>
 
-            <ThemeSwitcher :isSideBarCollapse="false"/>
-            
             <router-link class="profile" to="/profile" active-class="active-link">
                 <div class="row align-items-center">
                     <div class="col-auto">
@@ -77,26 +61,13 @@
                             class="initials-circle"
                         />
                     </div>
-                    <div class="col ps-0">
-                        <div class="middle">
-                            <div class="row">
-                                <div class="col">{{ fullName }}</div>
-                            </div>
-                            <div class="row">
-                                <div class="col email">
-                                    {{ email }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </router-link>
             <div class="row mt-3">
                 <div class="col">
                     <button @click="confirmLogout()" class="logout-button">
-                        <div class="d-flex align-items-center justify-content-start">
-                            <LogoutSvg class="me-3"/>
-                            <p class="m-0">Выйти из аккаунта</p>
+                        <div class="d-flex align-items-center justify-content-center">
+                            <LogoutSvg />
                         </div>
                     </button>
                 </div>
@@ -262,6 +233,7 @@ onBeforeMount(async () => {
 }
 .logoLCS {
     transition: all 0.5s;
+    scale: 0.7;
 }
 .logoLCS:hover {
     filter: drop-shadow(0 0 0.75rem rgba(0, 0, 0, 0.5));
@@ -276,7 +248,7 @@ onBeforeMount(async () => {
     width: 100%;
     border: 2px solid transparent;
     background-color: transparent;
-    padding: 12px 18px 12px 8px;
+    padding: 12px 18px 12px 14px;
     border-radius: 12px;
     transition: all 0.5s;
     margin-bottom: 20px;
@@ -294,12 +266,6 @@ onBeforeMount(async () => {
     font-family: 'SF Pro Rounded';
     transition: all 0.5s;
 }
-.split {
-    border: solid 2px var(--p-separator-opaque);
-    border-radius: 2pt;
-    margin-top: auto;
-    transition: all 0.5s;
-}
 .sidebar-container {
     height: 100vh;
     display: flex;
@@ -308,41 +274,22 @@ onBeforeMount(async () => {
 .menu {
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    align-self: center;
     gap: 12px;
     .pi {
         font-size: 1.25rem;
         position: absolute;
-        left: 16pt;
-        top: 50%;
-        transform: translateY(-50%);
+        top: 28%;
         pointer-events: none;   
     }
-}
-.general {
-    font-family: 'SF Pro Rounded';
-    font-weight: bold;
-    font-size: 18px;
-    color: var(--p-text-color);
-    transition: all 0.5s;
-}
-.menucrumb {
-    font-family: 'SF Pro Rounded';
-    padding-left: 48pt;
-    display: flex;
-    align-items: center;
-}
-.p-badge {
-    background-color: var(--p-red-500);
-    font-size: 16px;
-    padding-inline: 12px;
-    border-radius: 12px;
 }
 .menu-item {
     position: relative;
     display: flex;
-    align-items: center;
-    width: 100%;
-    height: 50px;
+    place-content: center;
+    width: 55px;
+    height: 55px;
     border-radius: 12px;
     transition: all 0.5s;
     text-decoration: none;
@@ -357,25 +304,30 @@ onBeforeMount(async () => {
     color: var(--p-text-color);
     background-color: var(--p-blue-500-low-op);
 }
-.search {
-    border-radius: 12px;
-    transition: all 0.5s;
-    width: 100%; 
-}
-.searchBar {
-    margin-top: 20pt;
-    display: inline-block;
-}
 .rectangle {
     display: flex;
     flex-direction: column;
-    background-color: var(--p-bg-color-2);
-    background-image: linear-gradient(to bottom, var(--p-blue-100), var(--p-bg-color-2) 35%); /* основной цвет фона */
-    background-repeat: no-repeat;
-    background-size: cover;
-    width: 300px;
+    justify-content: center;
+    width: 110px;
     padding: 1.25rem;
     transition: all 0.5s;
     border-right: 2px solid var(--p-grey-4);
+}
+.rectangle:before {
+  content: ' ';
+  display: block;
+  position: absolute;
+  left: 0;
+  filter: blur(1px);
+  top: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.8;
+  background-image: url('../assets/Exclude.png');
+  background-color: var(--p-bg-color-2);
+  background-repeat: no-repeat;
+  background-position: 50% 0;
+  background-size: contain;
+  z-index: -1;
 }
 </style>
