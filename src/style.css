@@ -10,8 +10,8 @@
   box-sizing: border-box;
 }
 
-nav.p-datatable-paginator-bottom {
-  border: 0;
+.p-datatable-paginator-bottom {
+  border: 0 !important;
 }
 
 div.p-datatable-header {
@@ -28,8 +28,15 @@ div.p-paginator {
   border-top: 0;
 }
 
+.p-datatable {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .p-datatable-table-container {
   border: 2px solid var(--p-grey-4);
+  height: 100%;
 }
 
 div.p-selectbutton button.p-togglebutton {

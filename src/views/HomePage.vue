@@ -60,8 +60,8 @@ if (query.message) {
 }
 
 .content {
-  flex: 1;
-  overflow-y: auto; /* Скроллинг для основного контента */
+  flex-grow: 1;
+  overflow: auto; /* Скроллинг для основного контента */
 }
 
 .expand {

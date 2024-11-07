@@ -9,9 +9,9 @@
                 :rows="rowsPerPage"
                 :totalRecords="totalRecords"
                 scrollable
+                scrollHeight="84.1vh"
                 removableSort
                 stripedRows
-                scrollHeight="83dvh"
                 @page="onPage"
                 :rowClass="rowClass"
                 @row-click="(event) => openCallDetails(event.data.id)"

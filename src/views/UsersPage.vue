@@ -10,7 +10,7 @@
                 filterDisplay="row" 
                 scrollable
                 stripedRows
-                scrollHeight="83dvh"
+                scrollHeight="83.68vh"
                 :rows="rowsPerPage"
                 :rowClass="rowClass"
                 @row-click="(event) => openDialog(event.data.id)"
