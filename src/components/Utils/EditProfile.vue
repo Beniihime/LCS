@@ -17,9 +17,9 @@
         </Popover>
 
         <Dialog v-model:visible="showEditDialog" modal header="Редактировать профиль" :style="{ 'max-width': '30rem' }">
-            <div class="row my-4">
+            <div class="row mt-2 mb-4">
                 <div class="col">
-                    <FloatLabel>
+                    <FloatLabel variant="on">
                         <InputText v-model="login" id="login" class="form-input" required />
                         <label for="login">Новый логин</label>
                     </FloatLabel>

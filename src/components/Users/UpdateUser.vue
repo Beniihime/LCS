@@ -1,7 +1,7 @@
 <template>
     <div class="d-flex justify-content-center">
         <Dialog v-model:visible="visible" modal header="Изменить информацию" :style="{ 'max-width': '30rem' }">
-            <div class="row my-4">
+            <div class="row mt-1 mb-3">
                 <div class="col">
                     <FloatLabel variant="on">
                         <InputText v-model="firstName" class="form-input"/>
@@ -23,8 +23,10 @@
                     </FloatLabel>
                 </div>
             </div>
-            <Divider class="my-4 py-1"/>
-            <div class="row mb-4">
+
+            <Divider class="my-3 py-1"/>
+
+            <div class="row mb-3">
                 <div class="col">
                     <FloatLabel variant="on">
                         <InputText v-model="login" class="form-input"/>
@@ -54,7 +56,7 @@
                     </FloatLabel>
                 </div>
             </div>
-            <Button label="Сохранить" class="search w-100 mb-3" @click="updateUserData"/>
+            <Button label="Сохранить" class="search w-100 mb-2" @click="updateUserData"/>
             <Button 
                 :label="blockButtonLabel" 
                 class="search w-100" 

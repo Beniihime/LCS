@@ -102,22 +102,21 @@ onMounted(async () => {
     color: var(--p-text-color);
 }
 .count {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
 }
 .card-text {
-    font-size: 1.2rem;
     font-family: 'SF Pro Rounded', sans-serif;
     color: var(--p-grey-1);
     margin-top: 5px;
 }
 .user {
-    background-color: var(--p-grey-4);
+    background-color: var(--p-grey-7);
     padding: 20px;
-    border-radius: 18px;
+    border-radius: 12px;
     margin-bottom: 10px;
 }
 .roleType {
-    background-color: #007bff;
+    background-color: var(--p-blue-500);
     border-radius: 50%;
     font-size: 20px;
     color: white;
@@ -128,7 +127,7 @@ onMounted(async () => {
     align-items: center;
 }
 .custom-role-type {
-    background-color: #6c2bb4;
+    background-color: var(--p-purple-500);
 }
 .role-label {
     display: inline-block;

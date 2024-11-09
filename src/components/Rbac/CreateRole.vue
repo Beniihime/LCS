@@ -2,29 +2,31 @@
     <div class="d-flex justify-content-center">
         <Button icon="pi pi-plus" label="Создать роль" class="create-btn" @click="openDialog"/>
         <Dialog v-model:visible="visible" modal header="Создание новой роли" :style="{ 'max-width': '30rem' }">
-            <div class="row row-cols-1 my-4">
-                <div class="col mb-4">
-                    <FloatLabel>
+            <div class="row row-cols-1 mt-1 mb-3">
+                <div class="col mb-3">
+                    <FloatLabel variant="on">
                         <InputText v-model="newRole.title" class="form-input"/>
                         <label>Название</label>
                     </FloatLabel>
                 </div>
-                <div class="col mb-4">
-                    <FloatLabel>
+                <div class="col mb-3">
+                    <FloatLabel variant="on">
                         <Textarea v-model="newRole.description" rows="5" class="w-100"/>
                         <label>Описание</label>
                     </FloatLabel>
                 </div>
                 <div class="col">
-                    <FloatLabel>
+                    <FloatLabel variant="on">
                         <Select v-model="newRole.priority" :options="priorities" optionValue="value" optionLabel="label" class="form-input"/>
                         <label>Приоритет</label>
                     </FloatLabel>
                 </div>
             </div>
-            <Divider class="my-4 py-1"/>
+
+            <Divider class="my-3 py-1"/>
+
             <div class="text-center">
-                <Button label="Создать" class="save-btn w-100 mb-3" @click="createRole" />
+                <Button label="Создать" class="save-btn w-100 mb-2" @click="createRole" />
             </div>
         </Dialog>
     </div>
@@ -105,8 +107,7 @@ label {
     font-size: 16px;
 }
 .create-btn {
-    border-radius: 12pt;
-    font-size: 14pt;
+    border-radius: 12px;
     transition: all 0.5s;
 }
 .form-input {
@@ -114,7 +115,6 @@ label {
 }
 .save-btn {
     border-radius: 12pt;
-    font-size: 14pt;
     transition: all 0.5s;
 }
 </style>

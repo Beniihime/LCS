@@ -31,7 +31,7 @@
                     <div class="col">
                         <IconField class="searchBar">
                             <InputIcon class="pi pi-search" />
-                            <InputText placeholder="Поиск" class="search" v-model="searchQuery"/>
+                            <InputText placeholder="Поиск..." class="search" v-model="searchQuery"/>
                         </IconField>
                     </div>
                     <div class="col-auto">
@@ -278,7 +278,7 @@ p {
     height: 100%;
 }
 .card:hover {
-    transform: scale(1.01);
+    filter: drop-shadow(0 0 0.5rem rgba(0, 0, 0, 0.2));
 }
 .card-body {
     padding: 28px;
@@ -338,13 +338,12 @@ main {
     font-size: 1rem;
 }
 .search {
-    border-radius: 12pt;
-    font-size: 16pt;
+    border-radius: 12px;
     transition: all 0.5s;
     width: 100%; 
 }
 .statistics {
-    background: var(--p-bg-color-2);
+    background: var(--p-bg-color-1);
     padding: 20px;
     border-radius: 18px;
     border: none;
@@ -357,14 +356,14 @@ main {
     text-align: center;
 }
 .stat-card {
-    background: var(--p-bg-color-1);
+    background: var(--p-bg-color-2);
     padding: 20px;
     border-radius: 18px;
     color: var(--p-text-color);
     transition: all 0.5s;
 }
 .stat-card:hover {
-    scale: 1.01;
+    filter: drop-shadow(0 0 0.75rem rgba(0, 0, 0, 0.3));
 }
 .stat-number {
     font-size: 2.5rem;

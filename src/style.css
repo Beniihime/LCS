@@ -69,7 +69,7 @@ thead.p-datatable-thead {
 #app {
   background-color: var(--p-bg-color-1);
   transition: all 0.5s;
-  height: 100%;
+  height: 100vh;
 }
 .logout-button:hover {
   svg.logout path {
@@ -125,6 +125,10 @@ svg.lcs {
   display: none !important;
 }
 
+.p-tooltip-arrow {
+  display: none !important;
+}
+
 .p-datatable-tbody > tr:hover {
   background-color: var(--p-blue-500-low-op) !important;
 }
@@ -137,7 +141,7 @@ svg.lcs {
 
   --bs-gutter-x: 0 !important;
 
-  --p-color-trans: rgba(0, 0, 0, 0.0);
+  --p-color-trans: #FFFFFF;
 
   --p-red-500: rgb(255, 101, 93) !important;
   --p-red-400: rgb(235, 66, 57) !important;
@@ -146,6 +150,7 @@ svg.lcs {
   --p-blue-200: rgba(138, 190, 250) !important;
   --p-blue-500: rgb(68, 143, 255) !important;
   --p-blue-400: rgb(86, 118, 221) !important;
+  --p-color-icon-menu: rgb(86, 118, 221) !important;
   --p-blue-500-low-op: rgba(96, 137, 226, 0.2) !important;
 
   --p-separator-opaque: rgba(198, 198, 200, 0.30) !important;
@@ -161,9 +166,8 @@ svg.lcs {
   /* --p-datatable-header-cell-selected-color: var(--p-blue-500) !important; */
 
   --p-transition-duration: 0.5s !important;
-  --p-transition-timing-function: ease !important;
   --p-transition-property: all !important;
-  --p-tooltip-gutter: 0rem !important;
+  --p-tooltip-gutter: 0.5rem !important;
   --p-tooltip-background: var(--p-blue-500) !important;
 
   --p-tree-background: var(--p-bg-color-3) !important;
@@ -208,6 +212,8 @@ svg.lcs {
   --p-bg-color-3: #3A3A3C;
   --p-text-color: #FFFFFF;
 
+  --p-color-trans: var(--p-bg-color-3);
+
   --p-separator-opaque: #38383A;
   --p-divider-border-color: #38383A !important;
   --p-button-primary-background: var(--p-blue-700) !important;
@@ -226,4 +232,6 @@ svg.lcs {
   --p-blue-500: rgb(68, 143, 255) !important;
   --p-blue-500-low-op: rgba(255, 255, 255, 0.14) !important;
   --p-blue-100: rgba(72, 149, 238, 0.6) !important;
+
+  --p-color-icon-menu: white !important;
 }

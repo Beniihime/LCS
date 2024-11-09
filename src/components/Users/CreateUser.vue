@@ -2,39 +2,40 @@
     <div class="d-flex justify-content-center">
         <Button class="search" icon="pi pi-plus" label="Пользователь" @click="visible = true"/>
         <Dialog v-model:visible="visible" modal header="Новый пользователь" :style="{ 'max-width': '30rem' }">
-            <div class="row my-4">
+            <div class="row mt-1 mb-3">
                 <div class="col">
-                    <FloatLabel>
+                    <FloatLabel variant="on">
                         <InputText v-model="firstName" id="firstName" class="form-input" required/>
                         <label for="firstName">Имя</label>
                     </FloatLabel>
                 </div>
                 <div class="col">
-                    <FloatLabel>
+                    <FloatLabel variant="on">
                         <InputText v-model="lastName" id="lastName" class="form-input" required/> 
                         <label for="lastName">Фамилия</label>
                     </FloatLabel>      
                 </div>
             </div>
-            <div class="row mb-3">
+            <div class="row">
                 <div class="col">
-                    <FloatLabel>
+                    <FloatLabel variant="on">
                         <InputText v-model="middleName" id="middleName" class="form-input"/> 
                         <label for="middleName">Отчество</label>
                     </FloatLabel> 
                 </div>
             </div>
-            <Divider class="my-4 py-1"/>
-            <div class="row mb-4">
+
+            <Divider class="my-3 py-1"/>
+
+            <div class="row mb-3">
                 <div class="col">
-                    <FloatLabel>
+                    <FloatLabel variant="on">
                         <InputText v-model="login" id="login" class="form-input" required/> 
                         <label for="login">Логин</label>
                     </FloatLabel> 
                 </div>
                 <div class="col">
-                    
-                    <FloatLabel>
+                    <FloatLabel variant="on">
                         <Password 
                             v-model="pass" 
                             class="form-input"
@@ -45,17 +46,17 @@
                     </FloatLabel> 
                 </div>
             </div>
-            <div class="row mb-4">
+            <div class="row mb-3">
                 <div class="col">
-                    <FloatLabel>
+                    <FloatLabel variant="on">
                         <InputText v-model="email" id="email" class="form-input" required/> 
                         <label for="email">E-mail</label>
                     </FloatLabel> 
                 </div>
             </div>
-            <div class="row mb-4">
+            <div class="row mb-3">
                 <div class="col">
-                    <FloatLabel>
+                    <FloatLabel variant="on">
                         <MultiSelect 
                             v-model="selectedRoles" 
                             display="chip" 
@@ -185,7 +186,7 @@ const updateRolesList = async () => {
 
 <style scoped>
 label {
-    font-size: 16px;
+    font-size: 14px;
 }
 .form-input {
     font-size: 16px;
@@ -193,7 +194,6 @@ label {
 }
 .search {
     border-radius: 12pt;
-    font-size: 14pt;
     transition: all 0.5s;
 }
 </style>
