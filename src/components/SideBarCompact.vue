@@ -9,10 +9,10 @@
             </div>
             
             <div class="menu mt-4 mb-5">
-                <router-link to="/overview" class="menu-item" active-class="active-link">
+                <router-link to="/overview" class="menu-item" active-class="active-link" v-tooltip="'Главная'">
                     <i class="pi pi-home"></i>
                 </router-link>
-                <router-link to="/notif" class="menu-item" active-class="active-link">
+                <router-link to="/notif" class="menu-item" active-class="active-link" v-tooltip="'Уведомления'">
                     <i class="pi pi-bell"></i>
                 </router-link>
             </div>
@@ -24,6 +24,7 @@
                         class="menu-item" 
                         active-class="active-link"
                         v-if="checkPermission(item.path) && showRequestsMenu"
+                        v-tooltip="item.name"
                     >
                         <!-- <OverlayBadge v-if="item.path === '/notif' && notificationStore.unreadCount > 0" :value="notificationStore.unreadCount">
                             
@@ -40,6 +41,7 @@
                         class="menu-item" 
                         active-class="active-link"
                         v-if="checkPermission(item.path)"
+                        v-tooltip="item.name"
                     >
                         
                         <i :class="item.icon"></i>
@@ -49,9 +51,9 @@
             </div>
             <Divider style="margin-top: auto;"/>
 
-            <ThemeSwitcher :isSideBarCollapse="true"/>
+            <ThemeSwitcher :isSideBarCollapse="true" />
 
-            <router-link class="profile" to="/profile" active-class="active-link">
+            <router-link class="profile" to="/profile" active-class="active-link" v-tooltip="'Профиль'">
                 <div class="row align-items-center">
                     <div class="col-auto">
                         <Avatar 
@@ -65,7 +67,7 @@
             </router-link>
             <div class="row mt-3">
                 <div class="col">
-                    <button @click="confirmLogout()" class="logout-button">
+                    <button @click="confirmLogout()" class="logout-button" v-tooltip="'Выйти'">
                         <div class="d-flex align-items-center justify-content-center">
                             <LogoutSvg />
                         </div>
@@ -299,9 +301,12 @@ onBeforeMount(async () => {
 .menu-item:hover {
     background-color: var(--p-blue-500-low-op);
     color: var(--p-text-color);
+    .pi {
+        color: var(--p-color-icon-menu);
+    }
 }
 .active-link {
-    color: var(--p-text-color);
+    color: var(--p-color-icon-menu);
     background-color: var(--p-blue-500-low-op);
 }
 .rectangle {

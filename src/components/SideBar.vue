@@ -351,10 +351,10 @@ onBeforeMount(async () => {
 }
 .menu-item:hover {
     background-color: var(--p-blue-500-low-op);
-    color: var(--p-text-color);
+    color: var(--p-color-icon-menu);
 }
 .active-link {
-    color: var(--p-text-color);
+    color: var(--p-color-icon-menu);
     background-color: var(--p-blue-500-low-op);
 }
 .search {
