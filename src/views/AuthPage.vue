@@ -178,12 +178,12 @@ main {
 }
 
 .login-page::before {
-   background-image: url('/src/assets/backgrounds/lp_bg_light.webp'); /* Светлое изображение */
+   background-image: url('/src/assets/backgrounds/lp_bg_light.png'); /* Светлое изображение */
    opacity: 1; /* Показываем светлую картинку по умолчанию */
 }
 
 .login-page::after {
-   background-image: url('/src/assets/backgrounds/lp_bg_dark.webp'); /* Темное изображение */
+   background-image: url('/src/assets/backgrounds/lp_bg_dark.png'); /* Темное изображение */
 }
 
 /* Когда включена темная тема */
