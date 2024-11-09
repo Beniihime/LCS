@@ -3,14 +3,13 @@
         <div class="content-wrapper">                
             <WelcomeScreen :visible="loading" />
             <DataTable
-                v-if="!loading"
+                v-if="!loading && customers.length"
                 v-model:filters="filters"
                 :value="customers" 
                 paginator 
                 filterDisplay="row" 
                 scrollable
                 stripedRows
-                scrollHeight="83.68vh"
                 :rows="rowsPerPage"
                 :rowClass="rowClass"
                 @row-click="(event) => openDialog(event.data.id)"
@@ -82,7 +81,7 @@
                         <div class="role-label-container">
                             <!-- Показываем первую роль -->
                             <Chip v-if="data.roles.length > 0" class="role-label">
-                                <span v-if="data.roles.length > 0" class="roleType" :class="getRoleTypeClass(data.roles[0])">
+                                <span class="roleType" :class="getRoleTypeClass(data.roles[0])">
                                     {{ data.roles[0].type.charAt(0) }}
                                 </span>
                                 <span>{{ data.roles[0].title }}</span>
@@ -106,20 +105,20 @@
                             </Popover>
                         </div>
                     </template>
-                    <!-- <template #filter="{ filterModel, filterCallback }">
+                    <template #filter="{ filterModel, filterCallback }">
                         <MultiSelect 
                             v-model="filterModel.value"
                             :options="roles"
-                            placeholder="Выберите роли"
                             optionLabel="title"
-                            optionValue="id"
+                            optionValue="title"
                             :maxSelectedLabels="1"
-                            @change="() => {
-                                console.log('Selected role IDs:', filterModel.value);
+                            placeholder="Выберите роли"
+                            @change="() => { 
                                 filterCallback();
+                                console.log('Selected Role IDs:', filterModel.value); // Выводим выбранные роли для отладки
                             }"
                         />
-                    </template> -->
+                    </template>
                 </Column>
                 <Column field="isBlocked" header="Статус" :showFilterMenu="false" style="min-width: 4rem;">
                     <template #body="{ data }">
@@ -185,7 +184,7 @@ const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     fullName: { value: '', matchMode: FilterMatchMode.CONTAINS },
     email: { value: '', matchMode: FilterMatchMode.STARTS_WITH },
-    roleIds: { value: [], matchMode: FilterMatchMode.IN },
+    roleIds: { value: null, matchMode: FilterMatchMode.CONTAINS },
     isBlocked: { value: null, matchMode: FilterMatchMode.EQUALS },
 });
 
@@ -246,10 +245,9 @@ const fetchCustomers = async () => {
         customers.value = response.data.users.map((user) => ({
             ...user,
             fullName: `${user.firstName} ${user.lastName} ${user.middleName}`,
-            roleIds: user.roles.map(role => role.id)
+            roleIds: user.roles.map(role => role.title),
         }));
         totalRecords.value = response.data.countEntities;      
-
     } catch (error) {
         console.debug('Ошибка при получении пользователей: ', error);
     }
@@ -258,8 +256,11 @@ const fetchCustomers = async () => {
 
 onMounted(async () => {
     loading.value = true;
-    await Promise.all([fetchCustomers(), fetchRoles()]);
-    loading.value = false;
+    await fetchCustomers(); // Дождёмся загрузки пользователей
+    await fetchRoles(); // Дождёмся загрузки ролей
+    nextTick(() => {
+        loading.value = false;
+    });
 });
 
 const fetchRoles = async () => {
@@ -285,13 +286,14 @@ h3 {
 .content {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: 100dvh;
     box-sizing: border-box;
 }
 .content-wrapper {
     flex-grow: 1;
     align-content: center;
     padding: 10px;
+    height: 100%;
     color: var(--p-text-color);
     transition: all 0.5s;
 }

@@ -33,9 +33,9 @@
                 <InfraManagerSearchUsers ref="infraSearchRef"/>
             </div>
             <div class="row">
-                <div class="col">
+                <div class="col" style="overflow: auto;">
                     <Button :label="collapsed ? 'Показать таблицу' : 'Скрыть'" :icon="collapsed ? 'pi pi-angle-down' : 'pi pi-angle-up'" iconPos="right"  class="toggle-button" severity="secondary" @click="toggleTable" />
-                    <div :class="['table-container', { open: !collapsed }]" class="d-flex justify-content-center">
+                    <div :class="['table-container', { open: !collapsed }]">
                         <DataTable
                             :value="calls"
                             paginator
@@ -44,7 +44,7 @@
                             scrollable
                             removableSort
                             stripedRows
-                            style="max-width: 95rem;"
+                            
                             scrollHeight="57vh"
                             @page="onPage"
                             :rowClass="rowClass"
@@ -98,7 +98,7 @@
                             </Column>
                             <Column field="callSummaryName" header="Сводка" style="min-width: 150px">
                                 <template #body="{ data }">
-                                    {{ data.callSummaryName }}
+                                    <div v-tooltip="data.description">{{ data.callSummaryName }}</div>
                                 </template>
                             </Column>
                             <Column field="serviceItemFullName" header="Элемент сервиса" style="min-width: 350px">
@@ -434,7 +434,6 @@ main {
 }
 .toggle-button {
     border-radius: 12px;
-    font-size: 14pt;
     transition: all 0.5s;
     width: 100%; 
     padding: 0;

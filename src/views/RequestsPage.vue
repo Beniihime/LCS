@@ -9,7 +9,6 @@
                 :rows="rowsPerPage"
                 :totalRecords="totalRecords"
                 scrollable
-                scrollHeight="84.1vh"
                 removableSort
                 stripedRows
                 @page="onPage"
@@ -61,7 +60,7 @@
                 </Column>
                 <Column field="callSummaryName" header="Сводка" style="min-width: 150px">
                     <template #body="{ data }">
-                        {{ data.callSummaryName }}
+                        <div v-tooltip="data.description">{{ data.callSummaryName }}</div>
                     </template>
                 </Column>
                 <Column field="serviceItemFullName" header="Элемент сервиса" style="min-width: 350px">
@@ -296,7 +295,7 @@ onMounted(async () => {
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    height: 100vh;
+    height: 100dvh;
 }
 .content-wrap {
     flex-grow: 1;
@@ -304,6 +303,7 @@ onMounted(async () => {
     padding: 10px 10px;
     color: var(--p-text-color);
     transition: all 0.5s;
+    height: 100%;
 }
 .openCall:hover {
     text-decoration: underline;
