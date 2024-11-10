@@ -115,12 +115,11 @@ label {
     position: absolute;
     top: 10px;
     right: 20px;
-    border-radius: 10px;
     width: 40px;
     height: 40px;
 }
 .save-btn {
-    border-radius: 12pt;
+    border-radius: 12px;
     font-size: 14pt;
     transition: all 0.5s;
 }

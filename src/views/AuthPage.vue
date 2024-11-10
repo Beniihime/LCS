@@ -147,7 +147,7 @@ const handleVideoEnded = () => {
     width: 100%;
     height: 50px;
     font-size: 1.25rem;
-    border-radius: 10px;
+    border-radius: 12px;
 }
 main {
     margin: 0;
@@ -198,7 +198,7 @@ main {
 .login-container {
     background: var(--p-bg-color-1);
     padding: 28px 40px;
-    border-radius: 18px;
+    border-radius: 12px;
     transition: background 0.5s ease;
     z-index: 1;
 }

@@ -153,7 +153,7 @@
                 
             </DataTable>
             
-            <Skeleton v-else width="100%" height="70vh" class="skeleton-table" />
+            <Skeleton v-else width="100%" height="100%" class="skeleton-table" />
         </div>
     </div>
 </template>
@@ -298,7 +298,7 @@ h3 {
     transition: all 0.5s;
 }
 .search {
-    border-radius: 12pt;
+    border-radius: 12px;
     font-size: 18px;
     transition: all 0.5s;
 }
@@ -357,7 +357,7 @@ h3 {
     background-color: var(--p-purple-500);
 }
 .skeleton-table {
-  border-radius: 18px;
+  border-radius: 12px;
   background-color: var(--p-grey-3);
 }
 </style>

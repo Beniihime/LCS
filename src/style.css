@@ -15,7 +15,7 @@
 }
 
 div.p-datatable-header {
-  border-radius: 18px 18px 0 0;
+  border-radius: 12px 12px 0 0;
   border: 2px solid var(--p-grey-4);
   border-bottom: 0;
   background-color: var(--p-bg-color-2);
@@ -23,7 +23,7 @@ div.p-datatable-header {
 
 div.p-paginator {
   background-color: var(--p-bg-color-2);
-  border-radius: 0 0 18px 18px;
+  border-radius: 0 0 12px 12px;
   border: 2px solid var(--p-grey-4);
   border-top: 0;
 }
@@ -32,6 +32,8 @@ div.p-paginator {
   height: 100%;
   display: flex;
   flex-direction: column;
+  background-color: var(--p-bg-color-1);
+  border-radius: 12px;
 }
 
 .p-datatable-table-container {
@@ -67,13 +69,51 @@ thead.p-datatable-thead {
 }
 
 #app {
-  background-color: var(--p-bg-color-1);
+  /* background: linear-gradient(to right, var(--p-bg-color-0), var(--p-bg-color-0)), 
+              url(../src/assets/backgrounds/lp_bg_dark.png) no-repeat center/100% fixed;
+  background-repeat: no-repeat;
+  background-size: cover; */
   transition: all 0.5s;
-  height: 100vh;
+  height: 100%;
 }
+
+#app::before, #app::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: opacity 0.5s ease; /* Плавная смена */
+  z-index: -1;
+  opacity: 0;
+}
+
+#app::before {
+  background: linear-gradient(to right, var(--p-bg-color-0), var(--p-bg-color-0)), 
+  url(../src/assets/backgrounds/lp_bg_light.png) no-repeat center/100% fixed; /* Светлое изображение */
+  opacity: 1; /* Показываем светлую картинку по умолчанию */
+}
+
+#app::after {
+  background: linear-gradient(to right, var(--p-bg-color-0), var(--p-bg-color-0)), 
+  url(../src/assets/backgrounds/lp_bg_dark.png) no-repeat center/100% fixed; /* Темное изображение */
+}
+
+/* Когда включена темная тема */
+.p-dark #app::before {
+  opacity: 0; /* Скрываем светлую картинку */
+}
+
+.p-dark #app::after {
+  opacity: 1; /* Показываем темную картинку */
+}
+
 .logout-button:hover {
   svg.logout path {
-    stroke: var(--p-blue-500);
+    stroke: var(--p-blue-400);
   }
 }
 .removed-row {
@@ -134,6 +174,7 @@ svg.lcs {
 }
 
 :root {
+  --p-bg-color-0: rgba(255, 255, 255, 0.5);
   --p-bg-color-1: rgba(255,255,255,1.0);
   --p-bg-color-2: rgba(242,242,247,1.0);
   --p-bg-color-3: rgba(255,255,255,1.0);
@@ -151,7 +192,7 @@ svg.lcs {
   --p-blue-500: rgb(68, 143, 255) !important;
   --p-blue-400: rgb(86, 118, 221) !important;
   --p-color-icon-menu: rgb(86, 118, 221) !important;
-  --p-blue-500-low-op: rgba(96, 137, 226, 0.2) !important;
+  --p-blue-500-low-op: rgb(202, 218, 253) !important;
 
   --p-separator-opaque: rgba(198, 198, 200, 0.30) !important;
   --p-inputtext-background: var(--p-bg-color-3) !important;
@@ -183,7 +224,7 @@ svg.lcs {
   --p-dialog-background: var(--p-bg-color-1) !important;
 
   --p-popover-content-padding: 15px 8px !important;
-  --p-popover-border-radius: 18px !important;
+  --p-popover-border-radius: 12px !important;
 
   --p-checkbox-background: var(--p-bg-color-3) !important;
 
@@ -202,12 +243,13 @@ svg.lcs {
   --p-grey-4: #D1D1D6;
   --p-grey-5: #E5E5EA;
   --p-grey-6: #F2F2F7;
-  --p-grey-7: #F0F0F08A;
+  --p-grey-7: #f8f8f8;
 
 }
 
 .p-dark {
-  --p-bg-color-1: #1C1C1E;
+  --p-bg-color-0: rgba(28, 28, 30, 0.6);
+  --p-bg-color-1: #1c1c1eff;
   --p-bg-color-2: #2C2C2E;
   --p-bg-color-3: #3A3A3C;
   --p-text-color: #FFFFFF;
@@ -230,7 +272,7 @@ svg.lcs {
 
   --p-red: #FF453A;
   --p-blue-500: rgb(68, 143, 255) !important;
-  --p-blue-500-low-op: rgba(255, 255, 255, 0.14) !important;
+  --p-blue-500-low-op: rgb(68, 68, 68) !important;
   --p-blue-100: rgba(72, 149, 238, 0.6) !important;
 
   --p-color-icon-menu: white !important;

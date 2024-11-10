@@ -280,9 +280,11 @@ onBeforeMount(async () => {
     border-radius: 12px;
     transition: all 0.5s;
     margin-bottom: 20px;
+    color: var(--p-text-color);
 }
 .logout-button:hover {
     background-color: var(--p-blue-500-low-op);
+    color: var(--p-blue-400);
 }
 .email {
     color: var(--p-grey-1);
@@ -292,12 +294,6 @@ onBeforeMount(async () => {
     color: white;
     font-weight: 700;
     font-family: 'SF Pro Rounded';
-    transition: all 0.5s;
-}
-.split {
-    border: solid 2px var(--p-separator-opaque);
-    border-radius: 2pt;
-    margin-top: auto;
     transition: all 0.5s;
 }
 .sidebar-container {
@@ -376,6 +372,6 @@ onBeforeMount(async () => {
     width: 300px;
     padding: 1.25rem;
     transition: all 0.5s;
-    border-right: 2px solid var(--p-grey-4);
+    border-right: 1px solid var(--p-grey-5);
 }
 </style>

@@ -135,7 +135,7 @@
                 </template>
             </DataTable>
 
-            <Skeleton v-else width="100%" height="90vh" class="skeleton-table" />
+            <Skeleton v-else width="100%" height="100%" class="skeleton-table" />
         </div>
         <InfraManagerCallsMe ref="callDetailsRef" class="position-absolute opacity-0" style="z-index: -999;"/>
     </div>
@@ -313,12 +313,12 @@ onMounted(async () => {
     font-size: 2rem;
 }
 .search {
-    border-radius: 12pt;
+    border-radius: 12px;
     font-size: 18px;
     transition: all 0.5s;
 }
 .skeleton-table {
-  border-radius: 18px;
+  border-radius: 12px;
   background-color: var(--p-grey-3);
 }
 </style>

@@ -84,7 +84,7 @@ function themeToggle() {
     width: 30px;
     height: 30px;
     padding: 22px;
-    border-radius: 10px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -101,7 +101,7 @@ function themeToggle() {
     width: 30px;
     height: 30px;
     padding: 22px;
-    border-radius: 10px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;

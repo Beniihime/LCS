@@ -255,7 +255,7 @@ main {
     width: 100%;
     height: 150px;
     overflow: hidden;
-    border-radius: 15px 15px 0 0;
+    border-radius: 12px 12px 0 0;
 }
 .content-wrap {
     width: 100%;
@@ -263,45 +263,29 @@ main {
 }
 .profile-card {
     background-color: var(--p-grey-6);
-    border-radius: 24px;
+    border-radius: 12px;
     border: 2px solid var(--p-grey-4);
     transition: all 0.5s;
     width: 100%;
     position: relative;
 }
 .infra-profile-card {
-    border-radius: 24px;
-    border: 2px solid var(--p-grey-4);
-    padding: 30px;
-    transition: all 0.5s;
-}
-.service-card .call-card {
-    padding: 20px;
-    margin-bottom: 20px;
-    border: 1px solid var(--p-grey-3);
-    border-radius: 10px;
-    background-color: var(--p-grey-5);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.5s;
-}
-.service-card {
     background-color: var(--p-grey-6);
-    border-radius: 24px;
+    border-radius: 12px;
     border: 2px solid var(--p-grey-4);
-    transition: all 0.5s;
-    width: 100%;
     padding: 30px;
+    transition: all 0.5s;
 }
 .profile-body {
     padding: 70px 30px 30px;
-    border-radius: 18px 18px 0 0;
+    border-radius: 12px 12px 0 0;
     overflow: hidden;
 }
 .header-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 22px 22px 0 0;
+    border-radius: 10px 10px 0 0;
 }
 h2 {
     margin-bottom: 5px;

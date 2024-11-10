@@ -44,7 +44,7 @@
                             scrollable
                             removableSort
                             stripedRows
-                            
+                            rowHover
                             scrollHeight="57vh"
                             @page="onPage"
                             :rowClass="rowClass"
@@ -417,7 +417,7 @@ main {
     margin-top: 20px;
 }
 .card {
-    border-radius: 18px;
+    border-radius: 12px;
     transition: all 0.5s;
     background-color: transparent;
     color: var(--p-text-color);

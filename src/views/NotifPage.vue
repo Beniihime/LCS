@@ -62,7 +62,7 @@ h2 {
 
 .notification-card {
     background-color: var(--p-grey-7);
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 15px;
     transition: all 0.5s;
 }

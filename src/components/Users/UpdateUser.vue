@@ -232,7 +232,7 @@ label {
     width: 100%;
 }
 .search {
-    border-radius: 12pt;
+    border-radius: 12px;
     font-size: 14pt;
     transition: all 0.5s;
 }

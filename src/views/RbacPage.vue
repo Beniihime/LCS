@@ -268,7 +268,7 @@ p {
 }
 .card {
     border: none;
-    border-radius: 18px;
+    border-radius: 12px;
     transition: all 0.5s;
     background-color: var(--p-bg-color-2);
     color: var(--p-text-color);
@@ -343,9 +343,8 @@ main {
     width: 100%; 
 }
 .statistics {
-    background: var(--p-bg-color-1);
     padding: 20px;
-    border-radius: 18px;
+    border-radius: 12px;
     border: none;
     transition: all 0.5s;
 }
@@ -358,7 +357,7 @@ main {
 .stat-card {
     background: var(--p-bg-color-2);
     padding: 20px;
-    border-radius: 18px;
+    border-radius: 12px;
     color: var(--p-text-color);
     transition: all 0.5s;
 }

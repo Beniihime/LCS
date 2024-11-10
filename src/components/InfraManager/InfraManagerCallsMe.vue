@@ -2,20 +2,6 @@
     <div class="">
         <!-- Заявки InfraManager -->
         <div class="service-card mt-3">
-            <h2>Последние заявки</h2>
-            <Divider />
-
-            <!-- Кнопка для загрузки последних заявок -->
-            <Button :label="isCallsVisible ? 'Скрыть заявки' : 'Показать заявки'" class="mb-3" severity="secondary"  @click="fetchCallsInfo"/>
-
-            <div class="microservice-card" v-if="isCallsVisible && lastCalls.length">
-                <div  v-for="call in lastCalls" :key="call.id" class="call-card" @click="openCallDetails(call.id)">
-                    <h4>Заявка №{{ call.number }}</h4>
-                    <p>{{ call.callSummaryName }}</p>
-                    <p><strong>Описание:</strong> {{ call.description }}</p>
-                    <p><strong>Сервис:</strong> {{ call.serviceItemAttendanceFullName }}</p>
-                </div>
-            </div>
 
             <!-- Модальное окно для подробной информации -->
             <Dialog v-model:visible="isDialogVisible" modal :style="{ 'min-width': '60rem', 'max-width': '100rem' }" @hide="closeDialog">
@@ -379,27 +365,12 @@ defineExpose({ openCallDetails });
 </script>
 
 <style scoped>
-.service-card .call-card {
-    padding: 32px;
-    margin-bottom: 20px;
-    border-radius: 10px;
-    background-color: var(--p-grey-7);
-    transition: all 0.5s;
-    cursor: pointer;
-}
 .service-card {
-    border-radius: 24px;
-    border: 2px solid var(--p-grey-4);
-    transition: all 0.5s;
-    width: 100%;
-    padding: 30px;
-}
-.slide-fade-enter-active, .slide-fade-leave-active {
-    transition: all 0.5s;
-}
-.slide-fade-enter-from, .slide-fade-leave-to {
-    transform: translateY(20px);
-    opacity: 0;
+  border-radius: 24px;
+  border: 2px solid var(--p-grey-4);
+  transition: all 0.5s;
+  width: 100%;
+  padding: 30px;
 }
 .dialog-title {
   text-align: center;
@@ -412,7 +383,7 @@ defineExpose({ openCallDetails });
 }
 .details-section {
   padding: 20px;
-  border-radius: 10px;
+  border-radius: 12px;
   background-color: var(--p-grey-7);
   .pi {
     margin-right: 10px;
@@ -446,7 +417,7 @@ h2 {
 }
 .document-card {
   padding: 16px;
-  border-radius: 10px;
+  border-radius: 12px;
   background-color: var(--p-grey-7);
   margin-bottom: 10px;
 }
@@ -473,7 +444,7 @@ h2 {
 }
 .negotiation-card {
   background-color: var(--p-grey-7);
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   border-left: 4px solid #007ad9;

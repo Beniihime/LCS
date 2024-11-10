@@ -46,7 +46,7 @@ main {
 
 .content {
     padding: 40px;
-    border-radius: 16px;
+    border-radius: 12px;
 }
 
 h1 {

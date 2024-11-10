@@ -114,7 +114,7 @@ label {
     width: 100%;
 }
 .save-btn {
-    border-radius: 12pt;
+    border-radius: 12px;
     transition: all 0.5s;
 }
 </style>

@@ -316,7 +316,7 @@ onBeforeMount(async () => {
     width: 110px;
     padding: 1.25rem;
     transition: all 0.5s;
-    border-right: 2px solid var(--p-grey-4);
+    border-right: 1px solid var(--p-grey-5);
 }
 .rectangle:before {
   content: ' ';

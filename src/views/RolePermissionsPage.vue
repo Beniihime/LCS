@@ -56,10 +56,11 @@
                                     <p class="permission-description">{{ permission.description }}</p>
                                 </div>
                                 <div v-if="permission.isCustomizable">
-                                    <ToggleSwitch
-                                        v-model="permission.enabled"
-                                        @update:model-value="togglePermission(roleStore.roleId, permission.id, $event)"
-                                    />
+                                    <ToggleSwitch v-model="permission.enabled" @update:model-value="togglePermission(roleStore.roleId, permission.id, $event)">
+                                        <template #handle="">
+                                            <i :class="['pi', { 'pi-check': permission.enabled, 'pi-times': !permission.enabled }]" style="font-size: 12px;"></i>
+                                        </template>
+                                    </ToggleSwitch>
                                 </div>
                                 <div v-else v-if="permission.enabled">
                                     <Tag value="Установлено" severity="success" icon="pi pi-check"/>
@@ -73,8 +74,6 @@
                     </div>
                 </div>
                
-                
-                
                 <Divider />
             </div>
         </div>
@@ -221,11 +220,11 @@ onMounted(async () => {
     width: 100%; 
 }
 .back-btn {
-    border-radius: 18px;
+    border-radius: 12px;
     font-size: 1.25rem;
 }
 .card {
-    border-radius: 18px;
+    border-radius: 12px;
     transition: transform 0.3s ease;
     background-color: var(--p-grey-7);
     color: var(--p-text-color);
@@ -267,6 +266,9 @@ onMounted(async () => {
     background-color: var(--p-grey-7);
     transition: all 0.5s;
     box-sizing: border-box;
+}
+.permission-item:hover {
+    filter: drop-shadow(0 0 0.5rem rgba(0, 0, 0, 0.3));
 }
 .permission-info {
     display: flex;

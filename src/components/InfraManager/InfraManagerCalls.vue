@@ -2,7 +2,7 @@
     <div class="">
         <!-- Заявки InfraManager -->
         <div class="service-card mt-3">
-            <h4><strong>Последние заявки</strong></h4>
+            <!-- <h4><strong>Последние заявки</strong></h4>
             <Divider />
 
             <div class="microservice-card">
@@ -12,7 +12,7 @@
                     <p><strong>Описание:</strong> {{ call.description }}</p>
                     <p><strong>Решение:</strong> {{ call.solution }}</p>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Модальное окно для подробной информации -->
             <Dialog v-model:visible="isDialogVisible" modal :style="{ 'min-width': '60rem', 'max-width': '100rem' }" @hide="closeDialog">
@@ -387,26 +387,6 @@ defineExpose({ openCallDetails });
 </script>
 
 <style scoped>
-.service-card .call-card {
-    padding: 20px;
-    margin-bottom: 15px;
-    border-radius: 10px;
-    background-color: var(--p-grey-7);
-    transition: all 0.5s;
-    cursor: pointer;
-}
-.service-card {
-    transition: all 0.5s;
-    width: 100%;
-}
-.service-card 
-.slide-fade-enter-active, .slide-fade-leave-active {
-    transition: all 0.5s;
-}
-.slide-fade-enter-from, .slide-fade-leave-to {
-    transform: translateY(20px);
-    opacity: 0;
-}
 .dialog-title {
   text-align: center;
   margin-bottom: 20px;
@@ -418,7 +398,7 @@ defineExpose({ openCallDetails });
 }
 .details-section {
   padding: 20px;
-  border-radius: 10px;
+  border-radius: 12px;
   background-color: var(--p-grey-7);
   color: var(--p-text-color);
 
@@ -446,7 +426,7 @@ h2 {
 }
 .document-card {
   padding: 16px;
-  border-radius: 10px;
+  border-radius: 12px;
   background-color: var(--p-grey-7);
   margin-bottom: 10px;
 }
@@ -481,7 +461,7 @@ h2 {
 }
 .negotiation-card {
   background-color: var(--p-grey-7);
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   border-left: 4px solid #007ad9;
