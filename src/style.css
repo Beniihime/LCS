@@ -69,15 +69,14 @@ thead.p-datatable-thead {
 }
 
 #app {
-  /* background: linear-gradient(to right, var(--p-bg-color-0), var(--p-bg-color-0)), 
-              url(../src/assets/backgrounds/lp_bg_dark.png) no-repeat center/100% fixed;
+  background: var(--p-bg-color-1);
   background-repeat: no-repeat;
-  background-size: cover; */
+  background-size: cover;
   transition: all 0.5s;
   height: 100%;
 }
 
-#app::before, #app::after {
+/* #app::before, #app::after {
   content: "";
   position: absolute;
   top: 0;
@@ -86,30 +85,30 @@ thead.p-datatable-thead {
   height: 100%;
   background-size: cover;
   background-position: center;
-  transition: opacity 0.5s ease; /* Плавная смена */
+  transition: opacity 0.5s ease;
   z-index: -1;
   opacity: 0;
 }
 
 #app::before {
   background: linear-gradient(to right, var(--p-bg-color-0), var(--p-bg-color-0)), 
-  url(../src/assets/backgrounds/lp_bg_light.png) no-repeat center/100% fixed; /* Светлое изображение */
-  opacity: 1; /* Показываем светлую картинку по умолчанию */
+  url(../src/assets/backgrounds/lp_bg_light.png) no-repeat center/100% fixed; 
+  opacity: 1;
 }
 
 #app::after {
   background: linear-gradient(to right, var(--p-bg-color-0), var(--p-bg-color-0)), 
-  url(../src/assets/backgrounds/lp_bg_dark.png) no-repeat center/100% fixed; /* Темное изображение */
+  url(../src/assets/backgrounds/lp_bg_dark.png) no-repeat center/100% fixed; 
 }
 
-/* Когда включена темная тема */
+
 .p-dark #app::before {
-  opacity: 0; /* Скрываем светлую картинку */
+  opacity: 0;
 }
 
 .p-dark #app::after {
-  opacity: 1; /* Показываем темную картинку */
-}
+  opacity: 1; 
+} */
 
 .logout-button:hover {
   svg.logout path {

@@ -48,6 +48,14 @@
                         <Tag :value="data.entityStateName" :severity="getStatusSeverity(data.entityStateName)" :icon="getStatusIcon(data.entityStateName)"/>
                     </template>
                 </Column>
+                <Column field="priorityName" header="Приоритет" style="min-width: 100px">
+                    <template #body="{ data }">
+                        <div class="d-flex align-items-center">
+                            <Badge value="" :severity="data.priorityName === 'Выскокий' ? 'danger' : data.priorityName === 'Низкий' ? 'success' : 'contrast'" class="me-2 p-2"/>
+                            {{ data.priorityName }}
+                        </div>
+                    </template>
+                </Column>
                 <Column field="initiatorFullName" header="Инициатор" sortable style="min-width: 200px">
                     <template #body="{ data }">
                         {{ data.initiatorFullName }}
@@ -58,9 +66,14 @@
                         {{ data.clientFullName }}
                     </template>
                 </Column>
-                <Column field="callSummaryName" header="Сводка" style="min-width: 150px">
+                <Column field="callSummaryName" header="Описание" style="min-width: 150px">
                     <template #body="{ data }">
-                        <div v-tooltip="data.description">{{ data.callSummaryName }}</div>
+                        <div v-tooltip="{ value: data.description, showDelay: 800, hideDelay: 300 }">{{ data.callSummaryName }}</div>
+                    </template>
+                </Column>
+                <Column field="solution" header="Решение" style="max-width: 250px;">
+                    <template #body="{ data }">
+                       <div style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;" v-tooltip="{ value: data.solution, showDelay: 800, hideDelay: 300 }">{{ data.solution }}</div>
                     </template>
                 </Column>
                 <Column field="serviceItemFullName" header="Элемент сервиса" style="min-width: 350px">
@@ -71,7 +84,7 @@
 
                 <Column field="serviceAttendanceFullName" header="Выполнил" sortable style="min-width: 150px">
                     <template #body="{ data }">
-                        {{ data.serviceAttendanceFullName }}
+                        {{ data.accomplisherFullName }}
                     </template>
                 </Column>
                 <Column field="serviceName" header="Сервис" style="min-width: 250px">
@@ -92,11 +105,6 @@
                 <Column field="executorFullName" header="Исполнитель" sortable style="min-width: 200px">
                     <template #body="{ data }">
                         {{ data.executorFullName }}
-                    </template>
-                </Column>
-                <Column field="priorityName" header="Приоритет" style="min-width: 100px">
-                    <template #body="{ data }">
-                        {{ data.priorityName }}
                     </template>
                 </Column>
                 <Column field="utcDateRegistered" header="Дата регистрации" sortable style="min-width: 290px">
