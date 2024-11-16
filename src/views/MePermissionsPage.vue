@@ -25,7 +25,7 @@
                     <div class="col">
                         <IconField class="searchBar">
                             <InputIcon class="pi pi-search" />
-                            <InputText placeholder="Поиск" class="search" v-model="searchQuery"/>
+                            <InputText id="search" name="search" placeholder="Поиск" class="search" v-model="searchQuery2" />
                         </IconField>
                     </div>
                 </div>
@@ -58,7 +58,7 @@ import { useRouter } from 'vue-router';
 import axiosInstance from '@/utils/axios.js';
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 
-const searchQuery = ref('');
+const searchQuery2 = ref('');
 
 const loading = ref(true);
 const resources = ref([]);
@@ -129,15 +129,15 @@ const updatePermissionStatus = (resourceId, permissionId, isActive) => {
 };
 
 const filteredResources = computed(() => {
-    if (!searchQuery.value) {
+    if (!searchQuery2.value) {
         return resources.value;
     }
 
     return resources.value.map(resource => ({
         ...resource,
         permissions: resource.permissions.filter(permission =>
-            permission.title.toLowerCase().startsWith(searchQuery.value.toLowerCase()) ||
-            permission.description.toLowerCase().startsWith(searchQuery.value.toLowerCase())
+            permission.title.toLowerCase().startsWith(searchQuery2.value.toLowerCase()) ||
+            permission.description.toLowerCase().startsWith(searchQuery2.value.toLowerCase())
         )
     })).filter(resource => resource.permissions.length > 0);
 });

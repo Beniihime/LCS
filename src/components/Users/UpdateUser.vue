@@ -1,48 +1,49 @@
 <template>
     <div class="d-flex justify-content-center">
+        <Button icon="pi pi-user-edit" label="Изменить" size="large" class="edit-btn" severity="contrast" rounded @click="fetchUserData"/>
         <Dialog v-model:visible="visible" modal header="Изменить информацию" :style="{ 'max-width': '30rem' }">
-            <div class="row mt-1 mb-3">
+            <div class="row mt-4 mb-5">
                 <div class="col">
-                    <FloatLabel variant="on">
-                        <InputText v-model="firstName" class="form-input"/>
+                    <FloatLabel>
+                        <InputText id="firstName" name="firstName" v-model="firstName" class="form-input" />
                         <label for="firstName">Имя</label>
                     </FloatLabel>
                 </div>
                 <div class="col">
-                    <FloatLabel variant="on">
-                        <InputText v-model="lastName" class="form-input"/>
+                    <FloatLabel>
+                        <InputText id="lastName" name="lastName" v-model="lastName" class="form-input" />
                         <label for="lastName">Фамилия</label>
                     </FloatLabel>
                 </div>
             </div>
-            <div class="row mb-3">
+            <div class="row">
                 <div class="col">
-                    <FloatLabel variant="on">
-                        <InputText id="middleName" v-model="middleName" class="form-input"/>
+                    <FloatLabel>
+                        <InputText id="middleName" name="middleName" v-model="middleName" class="form-input" />
                         <label for="middleName">Отчество</label>
                     </FloatLabel>
                 </div>
             </div>
 
-            <Divider class="my-3 py-1"/>
+            <Divider class="my-5 py-1"/>
 
-            <div class="row mb-3">
+            <div class="row mb-5">
                 <div class="col">
-                    <FloatLabel variant="on">
-                        <InputText v-model="login" class="form-input"/>
+                    <FloatLabel>
+                        <InputText id="login" name="login" v-model="login" class="form-input" />
                         <label for="login">Логин</label>
                     </FloatLabel>
                 </div>
                 <div class="col">
-                    <FloatLabel variant="on">
-                        <InputText id="email" v-model="email" class="form-input"/>
+                    <FloatLabel>
+                        <InputText id="email" name="email" v-model="email" class="form-input" />
                         <label for="email">E-mail</label>
                     </FloatLabel>
                 </div>
             </div>
             <div class="row mb-3">
                 <div class="col">
-                    <FloatLabel variant="on">
+                    <FloatLabel>
                         <MultiSelect 
                             v-model="selectedRoles" 
                             display="chip" 
@@ -57,13 +58,6 @@
                 </div>
             </div>
             <Button label="Сохранить" class="search w-100 mb-2" @click="updateUserData"/>
-            <Button 
-                :label="blockButtonLabel" 
-                class="search w-100" 
-                :severity="blockButtonSeverity" 
-                outlined 
-                @click="toggleUserBlock"
-            />
         </Dialog>
     </div>
 </template>
@@ -77,8 +71,6 @@ const toast = useToast();
 
 const props = defineProps({
     userId: String,
-    refreshTable: Function,
-    filters: Object,
     isBlocked: Boolean
 });
 
@@ -92,16 +84,15 @@ const firstName = ref('');
 const lastName = ref('');
 const middleName = ref('');
 const login = ref('');
-const isBlocked = ref(null);
 const email = ref('');
 
 const originalLogin = ref('');
 const originalEmail = ref('');
 
 
-const fetchUserData = async (userId) => {
+const fetchUserData = async () => {
     visible.value = true;
-    Iduser.value = userId;
+    Iduser.value = props.userId;
     try {
         const response = await axiosInstance.get(`/api/users/${ Iduser.value }`);
         const userData = response.data;
@@ -111,7 +102,6 @@ const fetchUserData = async (userId) => {
         middleName.value = userData.middleName;
         login.value = userData.login;
         email.value = userData.email;
-        isBlocked.value = userData.isBlocked;
         
         selectedRoles.value = userData.roles.map(role => role.id);
         originalLogin.value = userData.login;
@@ -201,19 +191,6 @@ const updateUserData = async () => {
         }));
     }
 };
-
-const toggleUserBlock = async () => {
-    try {
-        const endpoint = isBlocked.value ? 'unblock' : 'block';
-        await axiosInstance.patch(`/api/users/${ Iduser.value }/${ endpoint }`);
-        props.refreshTable(props.filters);
-    } catch (error) {
-        console.debug(`Ошибка при ${ isBlocked.value ? 'разблокировке' : 'блокировке' } пользователя: `, error);
-    }
-}
-
-const blockButtonLabel = computed(() => (isBlocked.value ? 'Разблокировать' : 'Заблокировать'));
-const blockButtonSeverity = computed(() => (isBlocked.value ? 'success' : 'danger'));
 
 onMounted(async () => {
     await updateRolesList();

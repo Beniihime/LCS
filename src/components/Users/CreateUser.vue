@@ -2,61 +2,78 @@
     <div class="d-flex justify-content-center">
         <Button class="search" icon="pi pi-plus" label="Пользователь" @click="visible = true"/>
         <Dialog v-model:visible="visible" modal header="Новый пользователь" :style="{ 'max-width': '30rem' }">
-            <div class="row mt-1 mb-3">
+            <div class="row mt-4 mb-5">
                 <div class="col">
-                    <FloatLabel variant="on">
-                        <InputText v-model="firstName" id="firstName" class="form-input" required/>
+                    <FloatLabel>
+                        <InputText v-model="firstName" id="firstName" name="firstName" class="form-input" />
                         <label for="firstName">Имя</label>
                     </FloatLabel>
                 </div>
                 <div class="col">
-                    <FloatLabel variant="on">
-                        <InputText v-model="lastName" id="lastName" class="form-input" required/> 
+                    <FloatLabel>
+                        <InputText v-model="lastName" id="lastName" name="lastName" class="form-input" /> 
                         <label for="lastName">Фамилия</label>
                     </FloatLabel>      
                 </div>
             </div>
             <div class="row">
                 <div class="col">
-                    <FloatLabel variant="on">
-                        <InputText v-model="middleName" id="middleName" class="form-input"/> 
+                    <FloatLabel>
+                        <InputText v-model="middleName" id="middleName" name="middleName" class="form-input" /> 
                         <label for="middleName">Отчество</label>
                     </FloatLabel> 
                 </div>
             </div>
 
-            <Divider class="my-3 py-1"/>
-
-            <div class="row mb-3">
+            <div class="row mt-5">
                 <div class="col">
-                    <FloatLabel variant="on">
-                        <InputText v-model="login" id="login" class="form-input" required/> 
-                        <label for="login">Логин</label>
-                    </FloatLabel> 
-                </div>
-                <div class="col">
-                    <FloatLabel variant="on">
-                        <Password 
-                            v-model="pass" 
-                            class="form-input"
-                            toggleMask
-                            required
-                        />
-                        <label for="pass">Пароль</label>
-                    </FloatLabel> 
-                </div>
-            </div>
-            <div class="row mb-3">
-                <div class="col">
-                    <FloatLabel variant="on">
-                        <InputText v-model="email" id="email" class="form-input" required/> 
+                    <FloatLabel>
+                        <InputText v-model="email" id="email" name="email" class="form-input" required @blur="checkEmail" :invalid="isInvalid(email)" />
                         <label for="email">E-mail</label>
-                    </FloatLabel> 
+                    </FloatLabel>
+                    <Message v-if="emailMessage" :severity="emailSeverity" size="small">{{ emailMessage }}</Message>
                 </div>
             </div>
-            <div class="row mb-3">
+
+            <Divider class="my-4 py-1"/>
+
+            <div class="row mb-5">
                 <div class="col">
-                    <FloatLabel variant="on">
+                    <FloatLabel>
+                        <InputText v-model="login" id="login" name="login" class="form-input" required @blur="checkLogin" :invalid="isInvalid(login)" />
+                        <label for="login">Логин</label>
+                    </FloatLabel>
+                    <Message v-if="loginMessage" :severity="loginSeverity" size="small">{{ loginMessage }}</Message>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col">
+                    <FloatLabel>
+                        <Password v-model="pass" id="pass" name="pass" toggleMask class="form-input" @input="validatePassword" :feedback="false" :invalid="!passwordChecks.length || !passwordChecks.upperLower || !passwordChecks.number" />
+                        <label for="pass">Пароль</label>
+                    </FloatLabel>
+                    <div class="password-requirements mt-3">
+                        <p><i :class="passwordChecks.length ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Минимум 8 символов</p>
+                        <p><i :class="passwordChecks.upperLower ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Верхний и нижний регистры</p>
+                        <p><i :class="passwordChecks.number ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Минимум одна цифра</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-5">
+                <div class="col">
+                    <FloatLabel>
+                        <Password id="confirmPass" name="confirmPass" v-model="confirmPass" toggleMask class="form-input" required :feedback="false" :invalid="pass !== confirmPass && confirmPass" />
+                        <label for="confirmPass">Подтвердите пароль</label>
+                    </FloatLabel>
+                    <Message v-if="pass !== confirmPass && confirmPass" severity="error" size="small">Пароли не совпадают</Message>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col">
+                    <FloatLabel>
                         <MultiSelect 
                             v-model="selectedRoles" 
                             display="chip" 
@@ -79,50 +96,73 @@
 import { ref, onMounted } from "vue";
 import axiosInstance from '@/utils/axios.js';
 
-import { useToast } from 'primevue/usetoast';
-
-const pass = ref('');
 const firstName = ref('');
 const middleName = ref('');
 const lastName = ref('');
-const login = ref('');
 const email = ref('');
+const login = ref('');
+const pass = ref('');
+const confirmPass = ref('');
+const emailMessage = ref('');
+const emailSeverity = ref('');
+const loginMessage = ref('');
+const loginSeverity = ref('');
 const selectedRoles = ref([]);
 const visible = ref(false);
 const roles = ref([]);
 const userPriority = ref(null);
 
-const toast = useToast();
-
-onMounted(async () => {
-    await fetchCurrentUserPriority();
-    await updateRolesList();
+const passwordChecks = ref({
+    length: false,
+    upperLower: false,
+    number: false,
 });
 
-const checkLoginAndEmail = async () => {
-    const isLoginOccupied = await axiosInstance.get('/api/users/checking/occupy-login', {
-        params: { login: login.value }
-    });
-    const isEmailOccupied = await axiosInstance.get('/api/users/checking/occupy-email', {
-        params: { email: email.value }
-    });
+const validatePassword = () => {
+    passwordChecks.value.length = pass.value.length >= 8;
+    passwordChecks.value.upperLower = /[a-z]/.test(pass.value) && /[A-Z]/.test(pass.value);
+    passwordChecks.value.number = /\d/.test(pass.value);
+};
 
-    if (isLoginOccupied.data === true) {
-        toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Логин уже занят', life: 3000 });
-        return false;
+const checkEmail = async () => {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+        emailMessage.value = 'Неверный формат email';
+        emailSeverity.value = 'error';
+        return;
     }
 
-    if (isEmailOccupied.data === true) {
-        toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Email уже занят', life: 3000 });
-        return false;
+    try {
+        const response = await axiosInstance.get('/api/users/checking/occupy-email', { params: { email: email.value } });
+        emailMessage.value = response.data ? 'Email уже занят' : 'Email доступен';
+        emailSeverity.value = response.data ? 'error' : 'success';
+    } catch {
+        emailMessage.value = 'Ошибка проверки email';
+        emailSeverity.value = 'error';
+    }
+};
+
+const isInvalid = (value) => {
+    return !value || (typeof value === 'string' && value.trim().length === 0);
+};
+
+const checkLogin = async () => {
+    if (!login.value) {
+        loginMessage.value = 'Логин обязателен';
+        loginSeverity.value = 'error';
+        return;
     }
 
-    return true;
+    try {
+        const response = await axiosInstance.get('/api/users/checking/occupy-login', { params: { login: login.value } });
+        loginMessage.value = response.data ? 'Логин уже занят' : 'Логин доступен';
+        loginSeverity.value = response.data ? 'error' : 'success';
+    } catch {
+        loginMessage.value = 'Ошибка проверки логина';
+        loginSeverity.value = 'error';
+    }
 };
 
 const createUser = async () => {
-    const isAvailable = await checkLoginAndEmail();
-    if (!isAvailable) return;
     
     try {
         const roleIds = selectedRoles.value.map(role => role.id);
@@ -182,6 +222,11 @@ const updateRolesList = async () => {
         console.debug('Ошибка при получении ролей: ', error);
     }
 };
+
+onMounted(async () => {
+    await fetchCurrentUserPriority();
+    await updateRolesList();
+});
 </script>
 
 <style scoped>
@@ -191,6 +236,17 @@ label {
 .form-input {
     font-size: 16px;
     width: 100%;
+}
+.password-requirements p {
+    display: flex;
+    align-items: center;
+    margin: 0.25rem 0;
+}
+.text-success {
+    color: var(--p-green-500);
+}
+.text-danger {
+    color: var(--p-red-500);
 }
 .search {
     border-radius: 12px;

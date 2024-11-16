@@ -11,7 +11,7 @@
                     <div class="col">
                         <IconField class="searchBar">
                             <InputIcon class="pi pi-search" />
-                            <InputText placeholder="Поиск..." class="search" v-model="searchQuery" />
+                            <InputText id="search" name="search" placeholder="Поиск..." class="search" v-model="searchQuery1" />
                         </IconField>
                     </div>
                     <div class="col-auto">
@@ -87,7 +87,7 @@ import { useRoleStore } from '@/stores/roleStore';
 import axiosInstance from '@/utils/axios.js';
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 
-const searchQuery = ref('');
+const searchQuery1 = ref('');
 const loading = ref(false);
 const roleStore = useRoleStore();
 const router = useRouter();
@@ -181,7 +181,7 @@ const filteredResources = computed(() => {
         ...resource,
     }));
 
-    if (!searchQuery.value) {
+    if (!searchQuery1.value) {
         return customizableResources; // Если нет запроса, возвращаем отфильтрованные ресурсы
     }
 
@@ -189,8 +189,8 @@ const filteredResources = computed(() => {
     return customizableResources.map(resource => ({
         ...resource,
         permissions: resource.permissions.filter(permission =>
-            permission.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-            permission.description.toLowerCase().includes(searchQuery.value.toLowerCase())
+            permission.title.toLowerCase().includes(searchQuery1.value.toLowerCase()) ||
+            permission.description.toLowerCase().includes(searchQuery1.value.toLowerCase())
         )
     })).filter(resource => resource.permissions.length > 0); // Возвращаем только те ресурсы, которые содержат полномочия после фильтрации
 });

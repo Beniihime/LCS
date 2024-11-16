@@ -46,7 +46,7 @@
 </template>
 
 <script setup>
-import { ref, defineExpose } from 'vue';
+import { ref } from 'vue';
 import axiosInstance from '@/utils/axios.js';
 
 const showCreateInfra = ref(false);

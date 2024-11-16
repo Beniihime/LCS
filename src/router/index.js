@@ -39,6 +39,7 @@ const routes = [
             },
             {
                 path: "/profile",
+                props: (route) => ({ id: route.query.id }),
                 component: () => import('@/views/ProfilePage.vue'),
                 name: 'Profile',
                 meta: { requiresAuth: true  }

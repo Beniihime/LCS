@@ -10,7 +10,7 @@
             
             <IconField class="searchBar">
                 <InputIcon class="pi pi-search" />
-                <InputText class="search" v-model="searchQuery" placeholder="Поиск..."/>
+                <InputText id="searchQuery" name="searchQuery" class="search" v-model="searchQuery" placeholder="Поиск..." />
             </IconField>
             <div class="menu mt-4">
                 <router-link to="/overview" class="menu-item" active-class="active-link">
@@ -67,7 +67,7 @@
 
             <ThemeSwitcher :isSideBarCollapse="false"/>
             
-            <router-link class="profile" to="/profile" active-class="active-link">
+            <router-link class="profile" :to="userId ? `/profile?id=${userId}` : '/profile'" >
                 <div class="row align-items-center">
                     <div class="col-auto">
                         <Avatar 
@@ -127,6 +127,8 @@ const router = useRouter();
 
 const notificationStore = useNotificationStore();
 const permissionStore = usePermissionStore();
+
+const userId = ref(null);
 
 const firstName = ref('');
 const lastName = ref('');
@@ -231,8 +233,13 @@ onBeforeMount(async () => {
         fullName.value = `${firstName.value} ${lastName.value}`.trim();
         initials.value = getInitials(firstName.value, lastName.value);
 
-        const userId = response.data.id;
-        const statusResponse = await axiosInstance.get(`/api/infra-manager/db/users/${userId}/status`);
+        userId.value = response.data.id;
+        const statusResponse = await axiosInstance.get(`/api/infra-manager/db/users/${userId.value}/status`);
+        if (statusResponse) {
+            localStorage.setItem("InfraStatus", true);
+        } else {
+            localStorage.setItem("InfraStatus", false);
+        }
         localStorage.setItem("infraManagerUserId",statusResponse.data.infraManagerUserId);
         localStorage.setItem('firstName', response.data.firstName);
         if (statusResponse.data.personalAccountUserId && statusResponse.data.infraManagerUserId) {

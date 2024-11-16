@@ -12,7 +12,7 @@
                 stripedRows
                 :rows="rowsPerPage"
                 :rowClass="rowClass"
-                @row-click="(event) => openDialog(event.data.id)"
+                @row-click="(event) => navigateToProfile(event.data.id)"
                 :totalRecords="totalRecords"
                 @page="onPage"
                 :globalFilterFields="['fullName', 'email', 'roles', 'status']"
@@ -57,7 +57,8 @@
                         <InputText 
                             v-model="filterModel.value" 
                             placeholder="Поиск по ФИО" 
-                            @input="filterCallback()" 
+                            @input="filterCallback()"
+                            autocomplete="off"
                         />
                     </template>
                 </Column>
@@ -72,7 +73,8 @@
                         <InputText 
                             v-model="filterModel.value" 
                             placeholder="Поиск по E-mail" 
-                            @input="filterCallback()" 
+                            @input="filterCallback()"
+                            autocomplete="off"
                         />
                     </template>
                 </Column>
@@ -139,17 +141,6 @@
                         />
                     </template>
                 </Column>
-                <Column field="change" header="" style="min-width: 0rem;" v-if="hasPermission('User', 'Update')">
-                    <template #body="{ data }">
-                        <UpdateUser 
-                            :userId="data.id" 
-                            :isBlocked="data.isBlocked" 
-                            :refreshTable="fetchCustomers" 
-                            :filters="filters"
-                            ref="updateUserRef"
-                        />
-                    </template>
-                </Column>
                 
             </DataTable>
             
@@ -159,15 +150,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, toRaw, nextTick } from 'vue';
+import { ref, onMounted, nextTick } from 'vue';
 import axiosInstance from '@/utils/axios.js';
 import { FilterMatchMode } from '@primevue/core/api';
 import qs from 'qs';
+import { useRouter } from 'vue-router';
 
 import CreateUser from '@/components/Users/CreateUser.vue';
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import UpdateUser from '@/components/Users/UpdateUser.vue';
 import { usePermissionStore } from '@/stores/permissions.js';
+
+const router = useRouter();
 
 const customers = ref([]);
 const totalRecords = ref(0);
@@ -218,7 +212,14 @@ const rowClass = (data) => {
 };
 
 const updateUserRef = ref(null); // Ссылка на дочерний компонент UpdateRole
-const openDialog = (id) => { nextTick(() => { updateUserRef.value?.fetchUserData(id); }); };
+// const openDialog = (id) => { nextTick(() => { updateUserRef.value?.fetchUserData(id); }); };
+
+const navigateToProfile = (userId) => {
+    router.push({ 
+        name: 'Profile', 
+        query: { id: userId } 
+    });
+};
 
 // Классы для отображения ролей в зависимости от их типа
 const getRoleTypeClass = (role) => {

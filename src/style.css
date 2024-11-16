@@ -20,7 +20,12 @@ div.p-datatable-header {
   border-bottom: 0;
   background-color: var(--p-bg-color-2);
 }
-
+.p-message {
+  background: none !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
 div.p-paginator {
   background-color: var(--p-bg-color-2);
   border-radius: 0 0 12px 12px;

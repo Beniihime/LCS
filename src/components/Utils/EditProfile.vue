@@ -1,6 +1,6 @@
 <template>
     <div class="d-flex justify-content-center">
-        <Button icon="pi pi-ellipsis-h" size="large" class="edit-btn" severity="secondary" rounded @click="toggle"/>
+        <Button icon="pi pi-user-edit" label="Изменить" size="large" class="edit-btn" severity="contrast" rounded @click="toggle"/>
 
         <Popover ref="op">
             <div class="row">
@@ -20,7 +20,7 @@
             <div class="row mt-2 mb-4">
                 <div class="col">
                     <FloatLabel variant="on">
-                        <InputText v-model="login" id="login" class="form-input" required />
+                        <InputText v-model="login" id="login" name="login" class="form-input" required />
                         <label for="login">Новый логин</label>
                     </FloatLabel>
                 </div>
@@ -43,8 +43,8 @@
             <div v-if="shouldChangeEmail" class="row mb-4">
                 <div class="col">
                     <FloatLabel>
-                        <InputText v-model="newEmail" id="email" class="form-input" />
-                        <label for="email">Новый Email</label>
+                        <InputText v-model="newEmail" id="newEmail" name="newEmail" class="form-input" />
+                        <label for="newEmail">Новый Email</label>
                     </FloatLabel>
                 </div>
             </div>
@@ -56,6 +56,7 @@
                             v-model="newPassword"
                             class="form-input"
                             toggleMask
+                            autocomplete="off"
                         />
                         <label for="newPassword">Новый пароль</label>
                     </FloatLabel>
@@ -68,6 +69,7 @@
                             v-model="oldPassword"
                             class="form-input"
                             toggleMask
+                            autocomplete="off"
                         />
                         <label for="oldPassword">Старый пароль</label>
                     </FloatLabel>
@@ -188,10 +190,7 @@ label {
     width: 100%;
 }
 .edit-btn {
-    font-size: 14pt;
     transition: all 0.5s;
-    position: absolute;
-    top:10px;
-    right: 15px;
+    border: 1px solid var(--p-grey-3);
 }
 </style>

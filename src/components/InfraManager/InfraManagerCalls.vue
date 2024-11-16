@@ -167,7 +167,7 @@
 </template>
 
 <script setup>
-import { ref, watch, defineExpose } from 'vue';
+import { ref, watch } from 'vue';
 import axiosInstance from '@/utils/axios.js';
 
 // Пропс для передачи ID пользователя

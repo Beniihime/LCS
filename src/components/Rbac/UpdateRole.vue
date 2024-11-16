@@ -3,20 +3,20 @@
         <Button v-tooltip.left="{ value: 'Изменение роли', showDelay: 300, hideDelay: 300 }" icon="pi pi-cog" class="edit-btn" @click="openDialog(id)"/>
         <Dialog v-model:visible="visible" modal header="Изменение роли" :style="{ 'max-width': '30rem' }">
             <div class="row row-cols-1 mt-1 mb-3">
-                <div class="col mb-3">
-                    <FloatLabel variant="on">
-                        <InputText v-model="currentRole.title" class="form-input"/>
+                <div class="col my-4">
+                    <FloatLabel>
+                        <InputText id="currentRole" name="currentRole" v-model="currentRole.title" class="form-input" />
                         <label>Название</label>
                     </FloatLabel>
                 </div>
-                <div class="col mb-3">
-                    <FloatLabel variant="on">
+                <div class="col mb-4">
+                    <FloatLabel>
                         <Textarea v-model="currentRole.description" rows="5" class="w-100"/>
                         <label>Описание</label>
                     </FloatLabel>
                 </div>
                 <div class="col">
-                    <FloatLabel variant="on">
+                    <FloatLabel>
                         <Select v-model="currentRole.priority" :options="priorities" optionValue="value" optionLabel="label" class="form-input" />
                         <label>Приоритет</label>
                     </FloatLabel>
@@ -120,7 +120,6 @@ label {
 }
 .save-btn {
     border-radius: 12px;
-    font-size: 14pt;
     transition: all 0.5s;
 }
 </style>

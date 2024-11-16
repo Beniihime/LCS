@@ -31,7 +31,7 @@
                     <div class="col">
                         <IconField class="searchBar">
                             <InputIcon class="pi pi-search" />
-                            <InputText placeholder="Поиск..." class="search" v-model="searchQuery"/>
+                            <InputText id="search" name="search" placeholder="Поиск..." class="search" v-model="searchQuery3" />
                         </IconField>
                     </div>
                     <div class="col-auto">
@@ -54,7 +54,7 @@
                                         v-if="role.id !== userRole.id && role.id !== 1 && hasPermission('Rbac', 'Update')" 
                                     />
                                     <h5 class="card-title">{{ role.title }}</h5>
-                                    <p class="card-text">{{ role.description }}</p>
+                                    <p class="card-text" v-tooltip="{ value: `${role.description}`, showDelay: 1000, hideDelay: 300 }">{{ role.description }}</p>
                                     <p class="card-text"><span class="muted">Приоритет: {{ role.priority }}</span></p>
                                     <div class="mt-auto row row-cols-2 justify-content-between align-items-center">
                                         <div class="col-auto">
@@ -132,11 +132,11 @@ const statisticsIcons = [
 const loading = ref(true);
 const roles = ref([]);
 const users = ref([]);
-const searchQuery = ref('');
+const searchQuery3 = ref('');
 const userRole = ref({id: null, title: '', type: '' });
 
 const filteredRoles = computed(() => {
-    return roles.value.filter(role => role.title.toLowerCase().startsWith(searchQuery.value.toLowerCase()));
+    return roles.value.filter(role => role.title.toLowerCase().startsWith(searchQuery3.value.toLowerCase()));
 });
 
 const permissionStore = usePermissionStore();

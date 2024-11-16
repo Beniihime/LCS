@@ -14,13 +14,13 @@
                             <InputGroupAddon>
                                 <i class="pi pi-user"></i>
                             </InputGroupAddon>
-                            <InputText placeholder="Логин" v-model="login" required />
+                            <InputText placeholder="Логин" id="login" name="login" v-model="login" required/>
                         </InputGroup>
                         <InputGroup class="my-2">
                             <InputGroupAddon>
                                 <i class="pi pi-key"></i>
                             </InputGroupAddon>
-                            <Password v-model="password" toggleMask :feedback="false" placeholder="Пароль" required />
+                            <Password v-model="password" id="password" name="password" toggleMask :feedback="false" placeholder="Пароль" required />
                         </InputGroup>
                         <div>
                             <Button label="Забыли пароль?" text class="forgot-password" />

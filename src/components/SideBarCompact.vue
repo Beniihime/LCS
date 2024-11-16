@@ -53,7 +53,7 @@
 
             <ThemeSwitcher :isSideBarCollapse="true" />
 
-            <router-link class="profile" to="/profile" active-class="active-link" v-tooltip="'Профиль'">
+            <router-link class="profile" :to="userId ? `/profile?id=${userId}` : '/profile'" v-tooltip="'Профиль'">
                 <div class="row align-items-center">
                     <div class="col-auto">
                         <Avatar 
@@ -100,6 +100,8 @@ const router = useRouter();
 
 const notificationStore = useNotificationStore();
 const permissionStore = usePermissionStore();
+
+const userId = ref(null);
 
 const firstName = ref('');
 const lastName = ref('');
@@ -204,8 +206,13 @@ onBeforeMount(async () => {
         fullName.value = `${firstName.value} ${lastName.value}`.trim();
         initials.value = getInitials(firstName.value, lastName.value);
 
-        const userId = response.data.id;
-        const statusResponse = await axiosInstance.get(`/api/infra-manager/db/users/${userId}/status`);
+        userId.value = response.data.id;
+        const statusResponse = await axiosInstance.get(`/api/infra-manager/db/users/${userId.value}/status`);
+        if (statusResponse) {
+            localStorage.setItem("InfraStatus", true);
+        } else {
+            localStorage.setItem("InfraStatus", false);
+        }
         localStorage.setItem("infraManagerUserId",statusResponse.data.infraManagerUserId);
         localStorage.setItem('firstName', response.data.firstName);
         if (statusResponse.data.personalAccountUserId && statusResponse.data.infraManagerUserId) {
