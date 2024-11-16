@@ -49,6 +49,7 @@ import Tab from 'primevue/tab';
 import TabList from 'primevue/tablist';
 import TabPanel from 'primevue/tabpanel';
 import TabPanels from 'primevue/tabpanels';
+import Message from 'primevue/message';
 
 const app = createApp(App);
 const pinia = createPinia()
@@ -104,7 +105,7 @@ app.component('Tab', Tab);
 app.component('TabList', TabList);
 app.component('TabPanel', TabPanel);
 app.component('TabPanels', TabPanels);
-
+app.component('Message', Message);
 
 app.use(pinia)
 app.use(router);
