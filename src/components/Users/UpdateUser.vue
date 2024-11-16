@@ -1,6 +1,6 @@
 <template>
     <div class="d-flex justify-content-center">
-        <Button icon="pi pi-user-edit" label="Изменить" size="large" class="edit-btn" severity="contrast" rounded @click="fetchUserData"/>
+        <Button icon="pi pi-user-edit" label="Изменить" class="edit-btn" severity="contrast" rounded @click="fetchUserData"/>
         <Dialog v-model:visible="visible" modal header="Изменить информацию" :style="{ 'max-width': '30rem' }">
             <div class="row mt-4 mb-5">
                 <div class="col">

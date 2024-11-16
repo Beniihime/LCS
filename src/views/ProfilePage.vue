@@ -11,7 +11,7 @@
                 </div>
 
                 <!-- Изменить пароль -->
-                <Button class="w-100 mb-4" label="Изменить пароль" icon="pi pi-key" outlined @click="visible = true" v-if="!isCurrentUser" />
+                <Button class="w-100 mb-4" label="Изменить пароль" icon="pi pi-key" outlined @click="visible = true" v-if="!isCurrentUser && hasPermission('User', 'Update')" />
                 <Dialog v-model:visible="visible" modal header="Изменить пароль" :style="{ 'max-width': '30rem' }">
                     <Form>
                         <FloatLabel class="mt-4">
@@ -73,7 +73,7 @@
                 
                 <!-- Кнопка блокировки -->
                 <Button 
-                    v-if="!isCurrentUser"
+                    v-if="!isCurrentUser && hasPermission('User', 'Update')"
                     :label="blockButtonLabel" 
                     class="w-100 block-button" 
                     :severity="blockButtonSeverity" 
@@ -108,7 +108,7 @@
                                 <p class="profile-email">{{ email }}</p>
                             </div>
                             <div class="col-auto">
-                                <UpdateUser v-if="!isCurrentUser" :userId="userId"/>
+                                <UpdateUser v-if="!isCurrentUser && hasPermission('User', 'Update')" :userId="userId"/>
                             </div>
                         </div>
                     </div>
@@ -202,6 +202,7 @@
 import { ref, onMounted, watch, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import axiosInstance from '@/utils/axios.js';
+import { usePermissionStore } from '@/stores/permissions.js';
 
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import UpdateUser from '@/components/Users/UpdateUser.vue';
@@ -209,6 +210,9 @@ import InfraManagerCallsMe from '@/components/InfraManager/InfraManagerCallsMe.v
 import InfraManagerServices from '@/components/InfraManager/InfraManagerServices.vue';
 
 const currentUserId = localStorage.getItem('userId');
+const permissionStore = usePermissionStore();
+
+const hasPermission = (type, action) => permissionStore.hasPermission(type, action);
 
 const isCurrentUser = computed(() => {
   return currentUserId === userId.value;
@@ -361,12 +365,19 @@ const fetchInfraManagerData = async () => {
     try {
         infraLoading.value = true;
         if (statusInfra.data) {
-            
+            let endpoint1;
+            let endpoint2;
             infraManagerUser.value = statusInfra.data;
-
+            if (isCurrentUser.value) {
+                endpoint1 = '/api/infra-manager/users/me'
+                endpoint2 = '/api/infra-manager/users/me/client/info' 
+            } else {
+                endpoint1 = `/api/infra-manager/users/${infraManagerUser.value.infraManagerUserId}`
+                endpoint2 = `/api/infra-manager/users/${infraManagerUser.value.infraManagerUserId}/client/info`
+            };
             const [infraInfo, clientInfo] = await Promise.all([
-                axiosInstance.get(`/api/infra-manager/users/${infraManagerUser.value.infraManagerUserId}`),
-                axiosInstance.get(`/api/infra-manager/users/${infraManagerUser.value.infraManagerUserId}/client/info`),
+                axiosInstance.get(endpoint1),
+                axiosInstance.get(endpoint2),
             ]);
 
             infraFullName.value = infraInfo.data.fullName;
