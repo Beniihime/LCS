@@ -148,6 +148,7 @@ svg.lcs {
 
 .p-password-input {
   width: 100%;
+  font-size: 14px !important;
 }
 
 .p-dialog-title {
@@ -220,10 +221,10 @@ svg.lcs {
   --p-avatar-lg-height: 110px !important;
   --p-avatar-lg-width: 110px !important;
 
-  --p-avatar-xl-width: 55px !important;
-  --p-avatar-xl-height: 55px !important;
+  --p-avatar-xl-width: 50px !important;
+  --p-avatar-xl-height: 50px !important;
   --p-avatar-border-radius: 18px !important;
-  --p-avatar-xl-font-size: 1.65rem !important;
+  --p-avatar-xl-font-size: 1.5rem !important;
 
   --p-dialog-background: var(--p-bg-color-1) !important;
 

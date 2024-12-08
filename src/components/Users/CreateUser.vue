@@ -2,57 +2,54 @@
     <div class="d-flex justify-content-center">
         <Button class="search" icon="pi pi-plus" label="Пользователь" @click="visible = true"/>
         <Dialog v-model:visible="visible" modal header="Новый пользователь" :style="{ 'max-width': '30rem' }">
-            <div class="row mt-4 mb-5">
+            <div class="row mb-2">
                 <div class="col">
-                    <FloatLabel>
-                        <InputText v-model="firstName" id="firstName" name="firstName" class="form-input" />
-                        <label for="firstName">Имя</label>
-                    </FloatLabel>
+                    <label for="firstName" class="ms-2">Имя <span class="text-danger">*</span></label>
+                    <InputText v-model="firstName" id="firstName" name="firstName" class="form-input" required placeholder="Введите имя"/>
                 </div>
                 <div class="col">
-                    <FloatLabel>
-                        <InputText v-model="lastName" id="lastName" name="lastName" class="form-input" /> 
-                        <label for="lastName">Фамилия</label>
-                    </FloatLabel>      
-                </div>
-            </div>
-            <div class="row">
-                <div class="col">
-                    <FloatLabel>
-                        <InputText v-model="middleName" id="middleName" name="middleName" class="form-input" /> 
-                        <label for="middleName">Отчество</label>
-                    </FloatLabel> 
+                    <label for="lastName" class="ms-2">Фамилия <span class="text-danger">*</span></label>   
+                    <InputText v-model="lastName" id="lastName" name="lastName" class="form-input" required placeholder="Введите фамилию"/> 
                 </div>
             </div>
 
-            <div class="row mt-5">
+            <div class="row mb-2">
+                <div class="col d-flex align-items-center">
+                    <Checkbox v-model="hasMiddleName" class="me-2" binary/>
+                    <label for="hasMiddleName" class="ms-1">Нет отчества</label>
+                </div>
+            </div>
+
+            <!-- Поле для отчества -->
+            <div class="row mb-1" v-if="!hasMiddleName">
                 <div class="col">
-                    <FloatLabel>
-                        <InputText v-model="email" id="email" name="email" class="form-input" required @blur="checkEmail" :invalid="isInvalid(email)" />
-                        <label for="email">E-mail</label>
-                    </FloatLabel>
+                    <label for="middleName" class="ms-2">Отчество</label>
+                    <InputText v-model="middleName" id="middleName" name="middleName" class="form-input" placeholder="Введите отчество"/>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <label for="email" class="ms-2">E-mail <span class="text-danger">*</span></label>
+                    <InputText v-model="email" id="email" name="email" class="form-input" required @blur="checkEmail" :invalid="isInvalid(email)" placeholder="Введите E-mail"/>
                     <Message v-if="emailMessage" :severity="emailSeverity" size="small">{{ emailMessage }}</Message>
                 </div>
             </div>
 
-            <Divider class="my-4 py-1"/>
+            <Divider class="my-2 py-1"/>
 
-            <div class="row mb-5">
+            <div class="row mb-1">
                 <div class="col">
-                    <FloatLabel>
-                        <InputText v-model="login" id="login" name="login" class="form-input" required @blur="checkLogin" :invalid="isInvalid(login)" />
-                        <label for="login">Логин</label>
-                    </FloatLabel>
+                    <label for="login" class="ms-2">Логин <span class="text-danger">*</span></label>
+                    <InputText v-model="login" id="login" name="login" class="form-input" required @blur="checkLogin" :invalid="isInvalid(login)" placeholder="Введите логин"/>
                     <Message v-if="loginMessage" :severity="loginSeverity" size="small">{{ loginMessage }}</Message>
                 </div>
             </div>
 
-            <div class="row mb-4">
+            <div class="row mb-2">
                 <div class="col">
-                    <FloatLabel>
-                        <Password v-model="pass" id="pass" name="pass" toggleMask class="form-input" @input="validatePassword" :feedback="false" :invalid="!passwordChecks.length || !passwordChecks.upperLower || !passwordChecks.number" />
-                        <label for="pass">Пароль</label>
-                    </FloatLabel>
+                    <label for="pass" class="ms-2">Пароль <span class="text-danger">*</span></label>
+                    <Password v-model="pass" id="pass" name="pass" toggleMask class="form-input" @input="validatePassword" :feedback="false" :invalid="!passwordChecks.length || !passwordChecks.upperLower || !passwordChecks.number" required placeholder="Введите пароль"/>
                     <div class="password-requirements mt-3">
                         <p><i :class="passwordChecks.length ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Минимум 8 символов</p>
                         <p><i :class="passwordChecks.upperLower ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Верхний и нижний регистры</p>
@@ -61,30 +58,26 @@
                 </div>
             </div>
 
-            <div class="row mb-5">
+            <div class="row mb-1">
                 <div class="col">
-                    <FloatLabel>
-                        <Password id="confirmPass" name="confirmPass" v-model="confirmPass" toggleMask class="form-input" required :feedback="false" :invalid="pass !== confirmPass && confirmPass" />
-                        <label for="confirmPass">Подтвердите пароль</label>
-                    </FloatLabel>
+                    <label for="confirmPass" class="ms-2">Подтвердите пароль <span class="text-danger">*</span></label>
+                    <Password id="confirmPass" name="confirmPass" v-model="confirmPass" toggleMask class="form-input" required :feedback="false" :invalid="pass !== confirmPass && confirmPass" placeholder="Введите пароль"/>
                     <Message v-if="pass !== confirmPass && confirmPass" severity="error" size="small">Пароли не совпадают</Message>
                 </div>
             </div>
 
             <div class="row mb-4">
                 <div class="col">
-                    <FloatLabel>
-                        <MultiSelect 
-                            v-model="selectedRoles" 
-                            display="chip" 
-                            :options="roles"
-                            optionLabel="title" 
-                            :maxSelectedLabels="3"
-                            class="form-input"
-                        />
-                        <label for="selectedRoles">Роли</label>
-                    </FloatLabel>
-                    
+                    <label for="selectedRoles" class="ms-2">Роли</label>
+                    <MultiSelect 
+                        v-model="selectedRoles" 
+                        display="chip" 
+                        :options="roles"
+                        optionLabel="title" 
+                        :maxSelectedLabels="3"
+                        placeholder="Выберите роли"
+                        class="form-input"
+                    />
                 </div>
             </div>
             <Button @click="createUser" icon="pi pi-check" label="Создать" class="search w-100"/>
@@ -111,6 +104,8 @@ const selectedRoles = ref([]);
 const visible = ref(false);
 const roles = ref([]);
 const userPriority = ref(null);
+
+const hasMiddleName = ref(true);
 
 const passwordChecks = ref({
     length: false,
@@ -234,13 +229,14 @@ label {
     font-size: 14px;
 }
 .form-input {
-    font-size: 16px;
+    font-size: 14px;
     width: 100%;
 }
 .password-requirements p {
     display: flex;
     align-items: center;
-    margin: 0.25rem 0;
+    margin: 0.25rem 0.75rem;
+    font-size: 14px;
 }
 .text-success {
     color: var(--p-green-500);
