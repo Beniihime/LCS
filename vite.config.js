@@ -4,6 +4,7 @@ import svgLoader from 'vite-svg-loader';
 import mkcert from 'vite-plugin-mkcert';
 import { visualizer } from "rollup-plugin-visualizer";
 import { viteStaticCopy } from 'vite-plugin-static-copy';
+import vueDevTools from 'vite-plugin-vue-devtools';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -11,6 +12,7 @@ export default defineConfig({
     vue(),
     svgLoader(),
     mkcert(),
+    vueDevTools(),
     visualizer(),
     viteStaticCopy({
       targets: [
@@ -18,7 +20,8 @@ export default defineConfig({
           src: 'src/assets/icons',
           dest: 'src/assets',
         }
-      ]
+      ],
+      
     })
   ],
   build: {
@@ -26,12 +29,20 @@ export default defineConfig({
       output: {
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
+            
             return id.toString().split('node_modules/')[1].split('/')[0].toString();
           }
         }
       }
     },
     chunkSizeWarningLimit: 1000,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true
+      }
+    }
   },
   server: {
     host: "0.0.0.0",
@@ -41,7 +52,7 @@ export default defineConfig({
     alias: { 
       '@': '/src',
       '~': '/public'
-    } 
+    }
   },
 });
 
