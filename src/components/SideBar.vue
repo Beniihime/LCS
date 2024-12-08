@@ -1,6 +1,6 @@
 <template>
     <ConfirmDialog></ConfirmDialog>
-    <div class="sidebar-container">
+    <div class="sidebar-container" v-if="isMobile">
         <div class="rectangle">
             <div class="d-flex align-items-center justify-content-center">
                 <router-link to="/overview" class="logoLCS">
@@ -67,7 +67,7 @@
 
             <ThemeSwitcher :isSideBarCollapse="false"/>
             
-            <router-link class="profile" :to="userId ? `/profile?id=${userId}` : '/profile'" >
+            <router-link class="profile" :to="userId ? `/profile?id=${userId}&r=${roleId}` : '/profile'" >
                 <div class="row align-items-center">
                     <div class="col-auto">
                         <Avatar 
@@ -106,7 +106,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onBeforeMount } from 'vue';
+import { ref, computed, onBeforeMount, onBeforeUnmount } from 'vue';
 import LogoutSvg from '@/assets/logout.svg';
 import axiosInstance from '@/utils/axios.js';
 
@@ -129,6 +129,7 @@ const notificationStore = useNotificationStore();
 const permissionStore = usePermissionStore();
 
 const userId = ref(null);
+const roleId = ref(null);
 
 const firstName = ref('');
 const lastName = ref('');
@@ -140,7 +141,7 @@ const menuItemsAdmin = [
     {
         name: 'Пользователи',
         path: '/users',
-        icon: 'pi pi-user'
+        icon: 'pi pi-users'
     },
     {
         name: 'Роли',
@@ -234,6 +235,7 @@ onBeforeMount(async () => {
         initials.value = getInitials(firstName.value, lastName.value);
 
         userId.value = response.data.id;
+        roleId.value = response.data.roles[0].id;
         const statusResponse = await axiosInstance.get(`/api/infra-manager/db/users/${userId.value}/status`);
         if (statusResponse) {
             localStorage.setItem("InfraStatus", true);
@@ -250,8 +252,24 @@ onBeforeMount(async () => {
     } catch (error) {
         console.debug('Ошибка при получении информации о пользователе: ', error);
     }
+
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
     
 });
+
+onBeforeUnmount(() => {
+    checkIsMobile();
+    window.removeEventListener('resize', checkIsMobile);
+})
+
+const isMobile = ref(false);
+
+const checkIsMobile = () => {
+    isMobile.value = window.innerWidth > 768; // Ширина для мобильных устройств
+};
+
+
 </script>
 
 <style scoped>
@@ -269,13 +287,14 @@ onBeforeMount(async () => {
 }
 .logoLCS {
     transition: all 0.5s;
+    scale: 0.9;
 }
 .logoLCS:hover {
-    filter: drop-shadow(0 0 0.75rem rgba(0, 0, 0, 0.5));
+    filter: drop-shadow(0 0 0.75rem rgba(0, 0, 0, 0.3));
 }
 .middle {
     font-family: 'SF Pro Rounded';
-    font-size: 1.1rem;
+    font-size: 1rem;
     line-height: normal;
     transition: all 0.5s;
 }
@@ -283,7 +302,7 @@ onBeforeMount(async () => {
     width: 100%;
     border: 2px solid transparent;
     background-color: transparent;
-    padding: 12px 18px 12px 8px;
+    padding: 8px;
     border-radius: 12px;
     transition: all 0.5s;
     margin-bottom: 20px;
@@ -311,11 +330,11 @@ onBeforeMount(async () => {
 .menu {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
     .pi {
-        font-size: 1.25rem;
+        font-size: 1rem;
         position: absolute;
-        left: 16pt;
+        left: 16px;
         top: 50%;
         transform: translateY(-50%);
         pointer-events: none;   
@@ -324,13 +343,13 @@ onBeforeMount(async () => {
 .general {
     font-family: 'SF Pro Rounded';
     font-weight: bold;
-    font-size: 18px;
+    font-size: 16px;
     color: var(--p-text-color);
     transition: all 0.5s;
 }
 .menucrumb {
     font-family: 'SF Pro Rounded';
-    padding-left: 48pt;
+    padding-left: 48px;
     display: flex;
     align-items: center;
 }
@@ -345,7 +364,7 @@ onBeforeMount(async () => {
     display: flex;
     align-items: center;
     width: 100%;
-    height: 50px;
+    height: 45px;
     border-radius: 12px;
     transition: all 0.5s;
     text-decoration: none;
@@ -363,10 +382,11 @@ onBeforeMount(async () => {
 .search {
     border-radius: 12px;
     transition: all 0.5s;
+    font-size: 14px;
     width: 100%; 
 }
 .searchBar {
-    margin-top: 20pt;
+    margin-top: 22px;
     display: inline-block;
 }
 .rectangle {
@@ -376,8 +396,8 @@ onBeforeMount(async () => {
     background-image: linear-gradient(to bottom, var(--p-blue-100), var(--p-bg-color-2) 35%); /* основной цвет фона */
     background-repeat: no-repeat;
     background-size: cover;
-    width: 300px;
-    padding: 1.25rem;
+    width: 250px;
+    padding: 1rem;
     transition: all 0.5s;
     border-right: 1px solid var(--p-grey-5);
 }

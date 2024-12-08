@@ -50,6 +50,7 @@ import TabList from 'primevue/tablist';
 import TabPanel from 'primevue/tabpanel';
 import TabPanels from 'primevue/tabpanels';
 import Message from 'primevue/message';
+import SpeedDial from 'primevue/speeddial';
 
 const app = createApp(App);
 const pinia = createPinia()
@@ -106,6 +107,7 @@ app.component('TabList', TabList);
 app.component('TabPanel', TabPanel);
 app.component('TabPanels', TabPanels);
 app.component('Message', Message);
+app.component('SpeedDial', SpeedDial);
 
 app.use(pinia)
 app.use(router);
