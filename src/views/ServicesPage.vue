@@ -2,7 +2,7 @@
     <main>
         <WelcomeScreen :visible="loading" />
         <div class="content-wrapper">
-            <h1 class="mb-4">Микросервисы</h1>
+            <h2 class="mb-4">Микросервисы</h2>
             <div class="services-cards">
                 <div class="card h-100">
                     <div class="row">
@@ -11,12 +11,12 @@
                                 <div class="row mb-1 align-items-center justify-content-between">
                                     <div class="col-auto">
                                         <div class="header">
-                                            <h2>InfraManager</h2>
+                                            <h3>InfraManager</h3>
                                             <h5 class="card-text">Управление системой автоматизации ИТ-процессов</h5>
                                         </div>
                                     </div>
                                     <div class="col-auto">
-                                        <Button type="button" icon="pi pi-ellipsis-v" @click="toggle" aria-haspopup="true" aria-controls="overlay_menu" severity="secondary"/>
+                                        <Button class="action" type="button" icon="pi pi-ellipsis-v" @click="toggle" aria-haspopup="true" aria-controls="overlay_menu" severity="secondary"/>
                                     </div>
                                 </div>
                                 <div class="row">
@@ -45,7 +45,7 @@
                             removableSort
                             stripedRows
                             rowHover
-                            scrollHeight="57vh"
+                            scrollHeight="59vh"
                             @page="onPage"
                             :rowClass="rowClass"
                             @row-click="(event) => openCallDetails(event.data.id)"
@@ -419,10 +419,10 @@ main {
     color: var(--p-text-color);
 }
 .card-text {
-    font-size: 1.3rem;
+    font-size: 1.15rem;
     font-family: 'SF Pro Rounded', sans-serif;
     color: var(--p-grey-1);
-    margin-top: 20px;
+    margin-top: 10px;
 }
 .card {
     border-radius: 12px;
@@ -465,5 +465,21 @@ main {
 }
 .pi {
     font-size: 2rem;
+}
+
+@media (max-width: 768px) {
+    .content-wrapper {
+        padding: 20px;
+    }
+    .card-text {
+        font-size: 0.74rem;
+        font-family: 'SF Pro Rounded', sans-serif;
+        color: var(--p-grey-1);
+        text-wrap: wrap;
+    }
+    h2 {
+        font-size: 18px;
+    }
+   
 }
 </style>

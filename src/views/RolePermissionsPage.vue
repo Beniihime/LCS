@@ -2,11 +2,11 @@
     <main>
         <WelcomeScreen :visible="loading" />
         <div class="permissions-wrapper">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex justify-content-between align-items-center">
                 <h2 class="m-0">Полномочия роли</h2>
                 <Button class="back-btn m-0" icon="pi pi-arrow-left" label="Назад" @click="goBack" text />
             </div>
-            <div class="searchField my-4">
+            <div class="searchField my-3">
                 <div class="row align-items-center">
                     <div class="col">
                         <IconField class="searchBar">
@@ -32,7 +32,7 @@
             <div v-for="resource in filteredResources" :key="resource.id" class="mt-4">
                 <div class="row align-items-center">
                     <div class="col-auto pe-0">
-                        <h3>{{ resource.title }}</h3>
+                        <h4>{{ resource.title }}</h4>
                     </div>
                     <div class="col-auto pe-0"><Tag :value="resource.type" severity="info" class="mx-2"/></div>
                     <div class="col-auto ps-0">
@@ -48,26 +48,52 @@
                     <p class="resource-description">{{ resource.description }}</p>
                 </div>
                 <div class="w-100">
-                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-2">
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
                         <div v-for="permission in resource.permissions" :key="permission.id" class="col">
                             <div class="permission-item h-100">
-                                <div class="permission-info">
+                                <div class="permission-header">
                                     <h3 class="permission-title">{{ permission.title }}</h3>
-                                    <p class="permission-description">{{ permission.description }}</p>
+                                    <div class="d-flex">
+                                        <Button class="me-2" text style="padding: 1px;" @click="openDialog(permission.id)">
+                                            <i class="pi pi-info-circle" style="font-size: 20px;"/>
+                                        </Button>
+                                        <Dialog 
+                                            v-model:visible="infoDialogVisible[permission.id]"
+                                            modal
+                                            :header="permission.title" 
+                                            :style="{ 'min-width': '20rem', 'max-width': '40rem' }"
+                                        >
+                                            <p>{{ permission.description }}</p>
+                                            <Tag 
+                                                v-if="permission.isCustomizable" 
+                                                value="Регулируемое" 
+                                                severity="success" 
+                                                icon="pi pi-cog"
+                                            />
+                                            <Tag 
+                                                v-else 
+                                                value="Не регулируемое" 
+                                                severity="warn" 
+                                                icon="pi pi-exclamation-triangle"
+                                            />
+                                        </Dialog>
+
+                                        <div v-if="permission.isCustomizable" class="d-flex">
+                                            <ToggleSwitch v-model="permission.enabled" @update:model-value="togglePermission(roleStore.roleId, permission.id, $event)">
+                                                <template #handle>
+                                                    <i :class="['pi', { 'pi-check': permission.enabled, 'pi-times': !permission.enabled }]" style="font-size: 8px; font-weight: 900;"></i>
+                                                </template>
+                                            </ToggleSwitch>
+                                        </div>
+                                        <div v-else-if="permission.enabled" class="d-flex">
+                                            <Tag severity="success" icon="pi pi-lock-open"/>
+                                        </div>
+                                        <div v-else class="d-flex">
+                                            <Tag severity="danger" icon="pi pi-lock" style="padding: 7px;"/>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div v-if="permission.isCustomizable">
-                                    <ToggleSwitch v-model="permission.enabled" @update:model-value="togglePermission(roleStore.roleId, permission.id, $event)">
-                                        <template #handle="">
-                                            <i :class="['pi', { 'pi-check': permission.enabled, 'pi-times': !permission.enabled }]" style="font-size: 12px;"></i>
-                                        </template>
-                                    </ToggleSwitch>
-                                </div>
-                                <div v-else v-if="permission.enabled">
-                                    <Tag value="Установлено" severity="success" icon="pi pi-check"/>
-                                </div>
-                                <div v-else>
-                                    <Tag value="Не установлено" severity="secondary" icon="pi pi-times"/>
-                                </div>
+                                <p class="permission-description">{{ permission.description }}</p>
                             </div>
                             
                         </div>
@@ -93,6 +119,20 @@ const roleStore = useRoleStore();
 const router = useRouter();
 const allPermissions = ref([]);
 const rolePermissions = ref([]);
+
+const infoDialogVisible = ref({});
+
+const initializeDialogVisibility = () => {
+    allPermissions.value.forEach(resource => {
+        resource.permissions.forEach(permission => {
+            infoDialogVisible.value[permission.id] = false;
+        });
+    });
+};
+
+const openDialog = (permissionId) => {
+    infoDialogVisible.value[permissionId] = true; // Открываем диалог
+};
 
 
 const fetchAllPermissions = async () => {
@@ -203,6 +243,7 @@ const getRoleTypeClass = () => {
 onMounted(async () => {
     await fetchAllPermissions();
     await fetchRolePermissions();
+    initializeDialogVisibility();
 });
 </script>
 
@@ -259,39 +300,57 @@ onMounted(async () => {
 }
 .permission-item {
     display: flex;
-    justify-content: space-between;
     flex-direction: column;
-    padding: 20px;
+    padding: 18px;
     border-radius: 12px;
     background-color: var(--p-grey-7);
     transition: all 0.5s;
+    position: relative;
     box-sizing: border-box;
 }
 .permission-item:hover {
     filter: drop-shadow(0 0 0.5rem rgba(0, 0, 0, 0.3));
 }
-.permission-info {
+.permission-header {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
 }
 .permission-title {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin: 0;
+    max-width: calc(100% - 120px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 .permission-description {
-    font-size: 1rem;
+    font-size: 14px;
     color: var(--p-grey-1);
+    margin-bottom: 8px 0 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.switch-container {
+    position: absolute;
+    top: 15px;
+    right: 15px;
 }
 .role-label {
-    font-size: 1.25rem;
-    font-weight: 400;
+    font-size: 1rem;
 }
 .roleType {
     background-color: var(--p-blue-500);
     border-radius: 50%;
     font-size: 20px;
     color: white;
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     display: flex;
     justify-content: center;
     align-items: center;

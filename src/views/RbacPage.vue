@@ -2,10 +2,10 @@
     <WelcomeScreen :visible="loading" />
     <main>
         <div class="content-wrapper">
-            <h1 class="mb-4">Настройки ролей</h1>
+            <h2 class="mb-2">Настройки ролей</h2>
             <div class="statistics">
                 <h2 class="statistics-title">Статистика ролей</h2>
-                <div class="row row-cols-4 g-3">
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
                     <div class="col" v-for="i in 4" :key="i">
                         <div class="stat-card">
                             <div v-if="loading">
@@ -13,7 +13,7 @@
                             </div>
                             <div v-else>
                                 <div class="row align-items-center">
-                                    <div class="col-auto">
+                                    <div class="col-auto pe-0">
                                         <i :class="statisticsIcons[i - 1]"></i>
                                     </div>
                                     <div class="col">
@@ -41,7 +41,7 @@
             </div>
             <Divider class="my-4"/>
             <div class="roles-cards">
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
                     <div class="col" v-for="role in filteredRoles" :key="role.id">
                         <div class="card">
                             <div class="card-body d-flex flex-column">
@@ -270,7 +270,7 @@ p {
     border: none;
     border-radius: 12px;
     transition: all 0.5s;
-    background-color: var(--p-bg-color-2);
+    background-color: var(--p-grey-7);
     color: var(--p-text-color);
     display: flex;
     flex-direction: column;
@@ -281,31 +281,36 @@ p {
     filter: drop-shadow(0 0 0.5rem rgba(0, 0, 0, 0.2));
 }
 .card-body {
-    padding: 28px;
+    padding: 14px;
     display: flex;
     flex-direction: column;
     flex-grow: 1;
 }
 .card-title {
-    font-size: 1.5rem;
-    margin-bottom: 10px;
+    font-size: 1.15rem;
+    margin-bottom: 8px;
     font-family: 'SF Pro Rounded', sans-serif;
     color: var(--p-text-color);
 }
 .card-text {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-family: 'SF Pro Rounded', sans-serif;
     color: var(--p-grey-1);
-    margin-top: 5px;
+    margin-bottom: 5px;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
     max-width: 400px;
 }
+p {
+    margin: 0;
+}
 .edit-btn, .delete-btn, .perm-btn {
     width: 100%;
-    border-radius: 12px;
+    border-radius: 8px;
+    padding: 5px;
     color: white;
+    font-size: 0.9rem;
 }
 .perm-btn {
     color: white;
@@ -315,6 +320,7 @@ p {
 }
 .muted {
     color: var(--p-grey-2);
+    font-size: 0.8rem;
 }
 main {
     display: flex;
@@ -327,7 +333,7 @@ main {
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    padding: 20px 8rem;
+    padding: 20px 6rem;
     overflow: hidden;
     color: var(--p-text-color);
 }
@@ -342,21 +348,15 @@ main {
     transition: all 0.5s;
     width: 100%; 
 }
-.statistics {
-    padding: 20px;
-    border-radius: 12px;
-    border: none;
-    transition: all 0.5s;
-}
 .statistics-title {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     margin-bottom: 20px;
     color: var(--p-text-color);
     text-align: center;
 }
 .stat-card {
-    background: var(--p-bg-color-2);
-    padding: 20px;
+    background-color: var(--p-grey-7);
+    padding: 15px;
     border-radius: 12px;
     color: var(--p-text-color);
     transition: all 0.5s;
@@ -365,11 +365,11 @@ main {
     filter: drop-shadow(0 0 0.75rem rgba(0, 0, 0, 0.3));
 }
 .stat-number {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: bold;
 }
 .stat-label {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     opacity: 0.8;
 }
 .bi {
