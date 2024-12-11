@@ -4,117 +4,123 @@
 
         <!-- Сайдбар перключения профилей -->
         <aside class="sidebar">
-            <div class="sidebar-menu">
-                <div class="button-group">
-                    <Button label="Профиль ЛКС" icon="pi pi-user" @click="setActiveProfile('user')" :class="{ 'p-button-outlined': activeProfile === 'user' }" class="w-100 mb-3"/>
-                    <Button :disabled="status === false" label="InfraManager" icon="pi pi-sitemap" @click="setActiveProfile('infra')" :class="{ 'p-button-outlined': activeProfile === 'infra' }" class="w-100 mb-3"/>
-                </div>
-
-                <!-- Изменить пароль -->
-                <Button class="w-100 mb-4" label="Изменить пароль" icon="pi pi-key" outlined @click="visible = true" v-if="!isCurrentUser && hasPermission('User', 'Update')" />
-                <Dialog v-model:visible="visible" modal header="Изменить пароль" :style="{ 'max-width': '30rem' }">
-                    <Form>
-                        <FloatLabel class="mt-4">
-                            <Password v-model="userPassword" inputId="userPassword" toggleMask class="form-input" @input="validatePassword" :feedback="false" :invalid="!passwordChecks.length || !passwordChecks.upperLower || !passwordChecks.number" />
-                            <label for="userPassword">Пароль</label>
-                        </FloatLabel>
-                    </Form>
-                    <div class="password-requirements my-3">
-                        <p><i :class="passwordChecks.length ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Минимум 8 символов</p>
-                        <p><i :class="passwordChecks.upperLower ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Верхний и нижний регистры</p>
-                        <p><i :class="passwordChecks.number ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Минимум одна цифра</p>
-                    </div>
-                    <Button label="Сохранить" class="w-100 text-center" @click="changePassword"/>
-                </Dialog>
-
-                <!-- Изменить о себе -->
-                <div v-if="isCurrentUser">
-                    <Button label="Сменить логин" text icon="pi pi-user" class="d-flex justify-content-between w-100" iconPos="right" @click="visibleLogin = true" />
-                    <Dialog v-model:visible="visibleLogin" modal header="Сменить логин" :style="{ 'max-width': '30rem' }">
-                        <FloatLabel class="mt-4">
-                            <InputText id="newLogin" v-model="newLogin" class="form-input" />
-                            <label for="newLogin">Новый логин</label>
-                        </FloatLabel>
-                        <Button label="Сохранить" icon="pi pi-check" class="w-100 mt-4" @click="changeLogin"/>
-                    </Dialog>
-                    <Button label="Сменить пароль" text icon="pi pi-key" class="d-flex justify-content-between w-100" iconPos="right" @click="visiblePass = true" />
-                    <Dialog v-model:visible="visiblePass" modal header="Сменить пароль" :style="{ 'max-width': '30rem' }">
-                        <Form>
-                            <FloatLabel class="mt-4">
-                                <Password :inputProps="{ autocomplete: 'off' }" inputId="oldPass" name="oldPass" v-model="oldPass" class="form-input" :feedback="false" toggleMask />
-                                <label for="oldPass">Старый пароль</label>
-                            </FloatLabel>
-                            <FloatLabel class="mt-4">
-                                <Password inputId="newPass" name="newPass" v-model="newPass" class="form-input" :feedback="false" toggleMask @input="validateMePassword" :invalid="!passwordChecks.length || !passwordChecks.upperLower || !passwordChecks.number" autocomplete="off"/>
-                                <label for="newPass">Новый пароль</label>
-                            </FloatLabel>
-                            <div class="password-requirements my-3">
-                                <p><i :class="passwordChecks.length ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Минимум 8 символов</p>
-                                <p><i :class="passwordChecks.upperLower ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Верхний и нижний регистры</p>
-                                <p><i :class="passwordChecks.number ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Минимум одна цифра</p>
-                            </div>
-                            <FloatLabel class="mt-5">
-                                <Password inputId="confirmPass" name="confirmPass" v-model="confirmPass" class="form-input" :feedback="false" toggleMask :invalid="newPass !== confirmPass && confirmPass" />
-                                <label for="confirmPass">Подтвердите новый пароль</label>
-                            </FloatLabel>
-                            <Button label="Сохранить" icon="pi pi-check" class="w-100 mt-4" @click="changeMePass"/>
-                        </Form>
-                    </Dialog>
-                    <Button label="Сменить email" text icon="pi pi-at" class="d-flex justify-content-between w-100" iconPos="right" @click="visibleEmail = true" />
-                    <Dialog v-model:visible="visibleEmail" modal header="Сменить email" :style="{ 'max-width': '30rem' }">
-                        <FloatLabel class="mt-4">
-                            <InputText id="newEmail" name="newEmail" v-model="newEmail" class="form-input" />
-                            <label for="newEmail">Новый email</label>
-                        </FloatLabel>
-                        <Button label="Сохранить" icon="pi pi-check" class="w-100 mt-4" @click="changeEmail"/>
-                    </Dialog>
-                </div>
-                
-                
-                <!-- Кнопка блокировки -->
-                <Button 
-                    v-if="!isCurrentUser && hasPermission('User', 'Update')"
-                    :label="blockButtonLabel" 
-                    class="w-100 block-button" 
-                    :severity="blockButtonSeverity" 
-                    outlined 
-                    @click="toggleUserBlock"
-                />
+            <div class="button-group">
+                <Button label="Профиль ЛКС" unstyled icon="pi pi-user me-3" @click="setActiveProfile('user')" :class="{ 'active-link': activeProfile === 'user' }" class="menu-item w-100 mb-3"/>
+                <Button unstyled label="InfraManager" icon="pi pi-sitemap me-3" @click="setActiveProfile('infra')" :class="{ 'active-link': activeProfile === 'infra', 'disabled': !status }" class="menu-item w-100 mb-3"/>
+                <Button unstyled label="Полномочия" icon="pi pi-lock me-3" @click="setActiveProfile('permiss')" :class="{ 'active-link': activeProfile === 'permiss' }" class="menu-item w-100 mb-3"/>
             </div>
+
+            <!-- Изменить пароль -->
+            <Button class="w-100 mb-3" label="Сменить пароль" icon="pi pi-key" outlined @click="visible = true" v-if="!isCurrentUser && hasPermission('User', 'Update')" />
+            <Dialog v-model:visible="visible" modal header="Изменить пароль" :style="{ 'max-width': '30rem' }">
+                <Form>
+                    <FloatLabel class="mt-4">
+                        <Password v-model="userPassword" inputId="userPassword" toggleMask class="form-input" @input="validatePassword" :feedback="false" :invalid="!passwordChecks.length || !passwordChecks.upperLower || !passwordChecks.number" />
+                        <label for="userPassword">Пароль</label>
+                    </FloatLabel>
+                </Form>
+                <div class="password-requirements my-3">
+                    <p><i :class="passwordChecks.length ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Минимум 8 символов</p>
+                    <p><i :class="passwordChecks.upperLower ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Верхний и нижний регистры</p>
+                    <p><i :class="passwordChecks.number ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Минимум одна цифра</p>
+                </div>
+                <Button label="Сохранить" class="w-100 text-center" @click="changePassword"/>
+            </Dialog>
+
+            <!-- Изменить о себе -->
+            <div v-if="isCurrentUser">
+                <Button label="Сменить логин" text icon="pi pi-user" class="d-flex justify-content-between w-100" iconPos="right" @click="visibleLogin = true" />
+                <Dialog v-model:visible="visibleLogin" modal header="Сменить логин" :style="{ 'max-width': '25rem' }">
+                    <div>
+                        <label for="newLogin" class="ms-2">Новый логин</label>
+                        <InputText id="newLogin" v-model="newLogin" class="form-input w-100" />
+                    </div>
+                    <Button label="Сохранить" icon="pi pi-check" class="w-100 mt-4" @click="changeLogin"/>
+                </Dialog>
+                <Button label="Сменить пароль" text icon="pi pi-key" class="d-flex justify-content-between w-100" iconPos="right" @click="visiblePass = true" />
+                <Dialog v-model:visible="visiblePass" modal header="Сменить пароль" :style="{ 'max-width': '25rem' }">
+                    <Form>
+                        <div class="">
+                            <label for="oldPass" class="ms-2">Старый пароль</label>
+                            <Password :inputProps="{ autocomplete: 'off' }" inputId="oldPass" name="oldPass" v-model="oldPass" class="form-input w-100" :feedback="false" toggleMask placeholder="Введите пароль" />
+                        </div>
+                        <div class="mt-2">
+                            <label for="newPass" class="ms-2">Новый пароль</label>
+                            <Password inputId="newPass" name="newPass" v-model="newPass" class="form-input w-100" :feedback="false" toggleMask @input="validateMePassword" :invalid="!passwordChecks.length || !passwordChecks.upperLower || !passwordChecks.number" autocomplete="off" placeholder="Введите новый пароль"/>
+                        </div>
+                        <div class="password-requirements my-3 mx-2">
+                            <p><i :class="passwordChecks.length ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Минимум 8 символов</p>
+                            <p><i :class="passwordChecks.upperLower ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Верхний и нижний регистры</p>
+                            <p><i :class="passwordChecks.number ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Минимум одна цифра</p>
+                        </div>
+                        <div class="">
+                            <label for="confirmPass" class="ms-2">Подтвердите новый пароль</label>
+                            <Password inputId="confirmPass" name="confirmPass" v-model="confirmPass" class="form-input w-100" :feedback="false" toggleMask :invalid="newPass !== confirmPass && confirmPass" />
+                        </div>
+                        <Button label="Сохранить" icon="pi pi-check" class="w-100 mt-4" @click="changeMePass"/>
+                    </Form>
+                </Dialog>
+                <Button label="Сменить email" text icon="pi pi-at" class="d-flex justify-content-between w-100" iconPos="right" @click="visibleEmail = true" />
+                <Dialog v-model:visible="visibleEmail" modal header="Сменить e-mail" :style="{ 'max-width': '25rem' }">
+                    <div class="">
+                        <label for="newEmail" class="ms-2">Новый e-mail</label>
+                        <InputText id="newEmail" name="newEmail" v-model="newEmail" class="form-input w-100" placeholder="Введите e-mail" />
+                    </div>
+                    <Button label="Сохранить" icon="pi pi-check" class="w-100 mt-4" @click="changeEmail"/>
+                </Dialog>
+            </div>
+            
+            
+            <!-- Кнопка блокировки -->
+            <Button 
+                v-if="!isCurrentUser && hasPermission('User', 'Update')"
+                :label="blockButtonLabel" 
+                class="w-100 block-button" 
+                :severity="blockButtonSeverity" 
+                text 
+                @click="toggleUserBlock"
+            />
         </aside>
+        
 
         <div class="content-wrap">
             <div v-if="activeProfile === 'user'">
                 <div class="profile-card">
-                    <div class="profile-header">
+                    <!-- <div class="profile-header">
                         <img src="../assets/backgrounds/profBack.webp" alt="Profile Header" class="header-image"/>
-                    </div>
-                    <div class="avatar-wrapper">
-                        <Avatar :image="srcAvatar" size="large" shape="circle" style="transition: all 0.5s;"/>
-                        <div class="avatar-overlay" @click="triggerFileUpload">
-                            <div class="upload-button pi pi-camera" />
-                            <input 
-                                ref="fileInput" 
-                                type="file" 
-                                style="display: none" 
-                                @change="onFileSelect"
-                            />
-                        </div>
-                    </div>
-                    <div class="profile-body">
-                        <div class="row">
-                            <div class="col">
-                                <h2>{{ fullName }}</h2>
-                                <p class="profile-email">{{ email }}</p>
+                    </div> -->
+                    <div class="row mx-0">
+                        <div class="col-auto d-flex align-items-center justify-content-center">
+                            <div class="avatar-wrapper">
+                                <Avatar :image="srcAvatar" icon="pi pi-user fs-1" size="large" shape="circle" style="transition: all 0.5s;" />
+                                <div class="avatar-overlay" @click="triggerFileUpload">
+                                    <div class="upload-button pi pi-camera" />
+                                    <input 
+                                        ref="fileInput" 
+                                        type="file" 
+                                        style="display: none" 
+                                        @change="onFileSelect"
+                                    />
+                                </div>
                             </div>
-                            <div class="col-auto">
-                                <UpdateUser v-if="!isCurrentUser && hasPermission('User', 'Update')" :userId="userId"/>
+                        </div>
+                        <div class="col d-flex align-items-center">
+                            <div class="profile-body w-100">
+                                <div class="row justify-content-between">
+                                    <div class="col">
+                                        <h2>{{ fullName }}</h2>
+                                        <p class="profile-email">{{ email }}</p>
+                                    </div>
+                                    <div class="col-auto d-flex align-items-center">
+                                        <UpdateUser v-if="!isCurrentUser && hasPermission('User', 'Update')" :userId="userId"/>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="profile-card mt-3">
-                    <h2 class="pt-4 ps-4">Информация о пользователе</h2>
+                <div class="profile-card" style="margin-top: 10px;">
+                    <h2 class="mb-4">Информация о пользователе</h2>
                     <div class="profile-info-body">
                         <div>
                             <div class="field">Имя</div>
@@ -147,10 +153,18 @@
                     </div>
                 </div>
             </div>
-        
+
+            <!-- Полномочия -->
+            <div v-if="activeProfile === 'permiss'">
+                <div class="profile-card">
+                    <MePermissionsPage />
+                </div>
+            </div>
+            
             <!-- Карточка профиля InfraManager -->
-            <div v-if="activeProfile === 'infra' && !infraLoading">
-                <div class="infra-profile-card" v-if="infraManagerUser">
+            <div v-if="activeProfile === 'infra'">
+                <!-- <WelcomeScreen :visible="infraLoading" /> -->
+                <div class="infra-profile-card" v-if="!infraLoading">
                     <h2>InfraManager</h2>
                     <Divider class="my-3"/>
                     <div class="infra-info">
@@ -188,9 +202,10 @@
                         </div>
                     </div>
                 </div>
-
-                <Skeleton class="w-100" style="height: 250px" v-else/>
             </div>
+
+            <Skeleton class="w-100" style="height: 250px; border-radius: 12px;" v-if="activeProfile === 'infra' && infraLoading"/>
+
             
             <!-- <InfraManagerServices v-if="infraManagerUser"/>
             <InfraManagerCallsMe v-if="infraManagerUser"/> -->
@@ -208,6 +223,7 @@ import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import UpdateUser from '@/components/Users/UpdateUser.vue';
 import InfraManagerCallsMe from '@/components/InfraManager/InfraManagerCallsMe.vue';
 import InfraManagerServices from '@/components/InfraManager/InfraManagerServices.vue';
+import MePermissionsPage from '@/views/MePermissionsPage.vue';
 
 const currentUserId = localStorage.getItem('userId');
 const permissionStore = usePermissionStore();
@@ -439,41 +455,58 @@ main {
     display: flex;
     height: 100%;
     padding: 10px;
-    box-sizing: border-box;
-    overflow: hidden;
+}
+.menu-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    height: 45px;
+    background-color: transparent;
+    border-radius: 12px;
+    transition: all 0.5s;
+    text-decoration: none;
+    color: var(--p-text-color);
+    border: 2px solid transparent;
+}
+.menu-item:hover {
+    background-color: var(--p-blue-500-low-op);
+    color: var(--p-color-icon-menu);
+    border: 2px solid transparent;
+}
+.active-link {
+    color: var(--p-color-icon-menu);
+    background-color: var(--p-blue-500-low-op);
+}
+.disabled {
+    pointer-events: none;
+    color: var(--p-grey-2);
 }
 .sidebar {
-    width: 250px;
+    position: fixed;
+    width: 200px;
     background-color: var(--p-grey-7);
     border: 2px solid var(--p-grey-4);
     border-radius: 12px;
-    padding: 20px;
+    padding: 15px;
+    height: calc(100vh - 20px);
     display: flex;
     flex-direction: column;
-    transition: all 0.5s;
-}
-.sidebar-menu {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
     overflow-y: auto;
 }
 .button-group {
     flex-grow: 1;
 }
+.p-chip {
+    background: transparent;
+}
 .block-button {
     margin-top: auto;
 }
 .avatar-wrapper {
-    position: absolute;
-    left: 6%;
-    top: 90px;
-    transform: translateX(-50%);
-    z-index: 10;
-    border: 6px solid var(--p-grey-7);
+    position: relative;
     border-radius: 50%;
-    overflow: hidden;
-    background-color: var(--p-grey-6);
     justify-content: center;
     align-items: center;
     display: flex;
@@ -481,10 +514,11 @@ main {
 }
 .avatar-overlay {
     position: absolute;
-    top: 0;
-    left: 0;
+    left: 50%;
+    transform: translateX(-50%);
     width: 100%;
     height: 100%;
+    border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -503,15 +537,10 @@ main {
     margin: 0;
     font-size: 1.5rem;
 }
-.profile-header {
-    position: relative;
-    width: 100%;
-    height: 150px;
-    overflow: hidden;
-}
 .content-wrap {
     flex: 1;
     width: 100%;
+    margin-left: 200px;
     padding-inline: 10px;
     overflow-y: auto;
     color: var(--p-text-color);
@@ -522,32 +551,22 @@ main {
     border: 2px solid var(--p-grey-4);
     transition: all 0.5s;
     width: 100%;
-    position: relative;
+    padding: 15px;
+    /* position: relative; */
 }
 .infra-profile-card {
     background-color: var(--p-grey-7);
     border-radius: 12px;
     border: 2px solid var(--p-grey-4);
-    padding: 30px;
+    padding: 20px;
     transition: all 0.5s;
-}
-.profile-body {
-    padding: 70px 30px 20px;
-    overflow: hidden;
 }
 .profile-info-body {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 30px;
-    padding: 30px;
+    padding: 0px;
     overflow: hidden;
-}
-.profile-edit-body {
-    display: grid;
-    grid-template-columns: repeat(1, 1fr);
-    gap: 20px;
-    width: 20%;
-    padding: 30px;
 }
 .header-image {
     width: 100%;
@@ -566,17 +585,19 @@ p {
 .profile-email {
     color: var(--p-grey-2);
     font-size: 16px;
+    margin: 0;
 }
 .pi {
     font-size: 1.5rem;
 }
 .field {
     color: var(--p-grey-2);
+    font-size: 1rem;
 }
 .value {
     color: var(--p-text-color);
     font-weight: bold;
-    font-size: 20px;
+    font-size: 1.15rem;
 }
 .password-requirements p {
     display: flex;
