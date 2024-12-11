@@ -15,10 +15,10 @@ const firstName = localStorage.getItem('firstName');
 .dashboard {
     display: flex;
     flex-direction: column;
-    padding: 2rem;
+    padding: 20px 8rem;
 }
 .header h1 {
-    font-size: 2.5rem;
+    font-size: 2rem;
     color: var(--p-text-color);
 }
 </style>

@@ -8,7 +8,7 @@ export const usePermissionStore = defineStore('permissions', {
     isLoaded: false,  // Новый флаг для отслеживания загрузки
   }),
   actions: {
-    async fetchPermissions() {
+    async fetchPermissions(retryCount = 3) {
       if (!this.isLoaded) {
         try {
           const response = await axiosInstance.get('/api/users/me/permissions');
@@ -16,7 +16,14 @@ export const usePermissionStore = defineStore('permissions', {
           this.isLoaded = true;  // Помечаем, что полномочия загружены
         } catch (error) {
           console.debug('Ошибка при загрузке полномочий:', error);
-          throw error;  // Пробрасываем ошибку, чтобы обработать её в роутере
+
+          // Проверяем, если ошибка 502
+          if (retryCount > 0 && error.response?.status === 502) {
+            console.debug(`Повторная попытка загрузки полномочий. Осталось попыток: ${retryCount - 1}`);
+            return this.fetchPermissions(retryCount - 1); // Повторная попытка
+          }
+
+          throw error;  // Если попытки исчерпаны или другая ошибка
         }
       }
     },

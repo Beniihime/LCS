@@ -98,7 +98,13 @@ router.beforeEach(async (to, from) => {
             await permissionStore.fetchPermissions();  // Дожидаемся загрузки полномочий
         } catch (error) {
             console.debug('Ошибка при загрузке полномочий:', error);
-            return { path: '/noAccess' };
+
+            // Если ошибка сервера, перенаправляем на страницу "Нет доступы"
+            if (error.response?.status === 502) {
+                return { path: '/noAccess' };
+            }
+
+            return { path: '/auth' };
         }
     }
 

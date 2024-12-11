@@ -92,7 +92,7 @@ onMounted(async () => {
 
 <style scoped>
 .pi {
-    font-size: 20pt;
+    font-size: 1rem;
 }
 .counter {
     color: var(--p-grey-1);
@@ -102,7 +102,7 @@ onMounted(async () => {
     color: var(--p-text-color);
 }
 .count {
-    font-size: 1.75rem;
+    font-size: 1.2rem;
 }
 .card-text {
     font-family: 'SF Pro Rounded', sans-serif;

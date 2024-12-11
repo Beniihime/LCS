@@ -3,23 +3,17 @@
         <Button v-tooltip.left="{ value: 'Изменение роли', showDelay: 300, hideDelay: 300 }" icon="pi pi-cog" class="edit-btn" @click="openDialog(id)"/>
         <Dialog v-model:visible="visible" modal header="Изменение роли" :style="{ 'max-width': '30rem' }">
             <div class="row row-cols-1 mt-1 mb-3">
-                <div class="col my-4">
-                    <FloatLabel>
-                        <InputText id="currentRole" name="currentRole" v-model="currentRole.title" class="form-input" />
-                        <label>Название</label>
-                    </FloatLabel>
-                </div>
-                <div class="col mb-4">
-                    <FloatLabel>
-                        <Textarea v-model="currentRole.description" rows="5" class="w-100"/>
-                        <label>Описание</label>
-                    </FloatLabel>
+                <div class="col">
+                    <label class="ms-2" for="currentRole">Название</label>
+                    <InputText id="currentRole" name="currentRole" v-model="currentRole.title" class="form-input" placeholder="Введите название..." />
                 </div>
                 <div class="col">
-                    <FloatLabel>
-                        <Select v-model="currentRole.priority" :options="priorities" optionValue="value" optionLabel="label" class="form-input" />
-                        <label>Приоритет</label>
-                    </FloatLabel>
+                    <label class="ms-2">Описание</label>
+                    <Textarea v-model="currentRole.description" rows="5" class="w-100" placeholder="Введите описание..." />
+                </div>
+                <div class="col">
+                    <label class="ms-2">Приоритет</label>
+                    <Select v-model="currentRole.priority" :options="priorities" optionValue="value" optionLabel="label" class="form-input" />
                 </div>
             </div>
 
@@ -110,13 +104,13 @@ label {
 }
 .edit-btn {
     margin-top: 10px;
-    border-radius: 12px;
+    border-radius: 8px;
     color: white;
     position: absolute;
-    top: 10px;
-    right: 20px;
-    width: 40px;
-    height: 40px;
+    top: 0px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
 }
 .save-btn {
     border-radius: 12px;

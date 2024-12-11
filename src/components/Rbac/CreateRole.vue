@@ -3,23 +3,17 @@
         <Button icon="pi pi-plus" label="Создать роль" class="create-btn" @click="openDialog"/>
         <Dialog v-model:visible="visible" modal header="Создание новой роли" :style="{ 'max-width': '30rem' }">
             <div class="row row-cols-1 mt-1 mb-3">
-                <div class="col my-4">
-                    <FloatLabel>
-                        <InputText id="newRole" name="newRole" v-model="newRole.title" class="form-input" />
-                        <label for="newRole">Название</label>
-                    </FloatLabel>
+                <div class="col mb-2">
+                    <label for="newRole" class="ms-2">Название</label>
+                    <InputText id="newRole" name="newRole" v-model="newRole.title" class="form-input" placeholder="Введите название..." />
                 </div>
-                <div class="col mb-4">
-                    <FloatLabel>
-                        <Textarea v-model="newRole.description" rows="3" class="w-100"/>
-                        <label>Описание</label>
-                    </FloatLabel>
+                <div class="col mb-2">
+                    <label class="ms-2">Описание</label>
+                    <Textarea v-model="newRole.description" rows="3" class="w-100" placeholder="Введите описание..." />
                 </div>
                 <div class="col">
-                    <FloatLabel>
-                        <Select v-model="newRole.priority" :options="priorities" optionValue="value" optionLabel="label" class="form-input"/>
-                        <label>Приоритет</label>
-                    </FloatLabel>
+                    <label class="ms-2">Приоритет</label>
+                    <Select v-model="newRole.priority" :options="priorities" optionValue="value" optionLabel="label" class="form-input" placeholder="Выберите приоритет..." />
                 </div>
             </div>
 

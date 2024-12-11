@@ -4,7 +4,7 @@
         <div class="service-card mt-3">
 
             <!-- Модальное окно для подробной информации -->
-            <Dialog v-model:visible="isDialogVisible" modal :style="{ 'min-width': '60rem', 'max-width': '100rem' }" @hide="closeDialog">
+            <Dialog v-model:visible="isDialogVisible" maximizable  modal :style="{ 'min-width': '60rem', 'max-width': '100rem' }" @hide="closeDialog">
                 <template v-if="errorOccurred">
                   <div class="error-message">
                     <p>Произошла ошибка при загрузке данных</p>

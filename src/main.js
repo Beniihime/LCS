@@ -51,6 +51,8 @@ import TabPanel from 'primevue/tabpanel';
 import TabPanels from 'primevue/tabpanels';
 import Message from 'primevue/message';
 import SpeedDial from 'primevue/speeddial';
+import TreeSelect from 'primevue/treeselect';
+import RadioButton from 'primevue/radiobutton';
 
 const app = createApp(App);
 const pinia = createPinia()
@@ -108,6 +110,8 @@ app.component('TabPanel', TabPanel);
 app.component('TabPanels', TabPanels);
 app.component('Message', Message);
 app.component('SpeedDial', SpeedDial);
+app.component('TreeSelect', TreeSelect);
+app.component('RadioButton', RadioButton);
 
 app.use(pinia)
 app.use(router);

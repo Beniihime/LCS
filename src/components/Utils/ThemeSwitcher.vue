@@ -13,8 +13,7 @@
     </div>
     <div class="col-lg-auto" @click="themeToggle" v-if="isSideBarCollapse">
         <div class="bt1" optionValue="value1" v-tooltip="'Сменить тему'">
-            <i :class="`pi ${ iconClass }`" class="me-2 me-lg-0"></i>
-            <span class="d-lg-none fs-6">{{ currentThemeLabel }}</span>
+            <i :class="`pi ${ iconClass }`"></i>
         </div>
     </div>
 </template>
