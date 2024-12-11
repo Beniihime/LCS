@@ -47,7 +47,7 @@ div.p-paginator {
 }
 
 div.p-selectbutton button.p-togglebutton {
-  font-size: 1rem;
+  font-size: 14px;
   width: 100%;
   background-color: var(--p-grey-4);
   border: none;
@@ -133,7 +133,7 @@ thead.p-datatable-thead {
 body {
   font-family: 'SF Pro Rounded' !important;
   font-weight: 400 !important;
-  font-size: 1.05rem !important;
+  font-size: 1rem !important;
 }
 
 svg.logout path {
@@ -149,6 +149,18 @@ svg.lcs {
 .p-password-input {
   width: 100%;
   font-size: 14px !important;
+}
+
+.p-select-option {
+  white-space: unset !important;
+}
+
+.p-autocomplete-input {
+  width: 100%;
+}
+
+.p-treeselect-label {
+  white-space: wrap !important;
 }
 
 .p-dialog-title {
@@ -201,6 +213,7 @@ svg.lcs {
 
   --p-separator-opaque: rgba(198, 198, 200, 0.30) !important;
   --p-inputtext-background: var(--p-bg-color-3) !important;
+  --p-treeselect-background: var(--p-bg-color-3) !important;
   --p-multiselect-background: var(--p-bg-color-3) !important;
   --p-select-background: var(--p-bg-color-3) !important;
   --p-divider-border-color: rgba(198, 198, 200, 0.30) !important;
