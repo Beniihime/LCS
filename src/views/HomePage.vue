@@ -1,13 +1,14 @@
 <template>
   <div class="layout">
-      <aside class="sidebar">
-          <SideBar v-if="isAuthenticated && isExpanded" class="position-relative"/>
-          <SideBarCompact v-if="isAuthenticated && isExpanded === false" class="position-relative"/>
-          <Button class="expand" :icon="isExpanded ? 'pi pi-angle-left' : 'pi pi-angle-right'" @click="toggleSidebar" />
-      </aside>
-      <main class="content">
-          <router-view />
-      </main>
+    <MobileSpeedDial />
+    <aside class="sidebar">
+      <SideBar v-if="isAuthenticated && isExpanded" class="position-relative"/>
+      <SideBarCompact v-if="isAuthenticated && isExpanded === false" class="position-relative"/>
+      <Button class="expand" :icon="isExpanded ? 'pi pi-angle-left' : 'pi pi-angle-right'" @click="toggleSidebar" />
+    </aside>
+    <main class="content">
+      <router-view />
+    </main>
   </div>
 </template>
 
@@ -16,6 +17,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import SideBar from '@/components/SideBar.vue';
 import SideBarCompact from '@/components/SideBarCompact.vue';
+import MobileSpeedDial from '@/components/Utils/MobileSpeedDial.vue';
 import { isAuthenticated } from '@/utils/auth';
 import { useRoute } from 'vue-router';
 

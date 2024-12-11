@@ -3,9 +3,9 @@
     <div class="sidebar-container">
         <div class="rectangle">
             <div class="d-flex align-items-center justify-content-center">
-                <div class="logoLCS">
+                <router-link to="/overview" class="logoLCS">
                     <Lcs />
-                </div>
+                </router-link>
             </div>
             
             <div class="menu mt-4 mb-5">
@@ -113,7 +113,7 @@ const menuItemsAdmin = [
     {
         name: 'Пользователи',
         path: '/users',
-        icon: 'pi pi-user'
+        icon: 'pi pi-users'
     },
     {
         name: 'Роли',
@@ -232,7 +232,7 @@ onBeforeMount(async () => {
     border: 2px solid transparent;
     transition: all 0.5s;
     border-radius: 12px;
-    padding: 5px;
+    padding: 6px;
     color: var(--p-text-color);
     text-decoration: none;
 }
@@ -245,7 +245,7 @@ onBeforeMount(async () => {
     scale: 0.7;
 }
 .logoLCS:hover {
-    filter: drop-shadow(0 0 0.75rem rgba(0, 0, 0, 0.5));
+    filter: drop-shadow(0 0 0.75rem rgba(0, 0, 0, 0.3));
 }
 .middle {
     font-family: 'SF Pro Rounded';
