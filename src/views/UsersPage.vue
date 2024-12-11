@@ -12,7 +12,7 @@
                 stripedRows
                 :rows="rowsPerPage"
                 :rowClass="rowClass"
-                @row-click="(event) => navigateToProfile(event.data.id)"
+                @row-click="(event) => navigateToProfile(event.data.id, event.data.roles[0].id)"
                 :totalRecords="totalRecords"
                 @page="onPage"
                 :globalFilterFields="['fullName', 'email', 'roles', 'status']"
@@ -115,10 +115,7 @@
                             optionValue="title"
                             :maxSelectedLabels="1"
                             placeholder="Выберите роли"
-                            @change="() => { 
-                                filterCallback();
-                                console.log('Selected Role IDs:', filterModel.value); // Выводим выбранные роли для отладки
-                            }"
+                            @change="filterCallback()"
                         />
                     </template>
                 </Column>
@@ -158,7 +155,6 @@ import { useRouter } from 'vue-router';
 
 import CreateUser from '@/components/Users/CreateUser.vue';
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
-import UpdateUser from '@/components/Users/UpdateUser.vue';
 import { usePermissionStore } from '@/stores/permissions.js';
 
 const router = useRouter();
@@ -211,13 +207,10 @@ const rowClass = (data) => {
     return [{ 'pointer': !data.removed }];
 };
 
-const updateUserRef = ref(null); // Ссылка на дочерний компонент UpdateRole
-// const openDialog = (id) => { nextTick(() => { updateUserRef.value?.fetchUserData(id); }); };
-
-const navigateToProfile = (userId) => {
+const navigateToProfile = (userId, roleId) => {
     router.push({ 
         name: 'Profile', 
-        query: { id: userId } 
+        query: { id: userId, r: roleId }
     });
 };
 
