@@ -2,6 +2,9 @@
     <main>
         <WelcomeScreen :visible="loading" />
         <div class="content-wrapper">
+            <div v-if="showScrollHint" class="scroll-hint" @click="hideScrollHint">
+                Прокрутите таблицу влево или вправо, чтобы увидеть больше данных.
+            </div>
             <h2 class="mb-4">Микросервисы</h2>
             <div class="services-cards">
                 <div class="card h-100">
@@ -38,6 +41,8 @@
                     <div :class="['table-container', { open: !collapsed }]">
                         <DataTable
                             :value="calls"
+                            :filters="filters"
+                            filterDisplay="row"
                             paginator
                             :rows="rowsPerPage"
                             :totalRecords="totalRecords"
@@ -76,21 +81,81 @@
                                     </OverlayBadge>
                                 </template>
                             </Column>
-                            <Column field="number" header="#" sortable style="min-width: 50px">
+                            <Column field="number" header="#" sortable :showFilterMenu="false" style="min-width: 180px">
                                 <template #body="{ data }">
                                     {{ data.number }}
                                 </template>
+                                <template #filter="{ filterModel, filterCallback }">
+                                    <div class="d-flex align-items-center">
+                                        <InputText 
+                                            v-model="filters.number"
+                                            placeholder="Введите номер..."
+                                            @input="handleFilterInput('number', filters.number)"
+                                            class="w-100"
+                                        />
+                                        <Button 
+                                            icon="pi pi-filter-slash"
+                                            text
+                                            severity="contrast"
+                                            class="ms-2"
+                                            v-if="filters.number"
+                                            @click="clearFilter('number', filterCallback)"
+                                        />
+                                    </div>
+                                </template>
                             </Column>
-                            <Column field="entityStateName" header="Статус" style="min-width: 100px;">
+                            <Column field="entityStateName" header="Статус" :showFilterMenu="false" style="min-width: 100px;">
                                 <template #body="{ data }">
                                     <Tag :value="data.entityStateName" :severity="getStatusSeverity(data.entityStateName)" :icon="getStatusIcon(data.entityStateName)" />
                                 </template>
+                                <template #filter="{ filterCallback }">
+                                    <div class="d-flex align-items-center">
+                                        <MultiSelect 
+                                            v-model="filters.entityStateNames"
+                                            :options="stateOptions"
+                                            optionLabel="label"
+                                            optionValue="value"
+                                            class="w-75"
+                                            placeholder="Выберите статус"
+                                            @change="handleFilterInput('entityStateNames', filters.entityStateNames)"
+                                        />
+                                        <Button 
+                                            icon="pi pi-filter-slash"
+                                            text
+                                            severity="contrast"
+                                            class="ms-2"
+                                            v-if="filters.entityStateNames"
+                                            @click="clearFilter('entityStateNames', filterCallback)"
+                                        />
+                                    </div>
+                                </template>
                             </Column>
-                            <Column field="priorityName" header="Приоритет" style="min-width: 100px">
+                            <Column field="priorityName" header="Приоритет" :showFilterMenu="false" style="min-width: 100px">
                                 <template #body="{ data }">
                                     <div class="d-flex align-items-center">
                                         <Badge value="" :severity="data.priorityName === 'Высокий' ? 'danger' : data.priorityName === 'Низкий' ? 'success' : 'contrast'" class="me-2 p-2"/>
                                         {{ data.priorityName }}
+                                    </div>
+                                </template>
+                                <template #filter="{ filterCallback }">
+                                    <div class="d-flex align-items-center">
+                                        <Select 
+                                            v-model="filters.priorityId"
+                                            :options="priorityOptions"
+                                            optionLabel="name"
+                                            optionValue="id"
+                                            class="w-100"
+                                            placeholder="Выберите приоритет..."
+                                            @change="handleFilterInput('priorityId', filters.priorityId)"
+                                        />
+                                        <Button 
+                                            icon="pi pi-filter-slash"
+                                            text
+                                            severity="contrast"
+                                            class="ms-2"
+                                            v-if="filters.priorityId"
+                                            @click="clearFilter('priorityId', filterCallback)"
+                                        />
                                     </div>
                                 </template>
                             </Column>
@@ -104,9 +169,32 @@
                                     {{ data.clientFullName }}
                                 </template>
                             </Column>
-                            <Column field="callSummaryName" header="Описание" style="min-width: 150px">
+                            <Column field="callSummaryName" header="Сводка" :showFilterMenu="false" style="min-width: 150px">
                                 <template #body="{ data }">
-                                    <div v-tooltip="{ value: data.description, showDelay: 800, hideDelay: 300 }">{{ data.callSummaryName }}</div>
+                                    {{ data.callSummaryName }}
+                                </template>
+                                <template #filter="{ filterCallback }">
+                                    <div class="d-flex align-items-center">
+                                        <InputText 
+                                            v-model="filters.callSummaryName"
+                                            placeholder="Введите..."
+                                            @input="handleFilterInput('callSummaryName', filters.callSummaryName)"
+                                            class="w-100"
+                                        />
+                                        <Button 
+                                            icon="pi pi-filter-slash"
+                                            text
+                                            severity="contrast"
+                                            class="ms-2"
+                                            v-if="filters.callSummaryName"
+                                            @click="clearFilter('callSummaryName', filterCallback)"
+                                        />
+                                    </div>
+                                </template>
+                            </Column>
+                            <Column field="description" header="Описание" style="max-width: 150px">
+                                <template #body="{ data }">
+                                    <div style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;" v-tooltip="{ value: data.description, showDelay: 800, hideDelay: 300 }">{{ data.description }}</div>
                                 </template>
                             </Column>
                             <Column field="solution" header="Решение" style="max-width: 250px;">
@@ -125,9 +213,31 @@
                                     {{ data.accomplisherFullName }}
                                 </template>
                             </Column>
-                            <Column field="serviceName" header="Сервис" style="min-width: 250px">
+                            <Column field="serviceName" header="Сервис" :showFilterMenu="false" style="min-width: 250px">
                                 <template #body="{ data }">
                                     {{ data.serviceName }}
+                                </template>
+                                <template #filter="{ filterCallback }">
+                                    <div class="d-flex align-items-center">
+                                        <Select 
+                                            v-model="filters.serviceName"
+                                            :options="serviceOptions"
+                                            :maxSelectedLabels="1"
+                                            optionLabel="label"
+                                            optionValue="label"
+                                            class="w-75"
+                                            placeholder="Выберите сервис..."
+                                            @change="handleFilterInput('serviceName', filters.serviceName)"
+                                        />
+                                        <Button 
+                                            icon="pi pi-filter-slash"
+                                            text
+                                            severity="contrast"
+                                            class="ms-2"
+                                            v-if="filters.serviceName"
+                                            @click="clearFilter('serviceName', filterCallback)"
+                                        />
+                                    </div>
                                 </template>
                             </Column>
                             <Column field="callTypeFullName" header="Тип заявки" style="min-width: 100px">
@@ -189,8 +299,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue';
+import { ref, onMounted, nextTick, watch, reactive } from 'vue';
 import axiosInstance from '@/utils/axios.js';
+import { useRoute, useRouter } from 'vue-router';
+import { debounce } from 'lodash';
+import qs from 'qs';
 
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import InfraManagerCreate from '@/components/InfraManager/InfraManagerCreate.vue';
@@ -214,6 +327,13 @@ const rowsPerPage = ref(10);  // Количество строк на стран
 const totalRecords = ref(0);  // Общее количество заявок
 const totalPages = ref(0);
 const loadedPages = ref(10);
+
+const route = useRoute();
+const router = useRouter();
+
+const serviceOptions = ref([]);
+const priorityOptions = ref([]);
+const stateOptions = ref([]);
 
 const rowsPerPageOptions = [
     { label: '5', value: 5 },
@@ -302,8 +422,16 @@ const fetchCalls = async () => {
             params: {
                 page: 1,
                 pageSize: rowsPerPage.value * 10,
-                InitiatorIdOrClientIdOrOwnerId: selectedUser.value?.id || undefined,
+                number: route.query.number || null,
+                callSummaryName: route.query.callSummaryName || null,
+                serviceName: route.query.serviceName || null,
+                priorityId: route.query.priorityId || null,
+                entityStateNames: route.query.entityStateNames || []
             },
+
+            paramsSerializer: (params) => {
+                return qs.stringify(params, { arrayFormat: 'repeat' })
+            }
         });
 
         if (response.data?.entities) {
@@ -324,7 +452,11 @@ const loadMorePages = async () => {
             params: {
                 page: loadedPages.value / 10 + 1,
                 pageSize: rowsPerPage.value * 10,
-                InitiatorIdOrClientIdOrOwnerId: selectedUser.value?.id || undefined,
+                number: route.query.number || null,
+                callSummaryName: route.query.callSummaryName || null,
+                serviceName: route.query.serviceName || null,
+                priorityId: route.query.priorityId || null,
+                entityStateNames: route.query.entityStateNames || []
             },
         });
 
@@ -368,6 +500,66 @@ const onPage = async (event) => {
     }
 };
 
+const fetchFilterOptions = async () => {
+    try {
+        const [services, priorities, states] = await Promise.all([
+            axiosInstance.get('/api/infra-manager/calls/service-names'),
+            axiosInstance.get('/api/infra-manager/calls/priorities'),
+            axiosInstance.get('/api/infra-manager/calls/states'),
+        ]);
+
+        serviceOptions.value = services.data.map(service => ({ label: service, value: service }));
+        priorityOptions.value = priorities.data;
+        stateOptions.value = states.data.map(state => ({ label: state, value: state }));
+    } catch (error) {
+        console.debug('Ошибка загрузки данных для фильтров: ', error);
+    }
+};
+
+const filters = reactive({
+    number: route.query.number || '',
+    callSummaryName: route.query.callSummaryName || '',
+    serviceName: route.query.serviceName ? route.query.serviceName.split(',') : [],
+    priorityId: route.query.priorityId || '',
+    entityStateNames: route.query.entityStateNames || []
+});
+
+const debouncedUpdateQuery = debounce((key, value) => {
+    const query = { ...route.query };
+
+    if (value && value.length !== 0) {
+        if (Array.isArray(value)) {
+            query[key] = value;
+        } else {
+            query[key] = value;
+        }
+    } else {
+        delete query[key];
+    }
+
+    router.push({ query });
+}, 750);
+
+const clearFilter = (key, filterCallback) => {
+    filters[key] = '';
+    filterCallback();
+    debouncedUpdateQuery(key, '');
+}
+
+// Обновление query при входе
+const handleFilterInput = (key, value) => {
+    filters[key] = value;
+    debouncedUpdateQuery(key, value);
+}
+
+watch (
+    () => route.query,
+    async () => {
+        await fetchCalls();
+    },
+    { immediate: true }
+);
+
 
 const callDetailsRef = ref(null); // Ссылка на дочерний компонент InfraManagerCalls
 
@@ -396,10 +588,18 @@ const showCreateDialog = () => { nextTick(() => { infraCreateRef.value?.openDial
 const showDeleteDialog = () => { nextTick(() => { infraDeleteRef.value?.openDialogDelete(); }); };
 const showSearchDialog = () => { nextTick(() => { infraSearchRef.value?.openDialogSearch(); }); };
 
-onMounted(() => {
-    fetchCalls();
-});
+const showScrollHint = ref(true);
 
+const hideScrollHint = () => {
+    showScrollHint.value = false;
+};
+
+onMounted(async () => {
+    await fetchFilterOptions();
+    setTimeout(() => {
+        hideScrollHint();
+    }, 8000);
+});
 </script>
 
 <style scoped>
@@ -408,6 +608,29 @@ main {
     flex-direction: column;
     height: 100%;
     box-sizing: border-box;
+}
+.scroll-hint {
+    position: absolute;
+    top: 20px;
+    right: 50%;
+    transform: translateX(50%);
+    background: var(--p-blue-500);
+    color: var(--p-text-color);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    text-align: center;
+    z-index: 1000;
+    cursor: pointer;
+    animation: fadeInOut 5s forwards;
+}
+@keyframes fadeInOut {
+    0%, 80% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
 }
 .content-wrapper {
     flex-grow: 1;
