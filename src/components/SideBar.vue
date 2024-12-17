@@ -392,8 +392,11 @@ const checkIsMobile = () => {
 .rectangle {
     display: flex;
     flex-direction: column;
-    background-color: var(--p-bg-color-2);
-    background-image: linear-gradient(to bottom, var(--p-blue-100), var(--p-bg-color-2) 35%); /* основной цвет фона */
+    /* background-color: var(--p-bg-color-2); */
+    /* background-image: linear-gradient(to bottom, var(--p-blue-100), var(--p-bg-color-2) 35%); */
+    background-image: url('/src/assets/backgrounds/winter.webp');
+    background-color: var(--p-grey-3);
+    background-blend-mode: overlay;
     background-repeat: no-repeat;
     background-size: cover;
     width: 250px;

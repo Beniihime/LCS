@@ -324,6 +324,9 @@ onBeforeMount(async () => {
     padding: 1.25rem;
     transition: all 0.5s;
     border-right: 1px solid var(--p-grey-5);
+    background-image: url('/src/assets/backgrounds/winter.webp');
+    background-color: var(--p-grey-3);
+    background-blend-mode: overlay;
 }
 .rectangle:before {
   content: ' ';
@@ -335,8 +338,8 @@ onBeforeMount(async () => {
   width: 100%;
   height: 100%;
   opacity: 0.8;
-  background-image: url('../assets/Exclude.png');
-  background-color: var(--p-bg-color-2);
+  /* background-image: url('../assets/Exclude.png'); */
+  /* background-color: var(--p-bg-color-2); */
   background-repeat: no-repeat;
   background-position: 50% 0;
   background-size: contain;
