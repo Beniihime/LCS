@@ -64,8 +64,6 @@
                                 @click="clearFilter('number', filterCallback)"
                             />
                         </div>
-                        
-
                     </template>
                 </Column>
                 <Column field="entityStateName" header="Статус" sortable :showFilterMenu="false" style="max-width: 200px;">
@@ -395,6 +393,11 @@ const loadMorePages = async () => {
             params: {
                 page: loadedPages.value / 10 + 1,
                 pageSize: rowsPerPage.value * 10,
+                number: route.query.number || null,
+                callSummaryName: route.query.callSummaryName || null,
+                serviceName: route.query.serviceName || null,
+                priorityId: route.query.priorityId || null,
+                entityStateNames: route.query.entityStateNames || []
             },
         });
 

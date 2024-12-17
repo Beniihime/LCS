@@ -1,12 +1,16 @@
 <template>
     <div class="d-flex justify-content-center">
         <Button class="search" icon="pi pi-plus" label="Пользователь" @click="visible = true"/>
-        <Dialog v-model:visible="visible" modal header="Новый пользователь" :style="{ 'max-width': '30rem' }">
+        <Dialog v-model:visible="visible" modal header="Новый пользователь" :style="{ 'max-width': '30rem', 'max-height': '60rem' }">
             <div class="row mb-2">
                 <div class="col">
                     <label for="firstName" class="ms-2">Имя <span class="text-danger">*</span></label>
                     <InputText v-model="firstName" id="firstName" name="firstName" class="form-input" required placeholder="Введите имя"/>
                 </div>
+                
+            </div>
+
+            <div class="row mb-2">
                 <div class="col">
                     <label for="lastName" class="ms-2">Фамилия <span class="text-danger">*</span></label>   
                     <InputText v-model="lastName" id="lastName" name="lastName" class="form-input" required placeholder="Введите фамилию"/> 
@@ -14,14 +18,6 @@
             </div>
 
             <div class="row mb-2">
-                <div class="col d-flex align-items-center">
-                    <Checkbox v-model="hasMiddleName" class="me-2" binary/>
-                    <label for="hasMiddleName" class="ms-1">Нет отчества</label>
-                </div>
-            </div>
-
-            <!-- Поле для отчества -->
-            <div class="row mb-1" v-if="!hasMiddleName">
                 <div class="col">
                     <label for="middleName" class="ms-2">Отчество</label>
                     <InputText v-model="middleName" id="middleName" name="middleName" class="form-input" placeholder="Введите отчество"/>
@@ -49,11 +45,12 @@
             <div class="row mb-2">
                 <div class="col">
                     <label for="pass" class="ms-2">Пароль <span class="text-danger">*</span></label>
-                    <Password v-model="pass" id="pass" name="pass" toggleMask class="form-input" @input="validatePassword" :feedback="false" :invalid="!passwordChecks.length || !passwordChecks.upperLower || !passwordChecks.number" required placeholder="Введите пароль"/>
-                    <div class="password-requirements mt-3">
-                        <p><i :class="passwordChecks.length ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Минимум 8 символов</p>
-                        <p><i :class="passwordChecks.upperLower ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Верхний и нижний регистры</p>
-                        <p><i :class="passwordChecks.number ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Минимум одна цифра</p>
+                    <Password v-model="pass" id="pass" name="pass" toggleMask class="form-input" @input="validatePassword" :feedback="false" :invalid="!passwordChecks.length || !passwordChecks.upperLower || !passwordChecks.number" required placeholder="••••••••"/>
+                    <div class="password-requirements mt-2">
+                        <p>Пароль должен соответствовать следующим условиям</p>
+                        <p><i :class="passwordChecks.length ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Должен состоять как минимум из 8 символов</p>
+                        <p><i :class="passwordChecks.upperLower ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Должен содержать символы в верхнем и нижнем регистре</p>
+                        <p><i :class="passwordChecks.number ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Должен содержать по крайней мере одну цифру</p>
                     </div>
                 </div>
             </div>
@@ -61,7 +58,7 @@
             <div class="row mb-1">
                 <div class="col">
                     <label for="confirmPass" class="ms-2">Подтвердите пароль <span class="text-danger">*</span></label>
-                    <Password id="confirmPass" name="confirmPass" v-model="confirmPass" toggleMask class="form-input" required :feedback="false" :invalid="pass !== confirmPass && confirmPass" placeholder="Введите пароль"/>
+                    <Password id="confirmPass" name="confirmPass" v-model="confirmPass" toggleMask class="form-input" required :feedback="false" :invalid="pass !== confirmPass && confirmPass" placeholder="••••••••"/>
                     <Message v-if="pass !== confirmPass && confirmPass" severity="error" size="small">Пароли не совпадают</Message>
                 </div>
             </div>

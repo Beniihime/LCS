@@ -91,6 +91,7 @@ function themeToggle() {
     color: var(--p-text-color);
     cursor: pointer;
     z-index: 999;
+    transition: all 0.5s;
 }
 
 .bt1 {
@@ -108,6 +109,13 @@ function themeToggle() {
     color: var(--p-text-color);
     cursor: pointer;
     z-index: 999;
+    transition: all 0.5s;
+}
+.bt1:hover {
+    background-color: var(--p-grey-3);
+}
+.bt:hover {
+    background-color: var(--p-grey-3);
 }
 
 @media (max-width: 896px) {

@@ -485,7 +485,7 @@ main {
 }
 .sidebar {
     position: fixed;
-    width: 200px;
+    width: 210px;
     background-color: var(--p-grey-7);
     border: 2px solid var(--p-grey-4);
     border-radius: 12px;
@@ -494,6 +494,7 @@ main {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    transition: all 0.5s;
 }
 .button-group {
     flex-grow: 1;
@@ -540,7 +541,7 @@ main {
 .content-wrap {
     flex: 1;
     width: 100%;
-    margin-left: 200px;
+    margin-left: 210px;
     padding-inline: 10px;
     overflow-y: auto;
     color: var(--p-text-color);

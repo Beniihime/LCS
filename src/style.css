@@ -239,6 +239,8 @@ svg.lcs {
   --p-avatar-border-radius: 18px !important;
   --p-avatar-xl-font-size: 1.5rem !important;
 
+  --p-dialog-color: #4d6280 !important;
+
   --p-dialog-background: var(--p-bg-color-1) !important;
 
   --p-popover-content-padding: 15px 8px !important;
@@ -271,6 +273,8 @@ svg.lcs {
   --p-bg-color-2: #2C2C2E;
   --p-bg-color-3: #3A3A3C;
   --p-text-color: #FFFFFF;
+
+  --p-dialog-color: #FFFFFF !important;
 
   --p-color-trans: var(--p-bg-color-3);
 

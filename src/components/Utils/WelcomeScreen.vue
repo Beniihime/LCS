@@ -37,21 +37,6 @@ const { visible } = toRefs(props);
     transition: opacity 0.5s ease;
 }
 
-.loading-spinner {
-    border: 12px solid rgba(255,255,255,0.3);
-    border-radius: 50%;
-    border-top: 16px solid #3498db;
-    width: 80px;
-    height: 80px;
-    animation: spin 1.5s linear infinite;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
 .fade-enter-active, .fade-leave-active {
   transition: opacity 0.5s ease;
 }

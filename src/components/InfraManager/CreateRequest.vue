@@ -3,6 +3,7 @@
         <Button rounded icon="pi pi-plus" outlined @click="visible = true"/>
         <Dialog v-model:visible="visible" modal header="Создание заявки" :style="{ 'max-width': '32rem' }">
             <template #container="{ closeCallback }">
+                <WelcomeScreen :visible="loading" class="rounded-4"/>
                 <div class="p-4">
                     <div class="row mb-4">
                         <h2>Создание заявки</h2>
@@ -19,7 +20,7 @@
                                     optionValue="id"
                                     @complete="searchUsers"
                                     optionLabel="fullName"
-                                    placeholder="Для кого заявка?"
+                                    placeholder="Выберите пользователя..."
                                 />
                                 <Button v-if="!whoami" rounded label="Для меня" severity="secondary" class="input-button" @click="fetchMe" />
                             </div>
@@ -88,12 +89,14 @@ import { ref, onMounted, watch } from "vue";
 import axiosInstance from "@/utils/axios.js";
 import { useToast } from 'primevue/usetoast';
 import PrioritySelect from '@/components/InfraManager/PrioritySelect.vue';
+import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 
 import { usePriorityStore } from '@/stores/priorityStore.js';
 
 
 const visible = ref(false);
 const whoami = ref('');
+const loading = ref(false);
 
 const userSuggestions = ref([]);
 
@@ -106,13 +109,15 @@ const store = usePriorityStore();
 
 
 const fetchMe = async () => {
+    loading.value = true;
     try {
         const response = await axiosInstance.get('/api/infra-manager/users/me');
 
-        whoami.value = response.data.fullName;
+        whoami.value = response.data;
     } catch (error) {
         console.debug('Ошибка при получении себя?? ', error);
     }
+    loading.value = false;
 }
 
 
