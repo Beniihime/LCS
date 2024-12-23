@@ -29,7 +29,7 @@
                             <h3 class="title m-0">Ваши заявки</h3>
                         </div>
                         <div class="col d-flex justify-content-end">
-                            <CreateRequest />
+                            <CreateRequest @refreshRequests="(id) => fetchCalls(id)"/>
                         </div>
                     </div>
                 </template>
@@ -95,7 +95,7 @@
                 <Column field="priorityName" header="Приоритет" sortable :showFilterMenu="false" style="max-width: 160px">
                     <template #body="{ data }">
                         <div class="d-flex align-items-center">
-                            <Badge value="" :severity="data.priorityName === 'Выскокий' ? 'danger' : data.priorityName === 'Низкий' ? 'success' : 'contrast'" class="me-2 p-2"/>
+                            <Badge value="" :severity="data.priorityName === 'Высокий' ? 'danger' : data.priorityName === 'Низкий' ? 'success' : 'contrast'" class="me-2 p-2"/>
                             {{ data.priorityName }}
                         </div>
                     </template>
@@ -350,11 +350,13 @@ const formatUTCToOmsk = (utcString) => {
 };
 
 const rowClass = (data) => {
-    return [{ 'removed-row': data.removed , 'not-allowed': data.removed, 'pointer': !data.removed }];
+    return [{ 'removed-row': data.removed , 'not-allowed': data.removed, 'pointer': !data.removed, 'highlighted-row': data.id === lastCreatedId.value }];
 };
 
+const lastCreatedId = ref(null);
+
 // Загрузка заявок (по страницам)
-const fetchCalls = async () => {
+const fetchCalls = async (highlightId = null) => {
     try {
         loading.value = true;
 
@@ -366,7 +368,7 @@ const fetchCalls = async () => {
                 callSummaryName: route.query.callSummaryName || null,
                 serviceName: route.query.serviceName || null,
                 priorityId: route.query.priorityId || null,
-                entityStateNames: route.query.entityStateNames || []
+                entityStateNames: route.query.entityStateNames || ['Инициирована', 'Открыта', 'Зарегистрирована', 'Ожидает']
             },
                 
             paramsSerializer: (params) => {
@@ -378,6 +380,14 @@ const fetchCalls = async () => {
             calls.value = response.data.entities;
             totalRecords.value = response.data.countAllEntities;
             totalPages.value = response.data.countAllPages;
+        }
+
+        if (highlightId) {
+            lastCreatedId.value = highlightId;
+            console.log(lastCreatedId.value);
+            setTimeout(() => {
+                lastCreatedId.value = null;
+            }, 5000);
         }
 
         loading.value = false;
@@ -441,7 +451,7 @@ const filters = reactive({
     callSummaryName: route.query.callSummaryName || '',
     serviceName: route.query.serviceName ? route.query.serviceName.split(',') : [],
     priorityId: route.query.priorityId || '',
-    entityStateNames: route.query.entityStateNames || []
+    entityStateNames: route.query.entityStateNames || ['Инициирована', 'Открыта', 'Зарегистрирована', 'Ожидает']
 });
 
 const debouncedUpdateQuery = debounce((key, value) => {

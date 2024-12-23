@@ -123,6 +123,19 @@ thead.p-datatable-thead {
 .removed-row {
   background-color: rgba(255, 0, 0, 0.2) !important;
 }
+.highlighted-row {
+  background-color: rgba(255, 215, 0, 0.5); /* Желтый цвет выделения */
+  animation: fadeOut 5s forwards; /* Анимация для плавного исчезновения */
+}
+
+@keyframes fadeOut {
+  0% {
+      background-color: rgba(255, 215, 0, 0.5);
+  }
+  100% {
+      background-color: transparent;
+  }
+}
 .not-allowed {
   cursor: not-allowed !important;
   pointer-events: none !important;

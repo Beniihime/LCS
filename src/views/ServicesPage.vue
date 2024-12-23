@@ -426,7 +426,7 @@ const fetchCalls = async () => {
                 callSummaryName: route.query.callSummaryName || null,
                 serviceName: route.query.serviceName || null,
                 priorityId: route.query.priorityId || null,
-                entityStateNames: route.query.entityStateNames || []
+                entityStateNames: route.query.entityStateNames || ['Инициирована', 'Открыта', 'Зарегистрирована', 'Ожидает']
             },
 
             paramsSerializer: (params) => {
@@ -456,7 +456,7 @@ const loadMorePages = async () => {
                 callSummaryName: route.query.callSummaryName || null,
                 serviceName: route.query.serviceName || null,
                 priorityId: route.query.priorityId || null,
-                entityStateNames: route.query.entityStateNames || []
+                entityStateNames: route.query.entityStateNames || ['Инициирована', 'Открыта', 'Зарегистрирована', 'Ожидает']
             },
         });
 
@@ -521,7 +521,7 @@ const filters = reactive({
     callSummaryName: route.query.callSummaryName || '',
     serviceName: route.query.serviceName ? route.query.serviceName.split(',') : [],
     priorityId: route.query.priorityId || '',
-    entityStateNames: route.query.entityStateNames || []
+    entityStateNames: route.query.entityStateNames || ['Инициирована', 'Открыта', 'Зарегистрирована', 'Ожидает']
 });
 
 const debouncedUpdateQuery = debounce((key, value) => {

@@ -85,7 +85,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, watch, defineEmits } from "vue";
 import axiosInstance from "@/utils/axios.js";
 import { useToast } from 'primevue/usetoast';
 import PrioritySelect from '@/components/InfraManager/PrioritySelect.vue';
@@ -93,7 +93,7 @@ import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 
 import { usePriorityStore } from '@/stores/priorityStore.js';
 
-
+const emit = defineEmits(['refreshRequests']);
 const visible = ref(false);
 const whoami = ref('');
 const loading = ref(false);
@@ -207,8 +207,13 @@ const createCall = async () => {
             influenceId: store.selecetedInfluenceId
         };
         // console.log(payload);
-        await axiosInstance.post('/api/infra-manager/calls/register', payload);
+        const response = await axiosInstance.post('/api/infra-manager/calls/register', payload);
+        const createdCallId = response.data.callId;
+
         visible.value = false;
+
+        emit('refreshRequests', createdCallId);
+
         window.dispatchEvent(new CustomEvent('toast', {
             detail: {
                 severity: 'success',
