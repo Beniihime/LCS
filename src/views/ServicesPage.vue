@@ -3,7 +3,7 @@
         <WelcomeScreen :visible="loading" />
         <div class="content-wrapper">
             <div v-if="showScrollHint" class="scroll-hint" @click="hideScrollHint">
-                Прокрутите таблицу влево или вправо, чтобы увидеть больше данных.
+                Прокрутите таблицу вправо, чтобы увидеть больше данных.
             </div>
             <h2 class="mb-4">Микросервисы</h2>
             <div class="services-cards">
@@ -104,7 +104,7 @@
                                     </div>
                                 </template>
                             </Column>
-                            <Column field="entityStateName" header="Статус" :showFilterMenu="false" style="min-width: 100px;">
+                            <Column field="entityStateName" header="Статус" :showFilterMenu="false" style="max-width: 250px;">
                                 <template #body="{ data }">
                                     <Tag :value="data.entityStateName" :severity="getStatusSeverity(data.entityStateName)" :icon="getStatusIcon(data.entityStateName)" />
                                 </template>
@@ -130,7 +130,7 @@
                                     </div>
                                 </template>
                             </Column>
-                            <Column field="priorityName" header="Приоритет" :showFilterMenu="false" style="min-width: 100px">
+                            <Column field="priorityName" header="Приоритет" :showFilterMenu="false" style="min-width: 200px">
                                 <template #body="{ data }">
                                     <div class="d-flex align-items-center">
                                         <Badge value="" :severity="data.priorityName === 'Высокий' ? 'danger' : data.priorityName === 'Низкий' ? 'success' : 'contrast'" class="me-2 p-2"/>
@@ -169,7 +169,7 @@
                                     {{ data.clientFullName }}
                                 </template>
                             </Column>
-                            <Column field="callSummaryName" header="Сводка" :showFilterMenu="false" style="min-width: 150px">
+                            <Column field="callSummaryName" header="Сводка" :showFilterMenu="false" style="min-width: 200px">
                                 <template #body="{ data }">
                                     {{ data.callSummaryName }}
                                 </template>

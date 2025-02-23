@@ -53,6 +53,7 @@ import Message from 'primevue/message';
 import SpeedDial from 'primevue/speeddial';
 import TreeSelect from 'primevue/treeselect';
 import RadioButton from 'primevue/radiobutton';
+import Paginator from 'primevue/paginator';
 
 const app = createApp(App);
 const pinia = createPinia()
@@ -112,6 +113,7 @@ app.component('Message', Message);
 app.component('SpeedDial', SpeedDial);
 app.component('TreeSelect', TreeSelect);
 app.component('RadioButton', RadioButton);
+app.component('Paginator', Paginator);
 
 app.use(pinia)
 app.use(router);

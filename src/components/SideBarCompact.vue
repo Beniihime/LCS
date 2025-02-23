@@ -13,10 +13,11 @@
                     <i class="pi pi-home"></i>
                 </router-link>
                 <router-link to="/notif" class="menu-item" active-class="active-link" v-tooltip="'Уведомления'">
+                    <OverlayBadge v-if="notificationStore.unreadCount > 0" :value="notificationStore.unreadCount" severity="danger" class="ms-5"/>
                     <i class="pi pi-bell"></i>
                 </router-link>
             </div>
-            <div class="menu mb-3">
+            <div class="menu mb-5">
                 <div v-for="item in menuItems">
                     <router-link 
                         :key="item.path" 
@@ -26,9 +27,6 @@
                         v-if="checkPermission(item.path) && showRequestsMenu"
                         v-tooltip="item.name"
                     >
-                        <!-- <OverlayBadge v-if="item.path === '/notif' && notificationStore.unreadCount > 0" :value="notificationStore.unreadCount">
-                            
-                        </OverlayBadge> -->
                         <i :class="item.icon"></i>
                     </router-link>
                 </div>
@@ -132,6 +130,11 @@ const menuItems = [
         name: 'Заявки',
         path: '/requests',
         icon: 'pi pi-pen-to-square'
+    },
+    {
+        name: 'Расписание',
+        path: '/schedule',
+        icon: 'pi pi-calendar'
     },
 ]
 

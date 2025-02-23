@@ -63,7 +63,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import axiosInstance from '@/utils/axios.js';
 import { useToast } from 'primevue/usetoast';
 
@@ -178,7 +178,6 @@ const updateUserData = async () => {
             }
         }));
 
-        props.refreshTable(props.filters);
     } catch (error) {
         console.debug('Ошибка при обновлении данных пользователя: ', error);
         window.dispatchEvent(new CustomEvent('toast', {

@@ -7,58 +7,114 @@ const routes = [
         path: "/", 
         component: () => import('@/views/HomePage.vue'),
         name: 'HomePage',
-        meta: { requiresAuth: true },
+        meta: { 
+            requiresAuth: true,
+            title: 'Главная'
+        },
         children: [
             {
                 path: "/users",
                 component: () => import('@/views/UsersPage.vue'),
                 name: 'Users',
-                meta: { permission: { type: 'User', action: 'Read' }, requiresAuth: true }
+                meta: { 
+                    permission: { 
+                        type: 'User', 
+                        action: 'Read' 
+                    }, 
+                    requiresAuth: true, 
+                    title: 'Пользователи' 
+                }
             },
             {
                 path: "/notif",
                 component: () => import('@/views/NotifPage.vue'),
-                meta: { requiresAuth: true  }
+                meta: { 
+                    requiresAuth: true,
+                    title: 'Уведомления'
+                }
             },
             {
                 path: "/rbac",
                 component: () => import('@/views/RbacPage.vue'),
                 name: 'Rbac',
-                meta: { permission: { type: 'Rbac', action: 'Read' }, requiresAuth: true  }
+                meta: { 
+                    permission: { 
+                        type: 'Rbac', 
+                        action: 'Read' 
+                    }, 
+                    requiresAuth: true,
+                    title: 'Роли'
+                }
             },
             {
                 path: "/me-permissions",
                 component: () => import('@/views/MePermissionsPage.vue'),
                 name: 'MePermissions',
+                meta: {
+                    title: 'Мои полномочия'
+                }
             },
             {
                 path: "/role-permissions",
                 component: () => import('@/views/RolePermissionsPage.vue'),
                 name: 'RolePermissions',
-                meta: { permission: { type: 'Rbac', action: 'Create' }, requiresAuth: true  }
+                meta: { 
+                    permission: { 
+                        type: 'Rbac', 
+                        action: 'Create' 
+                    }, 
+                    requiresAuth: true,
+                    title: 'Полномочия роли'
+                }
             },
             {
                 path: "/profile",
                 props: (route) => ({ id: route.query.id }),
                 component: () => import('@/views/ProfilePage.vue'),
                 name: 'Profile',
-                meta: { requiresAuth: true  }
+                meta: { 
+                    requiresAuth: true,
+                    title: 'Личный кабинет'
+                }
             },
             {
                 path: "/services",
                 component: () => import('@/views/ServicesPage.vue'),
                 name: 'Services',
-                meta: { permission: { type: 'InfraManager', action: 'Read' }, requiresAuth: true  }
+                meta: { 
+                    permission: { 
+                        type: 'InfraManager', 
+                        action: 'Read' 
+                    }, 
+                    requiresAuth: true,
+                    title: 'Микросервисы'
+                }
             },
             {
                 path: "/requests",
                 component: () => import('@/views/RequestsPage.vue'),
-                name: 'Requests'
+                name: 'Requests',
+                meta: {
+                    title: 'Заявки'
+                }
             },
             {
                 path: "/overview",
                 component: () => import('@/views/DashboardPage.vue'),
                 name: 'Dashboard'
+            },
+            {
+                path: "/schedule",
+                component: () => import('@/views/SchedulePage.vue'),
+                name: 'Schedule',
+                meta: {
+                    title: 'Расписание'
+                }
+            },
+            {
+                path: "/schedule/:idGroup",
+                component: () => import('@/views/ScheduleDetails.vue'),
+                name: 'ScheduleDetails'
             }
         ]
     }, 
@@ -90,6 +146,8 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, from) => {
+    const { title } = to.meta;
+    document.title = `${title} - LCS`;
     const permissionStore = usePermissionStore();
 
      // Если пользователь авторизован, загружаем полномочия

@@ -33,6 +33,13 @@ div.p-paginator {
   border-top: 0;
 }
 
+.paginatorSchedule > div.p-paginator {
+  background-color: transparent;
+  border-radius: 0;
+  border: 0;
+  margin-top: 20px;
+}
+
 .p-datatable {
   height: 100%;
   display: flex;
@@ -80,40 +87,6 @@ thead.p-datatable-thead {
   transition: all 0.5s;
   height: 100%;
 }
-
-/* #app::before, #app::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-size: cover;
-  background-position: center;
-  transition: opacity 0.5s ease;
-  z-index: -1;
-  opacity: 0;
-}
-
-#app::before {
-  background: linear-gradient(to right, var(--p-bg-color-0), var(--p-bg-color-0)), 
-  url(../src/assets/backgrounds/lp_bg_light.png) no-repeat center/100% fixed; 
-  opacity: 1;
-}
-
-#app::after {
-  background: linear-gradient(to right, var(--p-bg-color-0), var(--p-bg-color-0)), 
-  url(../src/assets/backgrounds/lp_bg_dark.png) no-repeat center/100% fixed; 
-}
-
-
-.p-dark #app::before {
-  opacity: 0;
-}
-
-.p-dark #app::after {
-  opacity: 1; 
-} */
 
 .logout-button:hover {
   svg.logout path {
@@ -273,7 +246,7 @@ svg.lcs {
   --p-grey-1: #8E8E93;
   --p-grey-2: #AEAEB2;
   --p-grey-3: #C7C7CC;
-  --p-grey-4: #D1D1D6;
+  --p-grey-4: #E5E5EA;
   --p-grey-5: #E5E5EA;
   --p-grey-6: #F2F2F7;
   --p-grey-7: #f8f8f8;

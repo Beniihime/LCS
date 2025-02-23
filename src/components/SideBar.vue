@@ -19,7 +19,14 @@
                 </router-link>
                 <router-link to="/notif" class="menu-item" active-class="active-link">
                     <i class="pi pi-bell"></i>
-                    <div class="menucrumb">Уведомления</div>
+                    <div class="menucrumb">
+                        <span>Уведомления</span>
+                        <Badge 
+                            v-if="notificationStore.unreadCount > 0"
+                            :value="notificationStore.unreadCount"
+                            class="p-badge ms-3"
+                        />
+                    </div>
                 </router-link>
             </div>
             <div class="menu">
@@ -50,7 +57,7 @@
                     <router-link 
                         :key="item.path" 
                         :to="item.path" 
-                        class="menu-item" 
+                        class="menu-item"
                         active-class="active-link"
                         v-if="checkPermission(item.path)"
                     >
@@ -160,6 +167,11 @@ const menuItems = [
         name: 'Заявки',
         path: '/requests',
         icon: 'pi pi-pen-to-square'
+    },
+    {
+        name: 'Расписание',
+        path: '/schedule',
+        icon: 'pi pi-calendar'
     },
 ]
 
@@ -355,8 +367,8 @@ const checkIsMobile = () => {
 }
 .p-badge {
     background-color: var(--p-red-500);
-    font-size: 16px;
-    padding-inline: 12px;
+    font-size: 12px;
+    padding: 6px;
     border-radius: 12px;
 }
 .menu-item {
