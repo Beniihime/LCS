@@ -190,7 +190,7 @@ svg.lcs {
   --p-red-500: rgb(255, 101, 93) !important;
   --p-red-400: rgb(235, 66, 57) !important;
 
-  --p-blue-100: rgba(138, 190, 250, 0.44) !important;
+  --p-blue-100: rgba(138, 190, 250, 0.4) !important;
   --p-blue-200: rgba(138, 190, 250) !important;
   --p-blue-500: rgb(68, 143, 255) !important;
   --p-blue-400: rgb(86, 118, 221) !important;
@@ -281,7 +281,7 @@ svg.lcs {
   --p-red: #FF453A;
   --p-blue-500: rgb(68, 143, 255) !important;
   --p-blue-500-low-op: rgb(68, 68, 68) !important;
-  --p-blue-100: rgba(72, 149, 238, 0.6) !important;
+  --p-blue-100: rgba(72, 149, 238, 0.4) !important;
 
   --p-color-icon-menu: white !important;
 }

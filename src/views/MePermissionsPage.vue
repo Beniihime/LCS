@@ -116,7 +116,7 @@ const fetchRolePermissions = async () => {
         const response = await axiosInstance.get(`/api/rbac/roles/${roleId}/permissions`);
         rolePermissions.value = response.data.resourcesWithPermissions; // Получаем полномочия роли
         updatePermissionsWithRoleStatus();
-        console.log(roleId);
+        console.debug(roleId);
     } catch (error) {
         console.debug('Ошибка при загрузке полномочий роли:', error);
     } finally {

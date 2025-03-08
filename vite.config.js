@@ -11,7 +11,7 @@ export default defineConfig({
   plugins: [
     vue(),
     svgLoader(),
-    // mkcert(),
+    mkcert(),
     vueDevTools(),
     visualizer(),
     viteStaticCopy({

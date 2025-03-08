@@ -1,6 +1,6 @@
 <template>
     <ConfirmDialog></ConfirmDialog>
-    <div class="sidebar-container" v-if="isMobile">
+    <div class="sidebar-container bg-image" v-if="isMobile">
         <div class="rectangle">
             <div class="d-flex align-items-center justify-content-center">
                 <router-link to="/overview" class="logoLCS">
@@ -401,16 +401,32 @@ const checkIsMobile = () => {
     margin-top: 22px;
     display: inline-block;
 }
+.sidebar-container.bg-image {
+    position: relative;
+    overflow: hidden; /* предотвращает выход размытия за границы */
+}
+.sidebar-container.bg-image::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    opacity: 0.5;
+    height: 100%;
+    background-image: url('/src/assets/backgrounds/spring.webp'); /* Укажите путь к изображению */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    
+    filter: blur(0.5px); /* Настройте степень размытия */
+    z-index: -1; /* Размытие будет под контентом */
+}
+
 .rectangle {
     display: flex;
     flex-direction: column;
     /* background-color: var(--p-bg-color-2); */
-    /* background-image: linear-gradient(to bottom, var(--p-blue-100), var(--p-bg-color-2) 35%); */
-    background-image: url('/src/assets/backgrounds/winter.webp');
-    background-color: var(--p-grey-3);
-    background-blend-mode: overlay;
-    background-repeat: no-repeat;
-    background-size: cover;
+    background-image: linear-gradient(to bottom, var(--p-blue-100), var(--p-bg-color-2) 95%);
     width: 250px;
     padding: 1rem;
     transition: all 0.5s;
