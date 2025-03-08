@@ -112,9 +112,19 @@ const routes = [
                 }
             },
             {
-                path: "/schedule/:idGroup",
-                component: () => import('@/views/ScheduleDetails.vue'),
-                name: 'ScheduleDetails'
+                path: "/schedule/group/:idGroup",
+                component: () => import('@/components/Schedule/ScheduleGroup.vue'),
+                name: 'ScheduleGroup',
+            },
+            {
+                path: "/schedule/room/:idAudLine",
+                component: () => import('@/components/Schedule/ScheduleAud.vue'),
+                name: 'ScheduleAud',
+            },
+            {
+                path: "/schedule/teacher/:idTeacher",
+                component: () => import('@/components/Schedule/ScheduleTeach.vue'),
+                name: 'ScheduleTeach',
             }
         ]
     }, 
@@ -122,17 +132,26 @@ const routes = [
         path: "/auth", 
         component: () => import('@/views/AuthPage.vue'),
         name: 'Auth',
-        meta: { requiresAuth: false }
+        meta: { 
+            requiresAuth: false,
+            title: 'Вход'
+        }
     },
     {
         path: '/noAccess',
         component: () => import('@/components/Utils/PermissionDenied.vue'),
-        name: 'NoAccess'
+        name: 'NoAccess',
+        meta: {
+            title: '403',
+        }
     },
     {
         path: '/notFound',
         component: () => import('@/components/Utils/NotFound.vue'),
-        name: 'NotFound'
+        name: 'NotFound',
+        meta: {
+            title: '404',
+        }
     },
     {
         path: '/:pathMatch(.*)*',
@@ -146,8 +165,14 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, from) => {
-    const { title } = to.meta;
+    let title = typeof to.meta.title === 'string' ? to.meta.title : 'none';
+
+    if (to.name === 'ScheduleGroup') {
+        title = 'Загрузка...';
+    }
+
     document.title = `${title} - LCS`;
+
     const permissionStore = usePermissionStore();
 
      // Если пользователь авторизован, загружаем полномочия

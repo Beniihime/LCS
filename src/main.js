@@ -54,6 +54,7 @@ import SpeedDial from 'primevue/speeddial';
 import TreeSelect from 'primevue/treeselect';
 import RadioButton from 'primevue/radiobutton';
 import Paginator from 'primevue/paginator';
+import DatePicker from 'primevue/datepicker';
 
 const app = createApp(App);
 const pinia = createPinia()
@@ -67,6 +68,18 @@ app.use(PrimeVue, {
             cssLayer: false,
         },
         ripple: true,
+    },
+    locale: {
+        firstDayOfWeek: 1,
+        dayNames: ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"],
+        dayNamesShort: ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"],
+        dayNamesMin: ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"],
+        monthNames: ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
+        monthNamesShort: ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"],
+        today: "Сегодня",
+        clear: "Очистить",
+        dateFormat: "dd.mm.yy",
+        weekHeader: "Нед"
     }
 });
 app.use(AppState);
@@ -114,6 +127,7 @@ app.component('SpeedDial', SpeedDial);
 app.component('TreeSelect', TreeSelect);
 app.component('RadioButton', RadioButton);
 app.component('Paginator', Paginator);
+app.component('DatePicker', DatePicker);
 
 app.use(pinia)
 app.use(router);

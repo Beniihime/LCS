@@ -46,7 +46,7 @@
                     <div class="row mb-4">
                         <div class="col">
                             <label for="priority" class="ms-2 mb-1">Приоритет</label>
-                            <InputText id="priority" v-model="store.selectedPriority" class="form-input" placeholder="Выберите приоритет..." @click="toggle"/>
+                            <InputText id="priority" readonly v-model="store.selectedPriority" class="form-input" placeholder="Выберите приоритет..." @click="toggle"/>
                             <Popover ref="op">
                                 <PrioritySelect />
                             </Popover>
@@ -87,7 +87,6 @@
 <script setup>
 import { ref, watch, defineEmits } from "vue";
 import axiosInstance from "@/utils/axios.js";
-import { useToast } from 'primevue/usetoast';
 import PrioritySelect from '@/components/InfraManager/PrioritySelect.vue';
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 
@@ -206,7 +205,6 @@ const createCall = async () => {
             priorityId: store.selectedPriorityId,
             influenceId: store.selecetedInfluenceId
         };
-        // console.log(payload);
         const response = await axiosInstance.post('/api/infra-manager/calls/register', payload);
         const createdCallId = response.data.callId;
 
@@ -254,6 +252,7 @@ const toggle = (event) => {
 }
 .form-input {
     width: 100%;
+    resize: none;
 }
 .custom-input {
     width: 100%;

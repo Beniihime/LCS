@@ -77,6 +77,7 @@
 import { ref, onMounted, watch, computed } from "vue";
 import axios from "axios";
 import { useRouter } from 'vue-router';
+import { useGroupsStore } from '@/stores/groups';
 
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 
@@ -92,10 +93,32 @@ const router = useRouter();
 const currentPage = ref(0);
 const rowsPerPage = ref(10); // Количество карточек на странице (по умолчанию)
 
+const groupsStore = useGroupsStore();
+
 const paginatedSchedule = computed(() => {
     const start = currentPage.value * rowsPerPage.value;
     const end = start + rowsPerPage.value;
     return computedFilteredSchedule.value.slice(start, end);
+});
+
+// Функция для получения ключа хранилища по категории
+const getSearchKey = (categoryId) => `searchQuery_category_${categoryId}`;
+
+// Обновление значения `searchQuery` в `localStorage`
+watch(searchQuery, (newQuery) => {
+    localStorage.setItem(getSearchKey(selectedCategory.value), newQuery);
+});
+
+// Фильтрация списка по введенному запросу
+const computedFilteredSchedule = computed(() => {
+    if (!searchQuery.value.trim()) {
+        return filteredSchedule.value;
+    }
+    const query = searchQuery.value.toLowerCase();
+    return filteredSchedule.value.filter(item =>
+        item.name.toLowerCase().includes(query) || 
+        (item.facul && item.facul.toLowerCase().includes(query))
+    );
 });
 
 // Обработчик paginator
@@ -108,8 +131,10 @@ const onPageChange = (event) => {
     currentPage.value = event.page;
 };
 
-const goToSchedule = (group) => {
-    router.push({ path: `/schedule/${group.id}` });
+const goToSchedule = (item) => {
+    if (selectedCategory.value === 1) router.push({ path: `/schedule/group/${item.id}` });
+    else if (selectedCategory.value === 2) router.push({ path: `/schedule/room/${item.id}` });
+    else if (selectedCategory.value === 3) router.push({ path: `/schedule/teacher/${item.id}` });
 }
 
 const fetchYears = async () => {
@@ -129,17 +154,17 @@ const fetchYears = async () => {
 const fetchSchedule = async (url) => {
     if (!selectedYear.value) return; // Проверяем, установлен ли год
 
-    console.log("Загрузка началась...");
-
     try {
         loading.value = true;
         const response = await axios.get(url, {
             params: { year: selectedYear.value }
         });
         filteredSchedule.value = response.data.data;
-        console.log("Данные загружены", filteredSchedule.value);
+        if(url.match("raspGrouplist").length > 0) {
+            groupsStore.setGroups(response.data.data);
+        }
     } catch (error) {
-        console.debug('Ошибка при загрузке расписания: ', error);
+        console.error('Ошибка при загрузке расписания: ', error);
     } finally {
         loading.value = false;
     }
@@ -185,6 +210,7 @@ const severityFacul = computed(() => (facul) => {
 
 const selectCategory = (category) => {
     selectedCategory.value = category.id;
+    searchQuery.value = localStorage.getItem(getSearchKey(selectedCategory.value)) || "";
     category.command();
 };
 
@@ -192,29 +218,32 @@ const selectYear = (year) => {
     selectedYear.value = year;
 };
 
-// Фильтрация списка по введенному запросу
-const computedFilteredSchedule = computed(() => {
-    if (!searchQuery.value.trim()) {
-        return filteredSchedule.value;
-    }
-    const query = searchQuery.value.toLowerCase();
-    return filteredSchedule.value.filter(item =>
-        item.name.toLowerCase().includes(query) || 
-        (item.facul && item.facul.toLowerCase().includes(query))
-    );
-});
-
 // Следим за изменением года и загружаем данные
-watch(selectedYear, async () => {
+watch(selectedYear, () => {
     if (loading.value) return; // Не перезапускаем загрузку, если она уже идет
     const currentCategory = categories.find(cat => cat.id === selectedCategory.value);
     if (currentCategory && currentCategory.command) {
-        await currentCategory.command();
+        currentCategory.command();
     }
 });
 
-onMounted(async () => {
-    await fetchYears();
+watch(selectedCategory, (newCategory) => {
+    sessionStorage.setItem("selectedCategory", newCategory);
+})
+
+onMounted(() => {
+    const savedCategory = sessionStorage.getItem("selectedCategory");
+    if (savedCategory) {
+        selectedCategory.value = Number(savedCategory); // Приводим к числу
+    }
+    searchQuery.value = localStorage.getItem(getSearchKey(selectedCategory.value)) || "";
+    
+    fetchYears().then(() => {
+        const currentCategory = categories.find(cat => cat.id === selectedCategory.value);
+        if (currentCategory && currentCategory.command) {
+            currentCategory.command();
+        }
+    });
 });
 
 </script>

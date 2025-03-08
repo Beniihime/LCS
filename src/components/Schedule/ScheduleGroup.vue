@@ -1,6 +1,11 @@
 <template>
     <WelcomeScreen :visible="isLoading"/>
     <div class="schedule-details-container">
+
+        <div v-if="showHint" class="hint-message">
+            Пожалуйста, выберите диапазон дат.
+        </div>
+
         <header class="schedule-header">
             <div class="header-row justify-content-between align-items-center">
                 <div class="d-flex align-items-center">
@@ -25,7 +30,7 @@
 
             <div class="header-row">
                 <div class="header-card" v-for="(_, index) in 4" :key="index">
-                    <Skeleton v-if="isLoading" widh="100%" height="3rem" />
+                    <Skeleton v-if="isLoading" width="100%" height="3rem" />
                     <template v-else>
                         <span class="card-title">{{ headerTitles[index] }}</span>
                         <span class="card-value">{{ headerValues[index] }}</span>
@@ -35,8 +40,26 @@
 
             <div class="header-row">
                 <div class="header-card date-picker">
-                    <Calendar v-model="selectedDate" :minDate="minDate" :maxDate="maxDate" :disabledDates="disabledDates"
-                      showIcon dateFormat="dd.mm.yy" @update:modelValue="fetchScheduleData" />
+                    <DatePicker v-if="showFullSchedule" v-model="selectedDateRange" selectionMode="range" :minDate="minDate" :maxDate="maxDate" :disabledDates="disabledDates" :showOtherMonths="false"
+                        showIcon variant="filled" iconDisplay="input" dateFormat="dd.mm.yy" @update:modelValue="fetchScheduleData" showButtonBar placeholder="Выберите диапазон" :manualInput="false">
+                        <template #date="slotProps">
+                            <div class="date-wrapper">
+                                <span :class="{ 'with-circle': isDateAvailable(slotProps.date) }">
+                                    {{ slotProps.date.day }}
+                                </span>
+                            </div>
+                        </template>
+                    </DatePicker>
+                    <DatePicker v-else v-model="selectedDate" :minDate="minDate" :maxDate="maxDate" :disabledDates="disabledDates" :showOtherMonths="false"
+                        showIcon variant="filled" iconDisplay="input" dateFormat="dd.mm.yy" @update:modelValue="fetchScheduleData" showButtonBar placeholder="Выберите дату" :manualInput="false">
+                        <template #date="slotProps">
+                            <div class="date-wrapper">
+                                <span :class="{ 'with-circle': isDateAvailable(slotProps.date) }">
+                                    {{ slotProps.date.day }}
+                                </span>
+                            </div>
+                        </template>
+                    </DatePicker>
                 </div>
                 <div class="header-card">
                     <span class="card-title">Тип недели</span>
@@ -48,11 +71,11 @@
             </Button>
         </header>
 
-        <div v-if="scheduleRasp.length" class="schedule-list">
-            <div v-for="(lessons, day) in groupedLessons" :key="day" class="_per-day-container">
+        <div v-if="Object.keys(groupedLessons).length > 0" class="schedule-list">
+            <div v-for="(lessons, date) in groupedLessons" :key="date" class="_per-day-container">
                 <div class="day-container">
-                    <h4 class="day-title">{{ day }}</h4>
-                    <span>{{ formatDate(lessons[0].дата) }}</span>
+                    <h4 class="day-title">{{ getDayOfWeek(date) }}</h4>
+                    <span>{{ formatDate(date) }}</span>
                 </div>
                 
                 <div v-for="lesson in lessons" :key="lesson.код" class="lesson-card">
@@ -60,7 +83,13 @@
                         <span class="lesson-number" :style="{ 'background-color': `var(--p-${cleanDiscipline(lesson.дисциплина).color}-500)` }">{{ lesson?.номерЗанятия }}</span>
                         <span class="time">{{ lesson.начало.replace("-", ":") }} <span class="lesson-second_plan"> - {{ lesson.конец.replace("-", ":") }}</span></span>
                         <div class="other-schedule">
-                            <Button size="small" icon="pi pi-ellipsis-v" variant="outlined" rounded class="me-3" />
+                            <Button type="button" size="small" icon="pi pi-ellipsis-v" variant="text" rounded class="me-3" @click="toggle(lesson.код, $event)"/>
+                            <Popover :ref="(el) => setPopoverRef(el, lesson.код)">
+                                <div class="other-schedule-buttons">
+                                    <Button text @click="ScheduleTeacher(lesson)">Расписание {{ lesson?.преподаватель }}</Button>
+                                    <Button text @click="ScheduleAud(lesson)">Расписание {{ lesson?.аудитория }}</Button>
+                                </div>
+                            </Popover>
                         </div>
                         
                     </div>
@@ -71,6 +100,7 @@
                         <p class="room lesson-second_plan">{{ lesson.аудитория }}</p>
                     </div>
                 </div>
+                
             </div>
         </div>
         <div v-else class="empty-message">
@@ -81,10 +111,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import Popover from 'primevue/popover';
 import axios from "axios";
-import Calendar from "primevue/calendar";
 
 import formatDate from "@/utils/formatDateWithoutTime.js";
 import WelcomeScreen from "@/components/Utils/WelcomeScreen.vue";
@@ -92,16 +122,22 @@ import WelcomeScreen from "@/components/Utils/WelcomeScreen.vue";
 const route = useRoute();
 const router = useRouter();
 const idGroup = route.params.idGroup;
+const groupName = ref("");
 const showFullSchedule = ref(false);
 
 const selectedDate = ref(null);
+const selectedDateRange = ref();
 const minDate = ref(null);
 const maxDate = ref(null);
 const availableDates = ref([]);
 const scheduleData = ref([]);
+const filteredScheduleData = ref([]);
 const scheduleRasp = ref([]);
+const searchQuery = ref("");
 
-const isLoading = ref(true); 
+const showHint = ref(false);
+
+const isLoading = ref(false); 
 
 const weekShortName = computed(() => {
     return scheduleData.value?.typesWeek?.find(t => t.typeWeekID === scheduleData.value?.curNumNed)?.shortName || '?';
@@ -115,14 +151,47 @@ const headerTitles = ["Группа", "Учебный год", "Семестр",
 const headerValues = computed(() => [
     scheduleData.value?.group?.name,
     scheduleData.value?.year,
-    scheduleData.value?.curSem,
+    getSemesterName(scheduleData.value?.curSem).name,
     `${scheduleData.value?.curWeekNumber} (${weekShortName.value} нед.)`
 ]);
 
+watch(groupName, (newGroupName) => {
+    localStorage.setItem('groupName', newGroupName);
+    document.title = `${newGroupName} - Расписание`;
+});
+
+const getSemesterName = (semester) => {
+    const semesters = {
+        1: { name: "Осень" },
+        2: { name: "Весна" }
+    };
+    return semesters[semester] || { name: "Неизвестно" };
+};
+
 const toggleScheduleMode = () => {
     showFullSchedule.value = !showFullSchedule.value;
+    showHint.value = (!selectedDateRange.value || !selectedDateRange.value[0] || !selectedDateRange.value[1]) && showFullSchedule.value;
     fetchScheduleData();
 };
+
+const popovers = ref([]);
+
+const setPopoverRef = (el, index) => {
+    popovers.value[index] = el;
+};
+
+const toggle = (index, event) => {
+    console.debug(popovers.value[index])
+    popovers.value[index]?.toggle(event);
+};
+
+const ScheduleTeacher = (lesson) => {
+    router.push(`/schedule/teacher/${lesson.кодПреподавателя}`)
+}
+
+const ScheduleAud = (lesson) => {
+    router.push(`/schedule/room/${lesson.код}`)
+}
 
 // Получаем доступные даты из GetRaspDates
 const fetchAvailableDates = async () => {
@@ -148,14 +217,32 @@ const fetchAvailableDates = async () => {
 const fetchScheduleData = async () => {
     if (!idGroup || !selectedDate.value) return;
 
+    isLoading.value = true;
+
     const formattedDate = selectedDate.value.toISOString().split("T")[0];
     const sdateParam = showFullSchedule.value ? "" : `&sdate=${formattedDate}`;
 
     try {
         const response = await axios.get(`https://umu.sibadi.org/api/Rasp?idGroup=${idGroup}${sdateParam}`);
         scheduleData.value = response.data.data.info;
+        
+        groupName.value = scheduleData.value?.group?.name;
+
         scheduleRasp.value = response.data.data.rasp;
-        console.debug(scheduleData.value)
+
+        if (showFullSchedule.value && selectedDateRange.value && selectedDateRange.value[0] && selectedDateRange.value[1]) {
+            filteredScheduleData.value = scheduleRasp.value.filter(lesson => {
+                const entryDate = new Date(lesson.дата).setHours(0, 0, 0, 0);
+                return entryDate >= selectedDateRange.value[0].setHours(0, 0, 0, 0) && entryDate <= selectedDateRange.value[1].setHours(0, 0, 0, 0);
+            });
+        } else if (!showFullSchedule.value && selectedDate.value) {
+            filteredScheduleData.value = scheduleRasp.value.filter(lesson => {
+                const entryDate = new Date(lesson.дата).setHours(0, 0, 0, 0);
+                return entryDate >= selectedDate.value.setHours(0, 0, 0, 0);
+            });
+        } else {
+            filteredScheduleData.value = scheduleRasp.value;
+        }
         
     } catch (error) {
         console.error("Ошибка загрузки расписания:", error);
@@ -164,22 +251,45 @@ const fetchScheduleData = async () => {
     }
 };
 
+const filteredLessons = computed(() => {
+    if (!searchQuery.value) return filteredScheduleData.value;
+    return filteredScheduleData.value.filter(lesson => {
+        return cleanDiscipline(lesson.дисциплина).cleanedDiscipline.toLowerCase().includes(searchQuery.value.toLowerCase());
+    });
+});
+
 // Групировка занятий по дням недели
 const groupedLessons = computed(() => {
     const grouped = {};
-    scheduleRasp.value.forEach(lesson => {
-        const day = lesson.день_недели;
-        if (!grouped[day]) {
-            grouped[day] = [];
+    filteredLessons.value.forEach(lesson => {
+        const date = lesson.дата;
+        if (!grouped[date]) {
+            grouped[date] = [];
         }
-        grouped[day].push(lesson);
+        grouped[date].push(lesson);
     });
     return grouped;
 });
 
+const getDayOfWeek = (dateString) => {
+    const date = new Date(dateString);
+    const dayOfWeek = new Intl.DateTimeFormat('ru-RU', { weekday: 'long' }).format(date);
+    return dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1);
+};
+
+const isDateAvailable = (dateObj) => {
+    if (!Array.isArray(availableDates.value)) {
+        console.error("availableDates is not an array:", availableDates.value);
+        return false;
+    }
+    
+    const date = new Date(dateObj.year, dateObj.month, dateObj.day);
+    return availableDates.value.some(d => d.toDateString() === date.toDateString());
+};
+
 // Очистка названия дисциплины от "лек.", "лаб.", "пр."
 const cleanDiscipline = (discipline) => {
-    const match = discipline.match(/^(лек|лаб|пр.)\s*/i, '');
+    const match = discipline.match(/^(лек|лаб|пр.|экз)\s*/i, '');
     let type = "";
     let color = "";
     if (match) {
@@ -187,7 +297,7 @@ const cleanDiscipline = (discipline) => {
         switch (typeAbbr) {
             case "лек":
                 type = "Лекция";
-                color = "green"
+                color = "green";
                 break;
             case "лаб":
                 type = "Лабораторная";
@@ -197,12 +307,16 @@ const cleanDiscipline = (discipline) => {
                 type = "Практика";
                 color = "amber";
                 break;
+            case "экз":
+                type = "Экзамен";
+                color = "sky";
+                break;
             default:
                 type = "";
         }
     }
     return {
-        cleanedDiscipline: discipline.replace(/^(лек|лаб|пр.)\s*/i, ''),
+        cleanedDiscipline: discipline.replace(/^(лек|лаб|пр.|экз)\s*/i, ''),
         type,
         color
     };
@@ -325,6 +439,10 @@ h4 {
     right: 0;
     top: 0;
 }
+.other-schedule-buttons {
+    display: grid;
+    gap: 10px;
+}
 .lesson-number {
     color: #fff;
     padding: 1px 14px;
@@ -367,5 +485,50 @@ h4 {
     border-radius: 12px;
     transition: all 0.5s;
     width: 100%; 
+}
+.date-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.with-circle {
+    position: relative;
+}
+
+.with-circle::after {
+    content: "";
+    width: 6px;
+    height: 6px;
+    background-color: var(--p-green-500);
+    border-radius: 50%;
+    position: absolute;
+    bottom: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.hint-message {
+    position: absolute;
+    top: 20px;
+    right: 50%;
+    transform: translateX(50%);
+    background: var(--p-blue-500);
+    color: var(--p-text-color);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    text-align: center;
+    z-index: 1000;
+    cursor: pointer;
+    animation: fadeInOut 5s forwards;
+}
+
+@keyframes fadeInOut {
+    0%, 80% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
 }
 </style>

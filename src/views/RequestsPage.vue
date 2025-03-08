@@ -384,7 +384,7 @@ const fetchCalls = async (highlightId = null) => {
 
         if (highlightId) {
             lastCreatedId.value = highlightId;
-            console.log(lastCreatedId.value);
+            console.debug(lastCreatedId.value);
             setTimeout(() => {
                 lastCreatedId.value = null;
             }, 5000);
