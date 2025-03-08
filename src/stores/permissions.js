@@ -34,7 +34,6 @@ export const usePermissionStore = defineStore('permissions', {
       const resource = this.permissions.find(item => item.type === resourceType);
 
       if (!resource) {
-        // console.log(`Ресурс с типом ${resourceType} не найден`);
         return false;
       }
       

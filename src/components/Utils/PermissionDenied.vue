@@ -27,7 +27,7 @@ import ThemeSwitcher from '@/components/Utils/ThemeSwitcher.vue';
 
 const router = useRouter();
 function goHome() {
-    router.push('/'); // Переход на главную
+    router.back(); // Переход назад
 }
 </script>
   

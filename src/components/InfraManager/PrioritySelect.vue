@@ -48,20 +48,12 @@
                                             v-model="selectedPriority"
                                             @change="updateSelection(urgency, influence)"
                                         />
-                                        <!-- <span class="priority-debug">
-                                            Срочность: {{ urgency.name }},
-                                            Влияние: {{ influence.name }},
-                                            Приоритет: {{ getPriorityName(getPriorityId(urgency.id, influence.id)) }}
-                                        </span> -->
                                     </label>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                     <p v-else>Загрузка данных...</p>
-                    <!-- <p>Выбранная срочность: {{ selectedUrgency?.name || 'Не выбрано' }}</p>
-                    <p>Выбранное влияние: {{ selectedInfluence?.name || 'Не выбрано' }}</p> -->
-                    <!-- <p>Приоритет: {{ getPriorityName(selectedPriority) }}</p> -->
                 </div>
             </div>
             

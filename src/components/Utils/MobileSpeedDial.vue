@@ -26,8 +26,8 @@ const router = useRouter();
 // Массив для элементов SpeedDial
 const items = [
     { label: 'Выход', icon: 'pi pi-sign-out', command: () => logout() },
-    { label: 'Профиль', icon: 'pi pi-user', command: () => console.log('Profile clicked') },
-    { label: 'Пользователи', icon: 'pi pi-users', command: () => console.log('Settings clicked') },
+    { label: 'Профиль', icon: 'pi pi-user', command: () => console.debug('Profile clicked') },
+    { label: 'Пользователи', icon: 'pi pi-users', command: () => console.debug('Settings clicked') },
     { label: 'Роли', icon: 'pi pi-sitemap', command: () => router.push('/rbac') },
     { label: 'Микросервисы', icon: 'pi pi-desktop', command: () => router.push('/services') },
     { label: 'Заявки', icon: 'pi pi-pen-to-square', command: () => router.push('/requests') },

@@ -59,7 +59,7 @@ const openDialog = (id) => {
         currentRole.value = { ...role };
         visible.value = true;
     }
-    console.log(role);
+    console.debug(role);
 };
 
 const fetchPriorities = async () => {
