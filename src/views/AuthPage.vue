@@ -26,6 +26,7 @@
                             <Button label="Забыли пароль?" text class="forgot-password" />
                         </div>
                         <Button class="but my-2 mb-0" type="submit" label="Войти" />
+                        <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
                     </form>
                 </div>
                 
@@ -53,7 +54,7 @@ const toast = useToast();
 const isLoading = ref(false);
 
 const auth = async () => {
-    isLoading.value = true;
+    errorMessage.value = '';
 
     try {
         const response = await axiosInstance.post('/api/auth/login', {
@@ -71,10 +72,11 @@ const auth = async () => {
         localStorage.setItem('userId', response.data.userId);
 
         scheduleTokenRefresh(response.data.refreshTokenExpired);
+        isLoading.value = true;
 
     } catch (error) {
-        errorMessage.value = 'Login failed: ' + (error.response ? error.response.data.message : error.message);
-        toast.add({ severity: 'error', summary: 'Ошибка', detail: errorMessage.value, life: 3000 });
+        errorMessage.value = error.response?.data?.message || 'Неверный логин или пароль';
+        // toast.add({ severity: 'error', summary: 'Ошибка', detail: errorMessage.value, life: 3000 });
     }
 };
 
@@ -161,6 +163,13 @@ main {
   width: 100vw;
   position: relative;
   overflow: hidden;
+}
+.error-message {
+    color: var(--p-red-500);
+    font-size: 14px;
+    margin-top: 8px;
+    margin-bottom: 0;
+    text-align: center;
 }
 
 .login-page::before, .login-page::after {

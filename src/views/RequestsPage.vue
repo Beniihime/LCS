@@ -546,7 +546,7 @@ onMounted(async () => {
     right: 50%;
     transform: translateX(50%);
     background: var(--p-blue-500);
-    color: var(--p-text-color);
+    color: white;
     padding: 10px 20px;
     border-radius: 8px;
     font-size: 14px;
