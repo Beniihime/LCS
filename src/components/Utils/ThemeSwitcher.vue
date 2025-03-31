@@ -2,7 +2,6 @@
     <SelectButton v-model="selectedTheme" optionValue="value" optionLabel="value" :options="themeOptions" class="mb-4" v-if="!isAuthPage && isSideBarCollapse === false">
         <template #option="slotProps">
             <i :class="slotProps.option.icon"></i>
-            <span class="label">{{ slotProps.option.label }}</span>
         </template>
     </SelectButton>
     <div class="col-lg-auto" @click="themeToggle" v-if="isAuthPage">
@@ -31,18 +30,22 @@ const props = defineProps({
 
 const themeOptions = ref([
     { icon: 'pi pi-sun', label: 'Светлая', value: 'light' },
-    { icon: 'pi pi-moon', label: 'Тёмная', value: 'dark' }    
+    { icon: 'pi pi-moon', label: 'Тёмная', value: 'dark' },
+    { icon: 'pi pi-hourglass', label: 'Авто', value: 'auto' }
 ]);
 
-const savedTheme = localStorage.getItem('theme') || 'light';
-
+const savedTheme = themeOptions.value.some(opt => opt.value === localStorage.getItem('theme')) 
+    ? localStorage.getItem('theme') 
+    : 'auto';
 const selectedTheme = ref(savedTheme);
 
 const route = useRoute();
 const isAuthPage = computed(() => route.path === '/auth' || route.path === '/noAccess' || route.path === '/notFound');
 
 const iconClass = computed(() => {
-    return selectedTheme.value === 'dark' ? 'pi-moon' : 'pi-sun';
+    if (selectedTheme.value === 'dark') return 'pi-moon';
+    if (selectedTheme.value === 'light') return 'pi-sun';
+    return 'pi-hourglass';
 });
 
 const currentThemeLabel = computed(() => {
@@ -51,27 +54,40 @@ const currentThemeLabel = computed(() => {
 })
 
 onMounted(() => {
-    onThemeToggler(selectedTheme.value);
+    applyTheme(selectedTheme.value);
 });
 
 watch(selectedTheme, (newTheme) => {
-    onThemeToggler(newTheme);
+    localStorage.setItem('theme', newTheme);
+    applyTheme(newTheme);
 });
 
-function onThemeToggler(theme) {
-    const root = document.getElementsByTagName('html')[0];
+function applyTheme(theme) {
+    const root = document.documentElement;
+
+    if (theme === 'auto') {
+        theme = getAutoTheme();
+    }
+
     if (theme === 'dark') {
         root.classList.add('p-dark')
     } else {
         root.classList.remove('p-dark');
     }
-    localStorage.setItem('theme', theme);
+
+}
+
+function getAutoTheme() {
+    const hour = new Date().getHours();
+    return (hour >= 18 || hour < 6) ? 'dark' : 'light';
 }
 
 function themeToggle() {
-    const newTheme = selectedTheme.value === 'dark' ? 'light' : 'dark';
+    const newTheme = selectedTheme.value === 'dark' ? 'light' 
+                   : selectedTheme.value === 'light' ? 'auto' 
+                   : 'dark';
+    
     selectedTheme.value = newTheme;
-    onThemeToggler(newTheme);
 }
 </script>
 
