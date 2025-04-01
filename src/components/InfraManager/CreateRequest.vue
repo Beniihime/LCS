@@ -69,7 +69,7 @@
                             <Button text label="Создать заявку" severity="success" @click="createCall"/>
                         </div>
                         <div class="col-auto">
-                            <Button text label="Отмена" severity="danger" @click="closeCallback" />
+                            <Button text label="Отмена" severity="danger" @click="handleCancel" />
                         </div>
                     </div>
                     <div class="row">
@@ -85,7 +85,7 @@
 </template>
 
 <script setup>
-import { ref, watch, defineEmits } from "vue";
+import { ref, watch } from "vue";
 import axiosInstance from "@/utils/axios.js";
 import PrioritySelect from '@/components/InfraManager/PrioritySelect.vue';
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
@@ -153,10 +153,12 @@ const transformServicesToTree = (data) => {
     const categoryNode = {
       key: category.id,
       label: category.name,
+      selectable: false,
       children: category.services.map((service) => {
         const serviceNode = {
           key: service.id,
           label: service.name,
+          selectable: false,
           children: service.items.map((item) => ({
             key: item.id,
             label: item.name,
@@ -232,6 +234,19 @@ const createCall = async () => {
 };
 
 watch(whoami, fetchServices);
+
+const resetForm = () => {
+    whoami.value = '';
+    selectedService.value = null;
+    shortDescriprion.value = '';
+    description.value = '';
+    store.selectedPriority = null;
+}
+
+const handleCancel = () => {
+    resetForm();
+    visible.value = false;
+}
 
 const op = ref();
 

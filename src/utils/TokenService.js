@@ -1,66 +1,44 @@
-// utils/TokenService.js
-import axiosInstance from '@/utils/axios.js';
-export function scheduleTokenRefresh(refreshTokenExpired) {
-  const currentTime = Math.floor(Date.now() / 1000); // Текущее время в секундах
-  const timeUntilExpiration = refreshTokenExpired - currentTime;
+import TokenWorker from "@/workers/tokenWorker.js?worker";
 
-  console.debug(`Current time: ${currentTime}`);
-  console.debug(`Token expiration time: ${refreshTokenExpired}`);
-  console.debug(`Time until expiration: ${timeUntilExpiration} seconds`);
+let tokenWorker = null;
 
-  if (timeUntilExpiration > 0) {
-      console.debug(`Scheduling token refresh in ${(timeUntilExpiration - 60)} seconds`);
-
-      // Обновляем токен за 1 минуту до истечения
-      setTimeout(() => {
-          console.debug('Refreshing token now...');
-          refreshAccessToken();
-      }, (timeUntilExpiration - 60) * 1000);
-  } else {
-      console.debug('Token is already expired, refreshing now...');
-      // Если токен уже истек, сразу обновляем
-      refreshAccessToken();
-  }
-}
-
-let isRefreshing = false;
-
-async function refreshAccessToken() {
-    if (isRefreshing) {
-        return; // Уже в процессе обновления
+export function startTokenWorker() {
+    if (typeof window === "undefined" || !window.Worker) {
+        console.error("[TokenService] Web Workers not supported or window is undefined.");
+        return;
     }
-    isRefreshing = true;
 
-    try {
-        console.debug('Attempting to refresh access token...');
+    if (tokenWorker) {
+        console.debug("[TokenService] Token worker is already running.");
+        return;
+    }
 
-        const userId = localStorage.getItem('userId');
-        const refreshToken = localStorage.getItem('refreshToken');
+    tokenWorker = new TokenWorker();
 
-        if (!userId || !refreshToken) {
-            throw new Error('Missing user credentials');
+    const refreshToken = localStorage.getItem("refreshToken");
+    const userId = localStorage.getItem("userId");
+    const refreshTokenExpired = parseInt(localStorage.getItem("refreshTokenExpired"), 10);
+
+    if (!refreshToken || !userId || isNaN(refreshTokenExpired)) {
+        console.error("[TokenService] Missing required authentication data.");
+        return;
+    }
+
+    tokenWorker.postMessage({ action: "start", refreshToken, userId, refreshTokenExpired });
+
+    tokenWorker.onmessage = (event) => {
+        if (event.data.action === "updateToken") {
+            console.debug("[TokenService] New token from Worker:", event.data);
+
+            localStorage.setItem("accessToken", event.data.accessToken);
+            localStorage.setItem("refreshToken", event.data.refreshToken);
+            localStorage.setItem("refreshTokenExpired", event.data.refreshTokenExpired);
         }
+    };
 
-        const response = await axiosInstance.post('/api/auth/refresh-token', null, {
-            params: {
-                value: refreshToken,
-                userId: userId
-            },
-            timeout: 5000
-        });
+    tokenWorker.onerror = (error) => {
+        console.error("[TokenService] Worker encountered an error:", error);
+    };
 
-        console.debug('Token refreshed successfully');
-
-        // Сохраняем новые токены
-        localStorage.setItem('accessToken', response.data.accessToken);
-        localStorage.setItem('refreshToken', response.data.refreshTokenValue);
-
-        // Перезапускаем таймер
-        scheduleTokenRefresh(response.data.refreshTokenExpired);
-
-    } catch (error) {
-        console.debug('Failed to refresh token', error);
-    } finally {
-        isRefreshing = false;
-    }
+    console.debug("[TokenService] Background token worker started!");
 }

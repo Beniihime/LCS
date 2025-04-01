@@ -18,7 +18,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, computed, defineProps } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 
 const props = defineProps({

@@ -1,5 +1,5 @@
 <script setup>
-import { useNotificationStore } from '@/stores/notifications';
+import { useNotificationStore } from '@/stores/notifications.js';
 import { onMounted } from 'vue';
 import formatDate from '@/utils/formatDate.js';  // Функция для форматирования даты
 

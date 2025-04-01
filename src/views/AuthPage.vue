@@ -39,8 +39,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useToast } from 'primevue/usetoast';
-
-import { scheduleTokenRefresh } from '@/utils/TokenService.js';
+import { startTokenWorker } from "@/utils/TokenService";
 import axiosInstance from '@/utils/axios.js';
 
 import ThemeSwitcher from '@/components/Utils/ThemeSwitcher.vue';
@@ -70,8 +69,10 @@ const auth = async () => {
         localStorage.setItem('accessToken', response.data.accessToken);
         localStorage.setItem('refreshToken', response.data.refreshTokenValue);
         localStorage.setItem('userId', response.data.userId);
+        localStorage.setItem('refreshTokenExpired', response.data.refreshTokenExpired);
 
-        scheduleTokenRefresh(response.data.refreshTokenExpired);
+        startTokenWorker();
+
         isLoading.value = true;
 
     } catch (error) {

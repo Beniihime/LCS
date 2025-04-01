@@ -57,7 +57,13 @@ import Paginator from 'primevue/paginator';
 import DatePicker from 'primevue/datepicker';
 
 const app = createApp(App);
-const pinia = createPinia()
+const pinia = createPinia();
+
+import { startTokenWorker } from "@/utils/TokenService.js";
+
+if (localStorage.getItem("refreshToken") && localStorage.getItem("userId")) {
+    startTokenWorker();
+}
 
 app.use(PrimeVue, {
     theme: {
