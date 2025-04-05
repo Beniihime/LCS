@@ -425,7 +425,6 @@ const checkIsMobile = () => {
 .rectangle {
     display: flex;
     flex-direction: column;
-    /* background-color: var(--p-bg-color-2); */
     background-image: linear-gradient(to bottom, var(--p-blue-100), var(--p-bg-color-2) 95%);
     width: 250px;
     padding: 1rem;

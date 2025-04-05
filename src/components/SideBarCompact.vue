@@ -1,6 +1,6 @@
 <template>
     <ConfirmDialog></ConfirmDialog>
-    <div class="sidebar-container">
+    <div class="sidebar-container bg-image">
         <div class="rectangle">
             <div class="d-flex align-items-center justify-content-center">
                 <router-link to="/overview" class="logoLCS">
@@ -283,6 +283,25 @@ onBeforeMount(async () => {
     display: flex;
     box-sizing: border-box;
 }
+.sidebar-container.bg-image {
+    position: relative;
+    overflow: hidden; /* предотвращает выход размытия за границы */
+}
+.sidebar-container.bg-image::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    opacity: 0.5;
+    height: 100%;
+    background-image: url('/src/assets/backgrounds/spring.webp');
+    background-position: center;
+    background-repeat: no-repeat;
+    
+    filter: blur(0.5px); /* Настройте степень размытия */
+    z-index: -1; /* Размытие будет под контентом */
+}
 .menu {
     display: flex;
     flex-direction: column;
@@ -327,9 +346,7 @@ onBeforeMount(async () => {
     padding: 1.25rem;
     transition: all 0.5s;
     border-right: 1px solid var(--p-grey-5);
-    background-image: url('/src/assets/backgrounds/winter.webp');
-    background-color: var(--p-grey-3);
-    background-blend-mode: overlay;
+    background-image: linear-gradient(to bottom, var(--p-blue-100), var(--p-bg-color-2) 95%);
 }
 .rectangle:before {
   content: ' ';
@@ -341,8 +358,6 @@ onBeforeMount(async () => {
   width: 100%;
   height: 100%;
   opacity: 0.8;
-  /* background-image: url('../assets/Exclude.png'); */
-  /* background-color: var(--p-bg-color-2); */
   background-repeat: no-repeat;
   background-position: 50% 0;
   background-size: contain;

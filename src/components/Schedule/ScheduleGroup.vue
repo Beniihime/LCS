@@ -289,7 +289,7 @@ const isDateAvailable = (dateObj) => {
 
 // Очистка названия дисциплины от "лек.", "лаб.", "пр."
 const cleanDiscipline = (discipline) => {
-    const match = discipline.match(/^(лек|лаб|пр.|экз)\s*/i, '');
+    const match = discipline.match(/^(лек|лаб|пр.|экз|зач)\s*/i, '');
     let type = "";
     let color = "";
     if (match) {
@@ -311,12 +311,16 @@ const cleanDiscipline = (discipline) => {
                 type = "Экзамен";
                 color = "sky";
                 break;
+            case "зач":
+                type = "Зачет";
+                color = "sky";
+                break;
             default:
                 type = "";
         }
     }
     return {
-        cleanedDiscipline: discipline.replace(/^(лек|лаб|пр.|экз)\s*/i, ''),
+        cleanedDiscipline: discipline.replace(/^(лек|лаб|пр.|экз|зач)\s*/i, ''),
         type,
         color
     };
