@@ -88,6 +88,17 @@ const routes = [
                     }, 
                     requiresAuth: true,
                     title: 'Микросервисы'
+                },
+                children: [
+                    
+                ]
+            },
+            {
+                path: "/services/infraManager",
+                component: () => import('@/components/Microservice/InfraManager/InfraManagerTable.vue'),
+                name: 'InfraTable',
+                meta: {
+                    title: 'Заявки'
                 }
             },
             {
