@@ -66,10 +66,13 @@ const auth = async () => {
             }
         });
 
+        const accessTokenExpired = Math.floor(Date.now() / 1000) + 15 * 60;
+        
         localStorage.setItem('accessToken', response.data.accessToken);
         localStorage.setItem('refreshToken', response.data.refreshTokenValue);
         localStorage.setItem('userId', response.data.userId);
         localStorage.setItem('refreshTokenExpired', response.data.refreshTokenExpired);
+        localStorage.setItem('accessTokenExpired', accessTokenExpired);
 
         startTokenWorker();
 

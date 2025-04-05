@@ -1,25 +1,42 @@
 // import axiosInstance from '@/utils/axios.js';
 
+let currentRefreshToken = null;
+let currentUserId = null;
+let currentRefreshTokenExpired = null;
+let currentAccessTokenExpired = null;
+
 self.onmessage = async (event) => {
     if (event.data.action === "start") {
-        const { refreshToken, userId, refreshTokenExpired } = event.data;
+        const { refreshToken, userId, refreshTokenExpired, accessTokenExpired } = event.data;
         console.debug("[TokenWorker] Starting background token refresh...");
-        startTokenRefreshLoop(refreshToken, userId, refreshTokenExpired);
+
+        currentRefreshToken = refreshToken;
+        currentUserId = userId;
+        currentRefreshTokenExpired = refreshTokenExpired;
+        currentAccessTokenExpired = accessTokenExpired;
+
+        startTokenRefreshLoop();
+    }
+    if (event.data.action === "refreshOnce") {
+        const { refreshToken, userId } = event.data;
+        await refreshAccessToken(refreshToken, userId);
     }
 }
 
-function startTokenRefreshLoop(refreshToken, userId, refreshTokenExpired) {
+function startTokenRefreshLoop() {
     setInterval(async () => {
         const currentTime = Math.floor(Date.now() / 1000);
-        const timeUntilExpiration = refreshTokenExpired - currentTime;
+        const timeUntilRefreshExpires = currentRefreshTokenExpired  - currentTime;
+        const timeUntilAccessExpires = currentAccessTokenExpired  - currentTime;
 
-        console.debug(`[TokenWorker] Time until expiration: ${timeUntilExpiration} seconds`);
+        console.debug(`[TokenWorker] Time until refreshToken expires: ${timeUntilRefreshExpires} seconds`);
+        console.debug(`[TokenWorker] Time until accessToken expires: ${timeUntilAccessExpires} seconds`);
 
-        if (timeUntilExpiration <= 60) {
+        if (timeUntilAccessExpires <= 60 || timeUntilRefreshExpires <= 60) {
             console.debug("[TokenWorker] Refreshing token...");
-            await refreshAccessToken(refreshToken, userId);
+            await refreshAccessToken(currentRefreshToken, currentUserId);
         }
-    }, 15 * 60 * 1000);
+    }, 10000);
 }
 
 async function refreshAccessToken(refreshToken, userId) {
@@ -30,10 +47,11 @@ async function refreshAccessToken(refreshToken, userId) {
             return;
         }
 
-        const response = await fetch("/api/auth-refresh-token", {
+        const url = `https://development.sibadi.org/api/auth/refresh-token?value=${encodeURIComponent(refreshToken)}&userId=${encodeURIComponent(userId)}`;
+
+        const response = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ value: refreshToken, userId }),
         }) 
 
         if (!response.ok) {
@@ -41,9 +59,20 @@ async function refreshAccessToken(refreshToken, userId) {
         }
 
         const data = await response.json();
+        const newAccessTokenExpired = Math.floor(Date.now() / 1000) + 15 * 60;
         console.debug("[TokenWorker] Token refreshed successfully!");
 
-        self.postMessage({ action: "updateToken", accessToken: data.accessToken, refreshToken: data.refreshTokenValue, refreshTokenExpired: data.refreshTokenExpired });
+        currentRefreshToken = data.refreshTokenValue;
+        currentRefreshTokenExpired = data.refreshTokenExpired;
+        currentAccessTokenExpired = newAccessTokenExpired;
+
+        self.postMessage({ 
+            action: "updateToken", 
+            accessToken: data.accessToken, 
+            refreshToken: data.refreshTokenValue, 
+            refreshTokenExpired: data.refreshTokenExpired,
+            accessTokenExpired: newAccessTokenExpired
+        });
 
     } catch (error) {
         console.error("[TokenWorker] Error refreshing token:", error);
