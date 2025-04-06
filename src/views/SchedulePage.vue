@@ -325,7 +325,6 @@ onMounted(() => {
 }
 
 .schedule-card:hover {
-    filter: drop-shadow(0 0 0.75rem rgba(0, 0, 0, 0.3));
     background: var(--p-blue-500-low-op);
     color: var(--p-color-icon-menu);
     cursor: pointer;

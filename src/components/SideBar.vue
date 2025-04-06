@@ -376,7 +376,7 @@ const checkIsMobile = () => {
     display: flex;
     align-items: center;
     width: 100%;
-    height: 45px;
+    padding-block: 10px;
     border-radius: 12px;
     transition: all 0.5s;
     text-decoration: none;

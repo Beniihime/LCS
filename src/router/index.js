@@ -98,7 +98,15 @@ const routes = [
                 component: () => import('@/components/Microservice/InfraManager/InfraManagerTable.vue'),
                 name: 'InfraTable',
                 meta: {
-                    title: 'Заявки'
+                    title: 'Все Заявки'
+                }
+            },
+            {
+                path: "/services/rating",
+                component: () => import('@/components/Microservice/Rating/RatingSeasons.vue'),
+                name: 'Seasons',
+                meta: {
+                    title: 'Сезон'
                 }
             },
             {

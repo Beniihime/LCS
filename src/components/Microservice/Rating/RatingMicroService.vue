@@ -1,6 +1,6 @@
 <template>
     <main>
-        <div class="card h-100">
+        <div class="card h-100" @click="seasons">
             <div class="row">
                 <div class="col">
                     <div class="card-body">
@@ -21,7 +21,14 @@
 </template>
 
 <script setup>
+import { ref } from "vue";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
+
+const seasons = () => {
+    router.push("/services/rating");
+};
 </script>
 
 <style scoped>

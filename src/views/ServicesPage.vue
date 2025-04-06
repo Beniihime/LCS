@@ -5,11 +5,11 @@
             <h2 class="mb-4">Микросервисы</h2>
             <div v-if="!loading" class="services-cards">
                 <InfraManagerMicroService />
-                <!-- <RatingService /> -->
+                <RatingService />
             </div>
             <div v-else class="services-cards">
                 <Skeleton width="100%" height="110px" />
-                <!-- <Skeleton width="100%" height="110px" /> -->
+                <Skeleton width="100%" height="110px" />
             </div>
         </div>
     </main>
@@ -18,8 +18,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
-import InfraManagerMicroService from "@/components/Microservice/InfraManagerMicroService.vue";
-import RatingService from "@/components/Microservice/RatingMicroService.vue";
+import InfraManagerMicroService from "@/components/Microservice/InfraManager/InfraManagerMicroService.vue";
+import RatingService from "@/components/Microservice/Rating/RatingMicroService.vue";
 
 const loading = ref(true);
 
