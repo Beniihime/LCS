@@ -15,6 +15,7 @@ import { createPinia } from 'pinia';
 
 import Button from 'primevue/button';
 import Tooltip from 'primevue/tooltip';
+import Toolbar from 'primevue/toolbar';
 import Avatar from 'primevue/avatar';
 import Divider from 'primevue/divider';
 import InputText from 'primevue/inputtext';
@@ -120,6 +121,7 @@ app.component('ToggleSwitch', ToggleSwitch);
 app.component('Menu', Menu);
 app.component('DataTable', DataTable);
 app.component('Column', Column);
+app.component('Toolbar', Toolbar);
 app.component('Timeline', Timeline);
 app.component('OverlayBadge', OverlayBadge);
 app.component('Skeleton', Skeleton);

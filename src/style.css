@@ -172,9 +172,9 @@ svg.lcs {
   display: none !important;
 }
 
-.p-datatable-tbody > tr:hover {
-  background-color: var(--p-blue-500-low-op) !important;
-}
+/* .p-datatable-tbody > tr:not(.p-datatable-row-group-header):not(.p-datatable-row-expansion):hover {
+  background-color: var(--p-blue-500-low-op) ;
+} */
 
 :root {
   --p-bg-color-0: rgba(255, 255, 255, 0.5);

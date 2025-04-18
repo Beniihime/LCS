@@ -15,9 +15,7 @@
                     :totalRecords="totalRecords"
                     scrollable
                     removableSort
-                    stripedRows
-                    rowHover
-                    
+                    stripedRows                    
                     @page="onPage"
                     :rowClass="rowClass"
                     @row-click="(event) => openCallDetails(event.data.id)"
@@ -616,7 +614,9 @@ main {
 .pi {
     font-size: 2rem;
 }
-
+:deep(.p-datatable-tbody > tr:hover) {
+    background-color: var(--p-blue-500-low-op) !important;
+}
 @media (max-width: 768px) {
     .content-wrapper {
         padding: 20px;

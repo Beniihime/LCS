@@ -13,10 +13,6 @@
                             </div>
                             <div class="col-auto">
                                 <Button class="action" type="button" icon="pi pi-ellipsis-v" @click.stop="toggle" aria-haspopup="true" aria-controls="overlay_menu" severity="secondary"/>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-auto">
                                 <Menu ref="menu" :model="menuItems" :popup="true" id="overlay_menu"/>
                             </div>
                         </div>

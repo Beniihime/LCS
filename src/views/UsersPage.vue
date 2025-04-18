@@ -354,4 +354,7 @@ h3 {
   border-radius: 12px;
   background-color: var(--p-grey-3);
 }
+:deep(.p-datatable-tbody > tr:hover) {
+    background-color: var(--p-blue-500-low-op) !important;
+}
 </style>

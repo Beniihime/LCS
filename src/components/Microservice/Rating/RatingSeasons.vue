@@ -3,22 +3,23 @@
         <div class="content-wrapper">
             <h2 class="mb-4">Выберите сезон</h2>
             <div class="seasons-grid">
-                <div v-for="item in 8" :key="item.id" class="season">
-                    <h3>1 квартал 2025</h3>
+                <div v-for="(item, index) in seasons" :key="item.id" class="season" @click="goToSeason(item.id)">
+                    <h3>{{ item.title }}</h3>
                     <div class="content mb-4">
                         <i class="pi pi-calendar me-2"></i>
-                        <span>Январь-Март</span>
+                        <span>{{ item.period }}</span>
                     </div>
                     <div class="content second-plan">
                         <i class="pi pi-chart-bar me-2"></i>
-                        <span>Индикаторов: 12</span>
+                        <span>Показателей: {{ item.indicators }}</span>
                     </div>
                     <div class="content second-plan">
                         <i class="pi pi-users me-2"></i>
-                        <span>Сотрудников: 27</span>
+                        <span>Сотрудников: {{ item.employees }}</span>
                     </div>
                     <div class="menu">
-                        <Button icon="pi pi-ellipsis-h" class="edit-btn"/>
+                        <Button type="button" icon="pi pi-ellipsis-h" class="edit-btn" @click.stop="(event) => toggle(event, index)" aria-haspopup="true" aria-controls="overlay_menu" v-tooltip="'Действия'" />
+                        <Menu :ref="(el) => { if (el) menus[index] = el }" :model="menuItems" :popup="true" id="season_edit"/>
                     </div>
                 </div>
                 <div class="add-season" v-tooltip.bottom="'Добавить сезон'">
@@ -31,7 +32,32 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useRouter } from "vue-router";
 
+const menus = ref([]);
+const router = useRouter();
+
+const seasons = ref([
+    { id: 1, title: '1 квартал 2025', period: 'Январь-Март', indicators: 12, employees: 27 },
+    { id: 2, title: '2 квартал 2025', period: 'Апрель-Июнь', indicators: 15, employees: 30 },
+    // ... остальные сезоны
+]);
+
+const menuItems = ref([{
+    label: 'Действия',
+    items: [
+        { label: 'Удалить', icon: 'pi pi-trash' },
+        { label: 'Изменить', icon: 'pi pi-pencil' },
+    ]
+}]);
+
+const toggle = (event, index) => {
+    menus.value[index].toggle(event);
+};
+
+const goToSeason = (seasonId) => {
+    router.push({ path: `/services/rating/season/${seasonId}`, });
+};
 
 </script>
 
@@ -64,8 +90,9 @@ main {
     position: relative;
 }
 .add-season {
-    padding: 20px;
+    padding: 30px;
     display: flex;
+    cursor: pointer;
 
     background-color: var(--p-grey-7);
     border: 2px solid var(--p-grey-5);
@@ -83,7 +110,6 @@ main {
     }
 }
 .add-season:hover {
-    cursor: pointer;
     background-color: var(--p-blue-500-low-op);
     border-color: var(--p-color-icon-menu);
     .pi {

@@ -32,7 +32,7 @@ function startTokenRefreshLoop() {
         console.debug(`[TokenWorker] Time until refreshToken expires: ${timeUntilRefreshExpires} seconds`);
         console.debug(`[TokenWorker] Time until accessToken expires: ${timeUntilAccessExpires} seconds`);
 
-        if (timeUntilAccessExpires <= 60 || timeUntilRefreshExpires <= 60) {
+        if (timeUntilRefreshExpires <= 60) {
             console.debug("[TokenWorker] Refreshing token...");
             await refreshAccessToken(currentRefreshToken, currentUserId);
         }

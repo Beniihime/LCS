@@ -4,6 +4,31 @@ import { usePermissionStore } from '@/stores/permissions.js';
 
 const routes = [
     { 
+        path: "/auth", 
+        component: () => import('@/views/AuthPage.vue'),
+        name: 'Auth',
+        meta: { 
+            requiresAuth: false,
+            title: 'Вход'
+        }
+    },
+    {
+        path: '/noAccess',
+        component: () => import('@/components/Utils/PermissionDenied.vue'),
+        name: 'NoAccess',
+        meta: {
+            title: '403',
+        }
+    },
+    {
+        path: '/notFound',
+        component: () => import('@/components/Utils/NotFound.vue'),
+        name: 'NotFound',
+        meta: {
+            title: '404',
+        }
+    },
+    { 
         path: "/", 
         component: () => import('@/views/HomePage.vue'),
         name: 'HomePage',
@@ -12,6 +37,13 @@ const routes = [
             title: 'Главная'
         },
         children: [
+            // Dashboard
+            {
+                path: "/overview",
+                component: () => import('@/views/DashboardPage.vue'),
+                name: 'Dashboard'
+            },
+            // Users section
             {
                 path: "/users",
                 component: () => import('@/views/UsersPage.vue'),
@@ -26,13 +58,16 @@ const routes = [
                 }
             },
             {
-                path: "/notif",
-                component: () => import('@/views/NotifPage.vue'),
+                path: "/profile",
+                props: (route) => ({ id: route.query.id }),
+                component: () => import('@/views/ProfilePage.vue'),
+                name: 'Profile',
                 meta: { 
                     requiresAuth: true,
-                    title: 'Уведомления'
+                    title: 'Личный кабинет'
                 }
             },
+            // RBAC section
             {
                 path: "/rbac",
                 component: () => import('@/views/RbacPage.vue'),
@@ -67,16 +102,7 @@ const routes = [
                     title: 'Полномочия роли'
                 }
             },
-            {
-                path: "/profile",
-                props: (route) => ({ id: route.query.id }),
-                component: () => import('@/views/ProfilePage.vue'),
-                name: 'Profile',
-                meta: { 
-                    requiresAuth: true,
-                    title: 'Личный кабинет'
-                }
-            },
+            // Services section
             {
                 path: "/services",
                 component: () => import('@/views/ServicesPage.vue'),
@@ -89,9 +115,6 @@ const routes = [
                     requiresAuth: true,
                     title: 'Микросервисы'
                 },
-                children: [
-                    
-                ]
             },
             {
                 path: "/services/infraManager",
@@ -110,6 +133,15 @@ const routes = [
                 }
             },
             {
+                path: "/services/rating/season/:idSeason",
+                component: () => import('@/components/Microservice/Rating/CertainSeason.vue'),
+                name: 'Indicators',
+                meta: {
+                    title: 'Показатели'
+                },
+            },
+            // Requests section
+            {
                 path: "/requests",
                 component: () => import('@/views/RequestsPage.vue'),
                 name: 'Requests',
@@ -117,11 +149,7 @@ const routes = [
                     title: 'Заявки'
                 }
             },
-            {
-                path: "/overview",
-                component: () => import('@/views/DashboardPage.vue'),
-                name: 'Dashboard'
-            },
+            // Schedule section
             {
                 path: "/schedule",
                 component: () => import('@/views/SchedulePage.vue'),
@@ -144,34 +172,19 @@ const routes = [
                 path: "/schedule/teacher/:idTeacher",
                 component: () => import('@/components/Schedule/ScheduleTeach.vue'),
                 name: 'ScheduleTeach',
-            }
+            },
+            // Notifications
+            {
+                path: "/notif",
+                component: () => import('@/views/NotifPage.vue'),
+                meta: { 
+                    requiresAuth: true,
+                    title: 'Уведомления'
+                }
+            },
+            
         ]
     }, 
-    { 
-        path: "/auth", 
-        component: () => import('@/views/AuthPage.vue'),
-        name: 'Auth',
-        meta: { 
-            requiresAuth: false,
-            title: 'Вход'
-        }
-    },
-    {
-        path: '/noAccess',
-        component: () => import('@/components/Utils/PermissionDenied.vue'),
-        name: 'NoAccess',
-        meta: {
-            title: '403',
-        }
-    },
-    {
-        path: '/notFound',
-        component: () => import('@/components/Utils/NotFound.vue'),
-        name: 'NotFound',
-        meta: {
-            title: '404',
-        }
-    },
     {
         path: '/:pathMatch(.*)*',
         redirect: '/notFound'

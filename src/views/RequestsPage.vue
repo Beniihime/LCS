@@ -555,6 +555,9 @@ onMounted(async () => {
     cursor: pointer;
     animation: fadeInOut 5s forwards;
 }
+:deep(.p-datatable-tbody > tr:hover) {
+    background-color: var(--p-blue-500-low-op) !important;
+}
 
 @keyframes fadeInOut {
     0%, 80% {
