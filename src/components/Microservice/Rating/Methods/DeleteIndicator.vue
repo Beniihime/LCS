@@ -1,21 +1,25 @@
 <template>
     <Button icon="pi pi-trash" outlined rounded severity="danger" @click="showDeleteDialog(props.item)" />
-    <Dialog v-model:visible="deleteDialogVisible" modal header="Подтверждение удаления"
+    <Dialog v-model:visible="deleteDialogVisible" modal header="Удалить показатель"
             :style="{ width: '30rem' }">
         <span>Вы уверены, что хотите удалить этот показатель ?<Tag>{{ props.item.indicator }}</Tag></span>
         <template #footer>
             <Button label="Нет" icon="pi pi-times" severity="secondary" outlined @click="deleteDialogVisible = false" />
-            <Button label="Да" icon="pi pi-check" severity="contrast" @click="confirmDelete" />
+            <Button label="Да" icon="pi pi-trash" severity="danger" @click="confirmDelete" />
         </template>
     </Dialog>
 </template>
 
 <script setup>
 import { ref } from 'vue';
+import axiosInstance from "@/utils/axios.js";
 
 const props = defineProps({
     item: Object,
+    seasonId: String
 })
+
+const emit = defineEmits(['deleted']);
 
 const deleteDialogVisible = ref(false);
 const itemToDelete = ref(null);
@@ -25,9 +29,15 @@ const showDeleteDialog = (item) => {
     deleteDialogVisible.value = true;
 };
 
-const confirmDelete = () => {
+const confirmDelete = async () => {
     if (itemToDelete.value) {
-        
+        try {
+            await axiosInstance.delete(`/api/rating/seasons/${props.seasonId}/indicators/${props.item.id}`);
+            emit('deleted');
+            deleteDialogVisible.value = false;
+        } catch(error) {
+            console.error('Ошибка при удалении: ', error);
+        }
     }
 }
 </script>

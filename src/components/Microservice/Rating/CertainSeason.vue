@@ -1,7 +1,6 @@
-как мне вот сделать чтобы target и points были построчно, а indicator, periodicity, responsible были span?
-
 <template>
     <main>
+        <WelcolmeScreen :visible="loading"/>
         <div class="content-wrapper">
             <header class="header">
                 <div class="header-row justify-content-between align-items-center">
@@ -10,14 +9,14 @@
                         <span class="fs-3 ms-4">Показатели эффективности</span>
                     </div>
 
-                    <div class="certain-season">Выбранный сезон: 1 квартал 2025</div>
+                    <div class="certain-season">Выбранный сезон: {{ seasonTitle }}</div>
                 </div>
                 
 
                 <div class="header-row">
                     <div class="header-card" v-for="(_, index) in 3" :key="index">
-                            <span class="card-title">{{ headerTitles[index] }}</span>
-                            <span class="card-value">{{ headerValues[index] }}</span>
+                        <span class="card-title">{{ headerTitles[index] }}</span>
+                        <span class="card-value">{{ headerValues[index] }}</span>
                     </div>
                 </div>
             </header>
@@ -42,7 +41,8 @@
                     <template #header>
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="header-left-group d-flex align-items-center">
-                                <Button label="Добавить" severity="contrast" icon="pi pi-plus" />
+                                <!-- <Button label="Добавить" severity="contrast" icon="pi pi-plus" /> -->
+                                <AddIndToSeason :seasonId="seasonId" @added="fetchIndicators" />
                                 <Button 
                                     :icon="allExpanded ? 'pi pi-minus' : 'pi pi-plus'"
                                     :label="allExpanded ? 'Свернуть все': 'Развернуть все'"
@@ -109,7 +109,7 @@
 
                     <Column field="edit" style="max-width: 100px;">
                         <template #body="{ data }">
-                            <DeleteIndicator :item="data" />
+                            <DeleteIndicator :item="data" :seasonId="seasonId" @deleted="fetchIndicators" />
                         </template>
                     </Column>
 
@@ -124,7 +124,7 @@
                                             <InputText id="searchEmp" name="search" placeholder="Поиск по сотруднику..." class="search" v-model="searchEmp" />
                                         </IconField>
                                         <h4 class="m-0 translate-middle-x">Сотрудники</h4>
-                                        <Button label="Добавить" icon="pi pi-plus" severity="contrast" size="small" />
+                                        <!-- <AddEmpToInd @updated="fetchIndicators" :seasonId="seasonId"/> -->
                                     </div>
                                     
                                 </template>
@@ -153,7 +153,7 @@
                     </template>
 
                     <template #paginatorstart>
-                        <span>Всего показателей: {{ raw.length }}</span>
+                        <span>Всего показателей: {{ formattedIndicators.length }}</span>
                     </template>
 
                     <template #paginatorend>
@@ -176,11 +176,23 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
-import { useRouter } from "vue-router";
+import { ref, computed, watch, onMounted } from 'vue';
+import { useRouter, useRoute } from "vue-router";
+import axiosInstance from "@/utils/axios.js";
+import { getQuarterPeriod } from '@/utils/formatSeason.js';
+
+import WelcolmeScreen from "@/components/Utils/WelcomeScreen.vue";
 
 import DeleteIndicator from "@/components/Microservice/Rating/Methods/DeleteIndicator.vue";
 import UpdEmployeeValue from "@/components/Microservice/Rating/Methods/UpdEmployeeValue.vue";
+import AddIndToSeason from "@/components/Microservice/Rating/Methods/AddIndToSeason.vue";
+import AddEmpToInd from "@/components/Microservice/Rating/Methods/AddEmpToInd.vue";
+
+const router = useRouter();
+const route = useRoute();
+
+const seasonId = route.params.idSeason;
+const seasonTitle = computed(() => route.query.title);
 
 const rowsPerPage = ref(10);
 const rowsPerPageOptions = [
@@ -190,20 +202,33 @@ const rowsPerPageOptions = [
     { label: '50', value: 50 },
 ];
 
-const router = useRouter();
+const goBack = () => router.back();
+const loading = ref(true);
+const headerTitles = ["Сотрудники", "Показатели", "Период"];
+const headerValues = computed(() => 
+    [
+        12, 
+        formattedIndicators.value.length, 
+        getQuarterPeriod(seasonTitle.value.split('/')[1])
+    ]
+);
 
-const goBack = () => {
-    router.back();
-};
+const groups = ref([]);
+const rawIndicators = ref([]);
+const formattedIndicators = ref([]);
+const employeeValues = ref([]);
 
+const searchInd = ref('');
+const searchEmp = ref('');
 const expandedRows = ref({});
 const expandedRowGroups = ref();
+const allExpanded = ref(false);
 
 const expandAll = () => {
-    const groups = [...new Set(raw.value.map(item => item.group))];
+    const groups = [...new Set(formattedIndicators.value.map(item => item.group))];
     expandedRowGroups.value = groups;
     // Разворачиваем только строки из развернутых групп
-    expandedRows.value = raw.value
+    expandedRows.value = formattedIndicators.value
         .filter(item => groups.includes(item.group))
         .reduce((acc, p) => (acc[p.id] = true) && acc, {});
 };
@@ -212,10 +237,6 @@ const collapseAll = () => {
     expandedRows.value = null;
 };
 
-const searchInd = ref('');
-const searchEmp = ref('');
-
-const allExpanded = ref(false);
 const toggleExpandAll = () => {
     if (allExpanded.value) {
         collapseAll();
@@ -226,10 +247,10 @@ const toggleExpandAll = () => {
 };
 
 const filteredIndicators = computed(() => {
-    if (!searchInd.value) return raw.value;
+    if (!searchInd.value) return formattedIndicators.value;
 
     const searchTerm = searchInd.value.toLowerCase();
-    const results = raw.value.filter(indicator =>
+    const results = formattedIndicators.value.filter(indicator =>
         indicator.indicator.toLowerCase().includes(searchTerm)
     );
 
@@ -269,18 +290,8 @@ const getSeverity = (index, points) => {
     return 'warn';
 };
 
-const calculateIndicatorsTotal = (name) => {
-    let total = 0;
-
-    if (raw.value) {
-        for (let indicator of raw.value) {
-            if (indicator.group === name) {
-                total++;
-            }
-        }
-    }
-
-    return total;
+const calculateIndicatorsTotal = (groupName) => {
+    return formattedIndicators.value.filter(ind => ind.group === groupName).length;
 }
 
 watch(expandedRowGroups, (newGroups, oldGroups) => {
@@ -290,7 +301,7 @@ watch(expandedRowGroups, (newGroups, oldGroups) => {
     if (collapsedGroups.length > 0) {
         // Сворачиваем только строки из свернутых групп
         const newExpandedRows = {...expandedRows.value};
-        raw.value
+        formattedIndicators.value
             .filter(item => collapsedGroups.includes(item.group))
             .forEach(item => {
                 delete newExpandedRows[item.id];
@@ -310,114 +321,56 @@ watch(searchInd, (newVal) => {
 //     return [{ 'highlighted-row': data.id === lastCreatedId.value }];
 // };
 
+const fetchIndicators = async () => {
+    loading.value = true;
+    try {
+        const [groupRes, indicatorRes, valuesRes] = await Promise.all([
+            axiosInstance.get('/api/rating/groups-indicators'),
+            axiosInstance.get(`/api/rating/seasons/${seasonId}/indicators`),
+            axiosInstance.get('/api/rating/employee-indicators-value'),
+        ]);
 
+        groups.value = groupRes.data;
+        rawIndicators.value = indicatorRes.data;
+        employeeValues.value = valuesRes.data;
 
-const raw = ref([
-  {
-    id: 1,
-    number: "1.1",
-    indicator: "Средний балл ЕГЭ поступивших на обучение по очной форме по специальностям и направлениям, закрепленным за институтом",
-    target: ["менее 60", "60-65", "66-89", "90-100"],
-    point: [0, 5, 10, 23],
-    periodicity: "3 квартал",
-    responsible: "Ответственный секретарь приемной комиссии",
-    employees: [
-      { name: "Иван Иванов", value: 23, group: "Директор", periodicity: '3 квартал' },
-      { name: "Мария Петрова", value: 10 },
-    ],
-    group: "Директор"
-  },
-  {
-    id: 2,
-    number: 1.2,
-    indicator: "Процент приема в пределах контрольных цифр приема по специальностям и направлениям, закрепленным за институтом",
-    target: ["менее 100%", "100%"],
-    point: [0, 3],
-    periodicity: "3 квартал",
-    responsible: "Ответственный секретарь приемной комиссии",
-    employees: [
-      { name: "Иван Иванов", value: 0 },
-      { name: "Мария Петрова", value: 3 },
-      { name: "Григорий Шамрай", value: 4 },
-    ],
-    group: "Директор"
-  },
-  {
-    id: 3,
-    number: 1.3,
-    indicator: "Соотношение численности абитуриентов, подавших заявление на поступление, к численности принятых на обучение по специальностям и направлениям, по очной и очно-заочной форме обучения, закрепленным за институтом",
-    target: ["менее 1,5", "1,6-2,0", "2,1-3,0", "3,1-4,0"],
-    point: [0, 3, 4, 5],
-    periodicity: "3 квартал",
-    responsible: "Ответственный секретарь приемной комиссии",
-    employees: [
-      { name: "Иван Иванов", value: 0 },
-      { name: "Мария Петрова", value: 3 },
-    ],
-    group: "Директор"
-  },
-  {
-    id: 4,
-    number: 1.4,
-    indicator: "Доля принятых на обучения в рамках квоты приема на целевое обучение по специальностям и направлениям, закрепленным за институтом",
-    target: ["менее 10%", "10-29%", "30-39%", "40-49%", "более 50%"],
-    point: [0, 3, 6, 9, 12],
-    periodicity: "3 квартал",
-    responsible: "Ответственный секретарь приемной комиссии",
-    employees: [
-      { name: "Иван Иванов", value: 0 },
-      { name: "Мария Петрова", value: 3 },
-    ],
-    group: "Директор"
-  },
-  {
-    id: 5,
-    number: 1.5,
-    indicator: "Процент заявлений на поступление на следующий уровень образования, принятых от лиц, имеющих диплом бакалавра, специалиста, магистра, на полученных в других образовательных организациях по специальностям и направлениям, закрепленным за институтом",
-    target: ["менее 10%", "10-20%", "20-30%", "30-40%", "40-50%", "50% и более"],
-    point: [0, 2, 4, 6, 8, 10],
-    periodicity: "3 квартал",
-    responsible: "Ответственный секретарь приемной комиссии",
-    employees: [
-      { name: "Иван Иванов", value: 0 },
-      { name: "Мария Петрова", value: 3 },
-    ],
-    group: "Директор"
-  },
-  {
-    id: 6,
-    number: 2.1,
-    indicator: "Соотношение приведенной численности лиц, прошедших обучение по дополнительным программам, и приведенного контингента студентов института",
-    target: ["0", "1-5%", "6-10%", "11-20%", "21-25%", "более 25%"],
-    point: [0, 1, 2, 3, 4, 6],
-    periodicity: "1 раз в квартал (1 квартал года следующего за отчетным)",
-    responsible: "Директор ИДО",
-    employees: [
-      { name: "Иван Иванов", value: 0 },
-      { name: "Мария Петрова", value: 3 },
-    ],
-    group: "Заведующий кафедры"
-  },
-  {
-    id: 7,
-    number: 2.2,
-    indicator: "Доля обучающихся по договорам о целевом обучении в приведенном контингенте студентов института",
-    target: ["0", "1-10%", "11-20%", "21-30%", "31-40%", "41-50%", "50% и более"],
-    point: [0, 5, 10, 15, 20, 25, 30],
-    periodicity: "4 квартал",
-    responsible: "Начальник УМУ",
-    employees: [
-      { name: "Иван Иванов", value: 0 },
-      { name: "Мария Петрова", value: 3 },
-    ],
-    group: "Заведующий кафедры"
-  },
-]);
+        const groupMap = new Map(groups.value.map((g, i) => [g.id, { ...g, index: i + 1 }]));
 
-const headerTitles = ["Сотрудники", "Показатели", "Период"];
-const headerValues = computed(() => [
-    12, 27, "Январь-Март"
-]);
+        const grouped = {};
+        rawIndicators.value.forEach(ind => {
+            const groupId = ind.groupIndicator.id;
+            if (!grouped[groupId]) grouped[groupId] = [];
+            grouped[groupId].push(ind);
+        });
+
+        formattedIndicators.value = Object.entries(grouped).flatMap(([groupId, indicators]) => {
+            const groupInfo = groupMap.get(Number(groupId));
+            return indicators.map((ind, idx) => {
+                const relatedValues = employeeValues.value.filter(v => v.indicator.id === ind.id);
+
+                return {
+                    id: ind.id,
+                    group: groupInfo.title,
+                    number: `${groupInfo.index}.${idx + 1}`,
+                    indicator: ind.title,
+                    periodicity: ind.periodicityIndicators.map(p => p.title).join(', '),
+                    responsible: ind.responsibleIndicators.map(r => r.title).join(', '),
+                    employees: relatedValues.map(v => v.employee.fio),
+                    target: relatedValues.map(v => v.target),
+                    point: relatedValues.map(v => v.value),
+                };
+            });
+        });
+    } catch(error) {
+        console.error('Ошибка при загрузке: ', error);
+    } finally {
+        loading.value = false;
+    }
+};
+
+onMounted(async () => {
+    await fetchIndicators();
+});
 </script>
 
 <style scoped>

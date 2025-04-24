@@ -1,5 +1,6 @@
 <template>
     <main>
+        <WelcolmeScreen :visible="loading"/>
         <div class="content-wrapper">
             <h2 class="mb-4">Выберите сезон</h2>
             <div class="seasons-grid">
@@ -19,45 +20,107 @@
                     </div>
                     <div class="menu">
                         <Button type="button" icon="pi pi-ellipsis-h" class="edit-btn" @click.stop="(event) => toggle(event, index)" aria-haspopup="true" aria-controls="overlay_menu" v-tooltip="'Действия'" />
-                        <Menu :ref="(el) => { if (el) menus[index] = el }" :model="menuItems" :popup="true" id="season_edit"/>
+                        <Menu :ref="(el) => { if (el) menus[index] = el }" :model="menuItems[index]" :popup="true" id="season_edit"/>
                     </div>
                 </div>
-                <div class="add-season" v-tooltip.bottom="'Добавить сезон'">
-                    <i class="pi pi-plus-circle my-5"></i>
-                </div>
+                
+                <CreateSeason @created="fetchSeasons" />
+                <UpdateSeason @edited="fetchSeasons" :season="selectedSeason" v-model:visible="showEditDialog" />
+                <DeleteSeason @deleted="fetchSeasons" :season="selectedSeason" v-model:visible="showDeleteDialog"/>
             </div>
         </div>
     </main>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from "vue-router";
+import axiosInstance from "@/utils/axios.js";
+import { getQuarterPeriod } from '@/utils/formatSeason.js';
+
+import WelcolmeScreen from "@/components/Utils/WelcomeScreen.vue";
+import CreateSeason from "@/components/Microservice/Rating/Methods/CreateSeason.vue";
+import UpdateSeason from "@/components/Microservice/Rating/Methods/UpdateSeason.vue";
+import DeleteSeason from "@/components/Microservice/Rating/Methods/DeleteSeason.vue";
 
 const menus = ref([]);
 const router = useRouter();
+const seasons = ref([]);
+const loading = ref(true);
 
-const seasons = ref([
-    { id: 1, title: '1 квартал 2025', period: 'Январь-Март', indicators: 12, employees: 27 },
-    { id: 2, title: '2 квартал 2025', period: 'Апрель-Июнь', indicators: 15, employees: 30 },
-    // ... остальные сезоны
-]);
+const menuItems = ref([]);
 
-const menuItems = ref([{
-    label: 'Действия',
-    items: [
-        { label: 'Удалить', icon: 'pi pi-trash' },
-        { label: 'Изменить', icon: 'pi pi-pencil' },
-    ]
-}]);
+const selectedSeason = ref(null);
+
+const showEditDialog = ref(false);
+const showDeleteDialog = ref(false);
+
+const openEditDialog = (season) => {
+  selectedSeason.value = season;
+  showEditDialog.value = true;
+};
+
+const openDeleteDialog = (season) => {
+  selectedSeason.value = season;
+  showDeleteDialog.value = true;
+};
 
 const toggle = (event, index) => {
     menus.value[index].toggle(event);
 };
 
 const goToSeason = (seasonId) => {
-    router.push({ path: `/services/rating/season/${seasonId}`, });
+    const selected = seasons.value.find(s => s.id === seasonId);
+    router.push({ 
+        path: `/services/rating/season/${seasonId}`, 
+        query: { title: selected.title }
+    });
 };
+
+const fetchSeasons = async () => {
+    loading.value = true;
+    try {
+        const { data } = await axiosInstance.get('/api/rating/seasons');
+        seasons.value = data.map(season => {
+            const quarter = season.title.split('/')[1];
+            const period = getQuarterPeriod(quarter);
+
+            return {
+                ...season,
+                period,
+                indicators: 0,  // заглушка
+                employees: 0    // заглушка
+            }
+        });
+
+        showEditDialog.value = false;
+        showDeleteDialog.value = false;
+
+        menuItems.value = seasons.value.map(season => ([{
+            label: 'Действия',
+            items: [
+                {
+                    label: 'Изменить',
+                    icon: 'pi pi-pencil',
+                    command: () => openEditDialog(season)
+                },
+                {
+                    label: 'Удалить',
+                    icon: 'pi pi-trash',
+                    command: () => openDeleteDialog(season)
+                }
+            ]
+        }]));
+    } catch (error) {
+        console.error('Ошибка при получении сезонов: ', error);
+    } finally {
+        loading.value = false;
+    }
+};
+
+onMounted(async () => {
+  await fetchSeasons();
+});
 
 </script>
 
@@ -88,33 +151,6 @@ main {
     border-radius: 18px;
     transition: all 0.5s;
     position: relative;
-}
-.add-season {
-    padding: 30px;
-    display: flex;
-    cursor: pointer;
-
-    background-color: var(--p-grey-7);
-    border: 2px solid var(--p-grey-5);
-    border-radius: 18px;
-
-    justify-content: center;
-    align-items: center;
-    place-items: center;
-    transition: all 0.5s;
-
-    .pi {
-        font-size: 32px;
-        color: var(--p-grey-2);
-        transition: all 0.5s;
-    }
-}
-.add-season:hover {
-    background-color: var(--p-blue-500-low-op);
-    border-color: var(--p-color-icon-menu);
-    .pi {
-        color: var(--p-color-icon-menu);
-    }
 }
 .menu {
     position: absolute;
