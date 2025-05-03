@@ -66,7 +66,15 @@ const auth = async () => {
             }
         });
 
-        const accessTokenExpired = Math.floor(Date.now() / 1000) + 15 * 60;
+        // Пытаемся получить время жизни accessToken с сервера, иначе считаем сами
+        let accessTokenExpired;
+        if (response.data.accessTokenExpiresIn) {
+            accessTokenExpired = Math.floor(Date.now() / 1000) + response.data.accessTokenExpiresIn;
+        } else if (response.data.accessTokenExpired) {
+            accessTokenExpired = response.data.accessTokenExpired;
+        } else {
+            accessTokenExpired = Math.floor(Date.now() / 1000) + 15 * 60; // Запасной вариант (15 мин)
+        }
         
         localStorage.setItem('accessToken', response.data.accessToken);
         localStorage.setItem('refreshToken', response.data.refreshTokenValue);

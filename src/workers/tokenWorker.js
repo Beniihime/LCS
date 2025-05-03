@@ -16,6 +16,12 @@ self.onmessage = async (event) => {
         currentAccessTokenExpired = accessTokenExpired;
 
         startTokenRefreshLoop();
+    } else if (event.data.action === "updateToken") {
+        console.debug("[TokenWorker] Updating internal state from main thread message");
+        currentRefreshToken = event.data.refreshToken;
+        currentUserId = userId;
+        currentRefreshTokenExpired = event.data.refreshTokenExpired;
+        currentAccessTokenExpired = event.data.accessTokenExpired;
     }
     if (event.data.action === "refreshOnce") {
         const { refreshToken, userId } = event.data;
@@ -60,11 +66,24 @@ async function refreshAccessToken(refreshToken, userId) {
         }) 
 
         if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                console.error(`[TokenWorker] Refresh token invalid (${response.status}). Stopping refresh attempts.`);
+                self.postMessage({ action: "refreshFailed" });
+                return;
+            }
             throw new Error(`[TokenWorker] Failed to refresh token: ${response.status}`);
         }
 
         const data = await response.json();
-        const newAccessTokenExpired = Math.floor(Date.now() / 1000) + 15 * 60;
+        let newAccessTokenExpired;
+        if (data.accessTokenExpiresIn) {
+            newAccessTokenExpired = Math.floor(Date.now() / 1000) + data.accessTokenExpiresIn;
+        } else if (data.accessTokenExpired) {
+            newAccessTokenExpired = data.accessTokenExpired;
+        } else {
+            newAccessTokenExpired = Math.floor(Date.now() / 1000) + 15 * 60;
+        }
+
         console.debug("[TokenWorker] Token refreshed successfully!");
 
         currentRefreshToken = data.refreshTokenValue;
