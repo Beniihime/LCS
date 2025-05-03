@@ -36,6 +36,11 @@ function startTokenRefreshLoop() {
             console.debug("[TokenWorker] Refreshing token...");
             await refreshAccessToken(currentRefreshToken, currentUserId);
         }
+
+        if (timeUntilAccessExpires <= 60) {
+            console.debug("[TokenWorker] Refreshing token...");
+            await refreshAccessToken(currentRefreshToken, currentUserId);
+        }
     }, 10000);
 }
 

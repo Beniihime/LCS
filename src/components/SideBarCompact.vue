@@ -30,6 +30,9 @@
                         <i :class="item.icon"></i>
                     </router-link>
                 </div>
+                <router-link to="/schedule" class="menu-item" active-class="active-link" v-tooltip="'Расписание'">
+                    <i class="pi pi-calendar"></i>
+                </router-link>
             </div>
             <div class="menu">
                 <div v-for="item in filteredMenuItems">
@@ -123,6 +126,11 @@ const menuItemsAdmin = [
         path: '/services',
         icon: 'pi pi-desktop'
     },
+    {
+        name: 'Настройка SSO',
+        path: '/sso',
+        icon: 'pi pi-cog'
+    }
 ];
 
 const menuItems = [
@@ -130,11 +138,6 @@ const menuItems = [
         name: 'Заявки',
         path: '/requests',
         icon: 'pi pi-pen-to-square'
-    },
-    {
-        name: 'Расписание',
-        path: '/schedule',
-        icon: 'pi pi-calendar'
     },
 ]
 

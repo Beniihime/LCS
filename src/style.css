@@ -1,7 +1,7 @@
 @font-face {
   font-family: "SF Pro Rounded";
-  src: url("https://db.onlinewebfonts.com/t/ead4092f880f75ff0883ced1856b2c37.woff2")format("woff2"),
-  url("https://db.onlinewebfonts.com/t/ead4092f880f75ff0883ced1856b2c37.woff")format("woff");
+  src: url("/src/assets/font/SF-Pro-Rounded.woff2")format("woff2"),
+  url("/src/assets/font/SF-Pro-Rounded.woff")format("woff");
   font-weight: 400;
   font-display: swap;
 }
@@ -208,6 +208,7 @@ svg.lcs {
   --p-inputgroup-addon-background: var(--p-bg-color-3) !important;
   --p-button-primary-background: var(--p-blue-500) !important;
   --p-togglebutton-hover-background: var(--p-grey-4) !important;
+  --p-inputchips-background: var(--p-bg-color-3) !important;
   /* --p-datatable-header-cell-selected-color: var(--p-blue-500) !important; */
 
   --p-transition-duration: 0.5s !important;

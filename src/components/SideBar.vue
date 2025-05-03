@@ -50,6 +50,10 @@
                         </div>
                     </router-link>
                 </div>
+                <router-link to="/schedule" class="menu-item" active-class="active-link">
+                    <i class="pi pi-calendar"></i>
+                    <div class="menucrumb">Расписание</div>
+                </router-link>
             </div>
             <div class="menu">
                 <div class="general mt-4" v-if="hasPermission('User', 'Read')">Администрирование</div>
@@ -160,6 +164,11 @@ const menuItemsAdmin = [
         path: '/services',
         icon: 'pi pi-desktop'
     },
+    {
+        name: 'Настройка SSO',
+        path: '/sso',
+        icon: 'pi pi-cog'
+    }
 ];
 
 const menuItems = [
@@ -167,11 +176,6 @@ const menuItems = [
         name: 'Заявки',
         path: '/requests',
         icon: 'pi pi-pen-to-square'
-    },
-    {
-        name: 'Расписание',
-        path: '/schedule',
-        icon: 'pi pi-calendar'
     },
 ]
 
@@ -195,6 +199,8 @@ const checkPermission = (path) => {
         return hasPermission('User', 'Read');
     } else if (path === '/services') {
         return hasPermission('InfraManager', 'Read');
+    } else if (path === '/sso') {
+        return hasPermission('SsoResource', 'Read')
     }
     return true; // Для остальных путей
 };

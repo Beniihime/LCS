@@ -57,6 +57,8 @@ import RadioButton from 'primevue/radiobutton';
 import Paginator from 'primevue/paginator';
 import DatePicker from 'primevue/datepicker';
 import InputNumber from 'primevue/inputnumber';
+import PickList from 'primevue/picklist';
+import Chips from 'primevue/chips';
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -138,6 +140,8 @@ app.component('RadioButton', RadioButton);
 app.component('Paginator', Paginator);
 app.component('DatePicker', DatePicker);
 app.component('InputNumber', InputNumber);
+app.component('PickList', PickList);
+app.component('Chips', Chips);
 
 app.use(pinia)
 app.use(router);

@@ -416,17 +416,45 @@ watch(() => route.query.id, async (newId) => {
 const changeLogin = async () => {
     try {
         await axiosInstance.patch('/api/users/me/login', newLogin.value.toString());
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: { 
+                severity: 'success', 
+                summary: 'Мой профиль', 
+                detail: `Логин успешно изменен`,
+            }
+        }));
         fetchUserProfile(userId.value);
     } catch (error) {
         console.debug('Ошибка при обновлении логина: ', error);
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: { 
+                severity: 'danger', 
+                summary: 'Мой профиль', 
+                detail: `Ошибка при обновлении логина`,
+            }
+        }));
     }
 }
 const changeEmail = async () => {
     try {
         await axiosInstance.patch('/api/users/me/email', newEmail.value.toString());
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: { 
+                severity: 'success', 
+                summary: 'Мой профиль', 
+                detail: `Email успешно изменен`,
+            }
+        }));
         fetchUserProfile(userId.value);
     } catch (error) {
         console.debug('Ошибка при обновлении email: ', error);
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: { 
+                severity: 'danger', 
+                summary: 'Мой профиль', 
+                detail: `Ошибка при обновлении Email`,
+            }
+        }));
     }
 }
 const changeMePass = async () => {
@@ -435,9 +463,23 @@ const changeMePass = async () => {
             newPassword: newPass.value.toString(),
             oldPassword: oldPass.value.toString()        
         });
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: { 
+                severity: 'success', 
+                summary: 'Мой профиль', 
+                detail: `Пароль успешно изменен`,
+            }
+        }));
         fetchUserProfile(userId.value);
     } catch (error) {
         console.debug('Ошибка при обновлении pass: ', error);
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: { 
+                severity: 'danger', 
+                summary: 'Мой профиль', 
+                detail: `Ошибка при обновлении пароля`,
+            }
+        }));
     }
 }
 

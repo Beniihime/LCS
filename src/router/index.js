@@ -182,6 +182,15 @@ const routes = [
                     title: 'Уведомления'
                 }
             },
+            // SSO
+            {
+                path: "/sso",
+                component: () => import('@/views/SsoConfig.vue'),
+                meta: {
+                    requiresAuth: true,
+                    title: 'Настройка SSO'
+                }
+            }
             
         ]
     }, 
