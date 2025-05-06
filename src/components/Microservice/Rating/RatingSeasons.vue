@@ -89,6 +89,18 @@ const fetchSeasons = async () => {
                 indicators: 0,  // заглушка
                 employees: 0    // заглушка
             }
+        }).sort((a, b) => {
+            // Split the title into year and quarter
+            const [yearA, quarterA] = a.title.split('/');
+            const [yearB, quarterB] = b.title.split('/');
+            
+            // Compare years first
+            if (yearA !== yearB) {
+                return parseInt(yearB) - parseInt(yearA); // Descending order for years
+            }
+            
+            // If years are equal, compare quarters
+            return parseInt(quarterB) - parseInt(quarterA); // Descending order for quarters
         });
 
         showEditDialog.value = false;
