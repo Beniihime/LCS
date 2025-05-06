@@ -35,8 +35,22 @@ const confirmDelete = async () => {
             await axiosInstance.delete(`/api/rating/seasons/${props.seasonId}/indicators/${props.item.id}`);
             emit('deleted');
             deleteDialogVisible.value = false;
+            window.dispatchEvent(new CustomEvent('toast', {
+                detail: { 
+                    severity: 'success', 
+                    summary: 'Рейтинг', 
+                    detail: `Показатель для сезона успешно удален`,
+                }
+            }));
         } catch(error) {
             console.error('Ошибка при удалении: ', error);
+            window.dispatchEvent(new CustomEvent('toast', {
+                detail: { 
+                    severity: 'danger', 
+                    summary: 'Рейтинг', 
+                    detail: `Ошибка при удалении показателя для сезона `,
+                }
+            }));
         }
     }
 }

@@ -57,7 +57,7 @@ main {
     display: flex;
     cursor: pointer;
 
-    background-color: var(--p-grey-7);
+    /* background-color: var(--p-grey-7); */
     border: 2px solid var(--p-grey-5);
     border-radius: 18px;
 

@@ -8,7 +8,7 @@
                             <div class="col-auto">
                                 <div class="header">
                                     <h3>RatingService</h3>
-                                    <h5 class="card-text">Какое-то описание</h5>
+                                    <h5 class="card-text"></h5>
                                 </div>
                             </div>
                             <div class="col-auto"></div>

@@ -9,12 +9,9 @@
                         <span class="fs-3 ms-4">Показатели эффективности</span>
                     </div>
 
-                    <div class="certain-season">Выбранный сезон: {{ seasonTitle }}</div>
-                </div>
-                
+                    <div class="certain-season">Выбранный сезон: {{ certainSeason?.title }}</div>
 
-                <div class="header-row">
-                    <div class="header-card" v-for="(_, index) in 3" :key="index">
+                    <div class="header-card" v-for="(_, index) in 2" :key="index">
                         <span class="card-title">{{ headerTitles[index] }}</span>
                         <span class="card-value">{{ headerValues[index] }}</span>
                     </div>
@@ -35,14 +32,13 @@
                     :rows="rowsPerPage"
                     stripedRows
                     scrollable
-                    scrollHeight="65vh"
+                    scrollHeight="72vh"
                     :rowClass="rowClass"
                 >
                     <template #header>
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="header-left-group d-flex align-items-center">
-                                <!-- <Button label="Добавить" severity="contrast" icon="pi pi-plus" /> -->
-                                <AddIndToSeason :seasonId="seasonId" @added="fetchIndicators" />
+                                <AddIndToSeason :seasonId="seasonId" @added="(id) => onIndicatorAdded(id)" :rawIndicators="rawIndicators"/>
                                 <Button 
                                     :icon="allExpanded ? 'pi pi-minus' : 'pi pi-plus'"
                                     :label="allExpanded ? 'Свернуть все': 'Развернуть все'"
@@ -114,8 +110,7 @@
                     </Column>
 
                     <template #expansion="slotProps">
-                        <div class="p-3 h-100">
-                            <h5 class="mb-3">Сотрудники по показателю: {{ slotProps.data.indicator }}</h5>
+                        <div class="p-0 h-100">
                             <DataTable :value="filteredEmployees(slotProps.data.employees)" responsiveLayout="scroll" scrollable>
                                 <template #header>
                                     <div class="d-flex justify-content-between align-items-center">
@@ -123,18 +118,23 @@
                                             <InputIcon class="pi pi-search" />
                                             <InputText id="searchEmp" name="search" placeholder="Поиск по сотруднику..." class="search" v-model="searchEmp" />
                                         </IconField>
-                                        <h4 class="m-0 translate-middle-x">Сотрудники</h4>
-                                        <!-- <AddEmpToInd @updated="fetchIndicators" :seasonId="seasonId"/> -->
+                                        <h4 class="m-0 translate-middle-x">Оценки сотрудников</h4>
+                                        <AddEmpToInd @updated="fetchIndicators" :seasonId="seasonId" :indicatorId="slotProps.data.id"/>
                                     </div>
                                     
                                 </template>
-                                <Column field="name" header="ФИО сотрудника" />
-                                <Column field="group" header="Группа" />
-                                <Column field="periodicity" header="Периодичность" />
-                                <Column field="value" header="Балл" />
+                                <Column field="employeeId" header="ФИО сотрудника" />
+                                <Column field="group" header="Группа" style="max-width: 150px;" />
+                                <Column field="periodicity" header="Периодичность" style="max-width: 100px;"/>
+                                <Column field="points" header="Балл">
+                                    <template #body="{ data }">
+                                        <Tag :value="data.points" 
+                                             :severity="getSeverity(_, data.point)" />
+                                    </template>
+                                </Column>
                                 <Column field="edit" style="max-width: 40px;">
                                     <template #body="{ data }">
-                                        <UpdEmployeeValue />
+                                        <DeleteEmployeeValue :value="data" @deleted="fetchIndicators" />
                                     </template>
                                 </Column>
                                 <template #footer>
@@ -184,7 +184,7 @@ import { getQuarterPeriod } from '@/utils/formatSeason.js';
 import WelcolmeScreen from "@/components/Utils/WelcomeScreen.vue";
 
 import DeleteIndicator from "@/components/Microservice/Rating/Methods/DeleteIndicator.vue";
-import UpdEmployeeValue from "@/components/Microservice/Rating/Methods/UpdEmployeeValue.vue";
+import DeleteEmployeeValue from "@/components/Microservice/Rating/Methods/DeleteEmployeeValue.vue";
 import AddIndToSeason from "@/components/Microservice/Rating/Methods/AddIndToSeason.vue";
 import AddEmpToInd from "@/components/Microservice/Rating/Methods/AddEmpToInd.vue";
 
@@ -192,7 +192,7 @@ const router = useRouter();
 const route = useRoute();
 
 const seasonId = route.params.idSeason;
-const seasonTitle = computed(() => route.query.title);
+const certainSeason = ref({});
 
 const rowsPerPage = ref(10);
 const rowsPerPageOptions = [
@@ -204,12 +204,11 @@ const rowsPerPageOptions = [
 
 const goBack = () => router.back();
 const loading = ref(true);
-const headerTitles = ["Сотрудники", "Показатели", "Период"];
+const headerTitles = ["Оценки сотрудников", "Период"];
 const headerValues = computed(() => 
     [
-        12, 
-        formattedIndicators.value.length, 
-        getQuarterPeriod(seasonTitle.value.split('/')[1])
+        calculateTotalEmployeeScores(), 
+        getQuarterPeriod(certainSeason?.value?.title?.split('/')[1])
     ]
 );
 
@@ -223,6 +222,13 @@ const searchEmp = ref('');
 const expandedRows = ref({});
 const expandedRowGroups = ref();
 const allExpanded = ref(false);
+
+const lastAddedIndicatorId = ref(null);
+
+const onIndicatorAdded = (id) => {
+    lastAddedIndicatorId.value = id;
+    fetchIndicators(id);
+};
 
 const expandAll = () => {
     const groups = [...new Set(formattedIndicators.value.map(item => item.group))];
@@ -294,6 +300,12 @@ const calculateIndicatorsTotal = (groupName) => {
     return formattedIndicators.value.filter(ind => ind.group === groupName).length;
 }
 
+const calculateTotalEmployeeScores = () => {
+    return formattedIndicators.value
+        .filter(indicator => indicator.employees)
+        .reduce((acc, indicator) => acc + indicator.employees.length, 0);
+};
+
 watch(expandedRowGroups, (newGroups, oldGroups) => {
     // Находим группы, которые были свернуты
     const collapsedGroups = oldGroups?.filter(group => !newGroups?.includes(group)) || [];
@@ -317,31 +329,39 @@ watch(searchInd, (newVal) => {
     }
 });
 
-// const rowClass = (data) => {
-//     return [{ 'highlighted-row': data.id === lastCreatedId.value }];
-// };
+const lastCreatedId = ref(null);
 
-const fetchIndicators = async () => {
+const rowClass = (data) => {
+    return [{ 'highlighted-row': data.id === lastCreatedId.value }];
+};
+
+const fetchIndicators = async (highlightId = null) => {
     loading.value = true;
     try {
-        const [groupRes, indicatorRes, valuesRes] = await Promise.all([
+        const [{ data: groupsData }, { data: indicatorsData }, { data: valuesData }, { data: seasonData }] = await Promise.all([
             axiosInstance.get('/api/rating/groups-indicators'),
             axiosInstance.get(`/api/rating/seasons/${seasonId}/indicators`),
             axiosInstance.get('/api/rating/employee-indicators-value'),
+            axiosInstance.get(`/api/rating/seasons/${seasonId}`),
         ]);
 
-        groups.value = groupRes.data;
-        rawIndicators.value = indicatorRes.data;
-        employeeValues.value = valuesRes.data;
+        groups.value = groupsData;
+        rawIndicators.value = indicatorsData;
+        employeeValues.value = valuesData;
+        certainSeason.value = seasonData;
 
-        const groupMap = new Map(groups.value.map((g, i) => [g.id, { ...g, index: i + 1 }]));
+        const groupMap = groups.value.reduce((map, g, i) => {
+            map.set(g.id, { ...g, index: i + 1 });
+            return map;
+        }, new Map());
 
-        const grouped = {};
-        rawIndicators.value.forEach(ind => {
+
+        const grouped = rawIndicators.value.reduce((acc, ind) => {
             const groupId = ind.groupIndicator.id;
-            if (!grouped[groupId]) grouped[groupId] = [];
-            grouped[groupId].push(ind);
-        });
+            if (!acc[groupId]) acc[groupId] = [];
+            acc[groupId].push(ind);
+            return acc;
+        }, {});
 
         formattedIndicators.value = Object.entries(grouped).flatMap(([groupId, indicators]) => {
             const groupInfo = groupMap.get(Number(groupId));
@@ -355,12 +375,41 @@ const fetchIndicators = async () => {
                     indicator: ind.title,
                     periodicity: ind.periodicityIndicators.map(p => p.title).join(', '),
                     responsible: ind.responsibleIndicators.map(r => r.title).join(', '),
-                    employees: relatedValues.map(v => v.employee.fio),
+                    employees: relatedValues.map(v => ({
+                        id: v.id,
+                        employeeId: v.employeeId,
+                        responsibleEmployeeId: v.responsibleEmployeeId,
+                        group: ind.groupIndicator.title,
+                        indicatorId: v.indicatorId,
+                        periodicity: ind.periodicityIndicators.map(p => p.title).join(', '),
+                        points: v.points
+                    })),
                     target: relatedValues.map(v => v.target),
                     point: relatedValues.map(v => v.value),
                 };
             });
         });
+
+        if (lastAddedIndicatorId.value) {
+            const addedIndicator = formattedIndicators.value.find(ind => ind.id === lastAddedIndicatorId.value);
+            if (addedIndicator) {
+                if (!expandedRowGroups.value) {
+                    expandedRowGroups.value = [];
+                }
+                if (!expandedRowGroups.value.includes(addedIndicator.group)) {
+                    expandedRowGroups.value.push(addedIndicator.group);
+                }
+            }
+            lastAddedIndicatorId.value = null;
+        };
+
+        if (highlightId) {
+            lastCreatedId.value = highlightId;
+            console.debug(lastCreatedId.value);
+            setTimeout(() => {
+                lastCreatedId.value = null;
+            }, 5000);
+        }
     } catch(error) {
         console.error('Ошибка при загрузке: ', error);
     } finally {
@@ -384,7 +433,7 @@ header {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    padding-inline: 20rem;
+    padding-inline: 0rem;
 }
 .content-wrapper {
     flex-grow: 1;
@@ -449,12 +498,15 @@ header {
 :deep(.p-datatable-row-expansion .p-datatable-scrollable-table .p-datatable-thead) {
     z-index: 0;
 }
-:deep(.p-datatable-row-expansion .p-datatable-footer) {
-    border: 2px solid var(--p-grey-4);
-    border-top: none;
-    border-radius: 0 0 12px 12px;
-}
 /* :deep(.p-datatable-row-expansion .p-datatable-table-container) {
     border-radius: 12px 12px 0 0;
 } */
+:deep(.p-datatable-row-expansion > td) {
+    padding: 0;
+}
+:deep(.p-datatable-row-expansion .p-datatable-header), 
+:deep(.p-datatable-row-expansion .p-datatable-table-container) {
+    border-radius: 0;
+    border: 0;
+}
 </style>

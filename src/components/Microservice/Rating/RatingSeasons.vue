@@ -70,10 +70,8 @@ const toggle = (event, index) => {
 };
 
 const goToSeason = (seasonId) => {
-    const selected = seasons.value.find(s => s.id === seasonId);
     router.push({ 
         path: `/services/rating/season/${seasonId}`, 
-        query: { title: selected.title }
     });
 };
 

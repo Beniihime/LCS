@@ -1,21 +1,20 @@
 <template>
-    <Button label="Добавить" severity="contrast" icon="pi pi-plus" @click="visible = true"/>
+    <Button label="Добавить" severity="contrast" icon="pi pi-plus" @click="openDialog"/>
     <Dialog v-model:visible="visible" header="Добавить показатель к сезону" :modal="true">
         <div class="row-cols-1">
-            <label for="seasons">Показатель</label>
-            <AutoComplete 
-                v-model="selectedInd"
-                :suggestions="filteredIndicators"
-                optionLabel="title"
-                placeholder="Выберите показатель..."
-                @complete="searchIndicators"
+            <PickList
+                v-model="pickListValue"
+                :showSourceControls="false"
+                :showTargetControls="false"
+                scrollHeight="30rem"
+                style="width: 70rem;"
             >
-                <template #option="slotProps">
+                <template #option="{ option }">
                     <div class="autocomplete-item">
-                        {{ slotProps.option.title }}
+                        {{ option.title }}
                     </div>
                 </template>
-            </AutoComplete>
+            </PickList>
         </div>
         <template #footer>
             <Button label="Отмена" icon="pi pi-times" severity="secondary" @click="closeDialog" outlined />
@@ -27,14 +26,19 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import axiosInstance from "@/utils/axios.js";
+
 const visible = ref(false);
 const emit = defineEmits(['added']);
 
+const sohedar = ref('Доступные показатели')
+
 const props = defineProps({
-    seasonId: String
+    seasonId: String,
+    rawIndicators: Object
 })
 
-const selectedInd = ref(null);
+const pickListValue = ref([[], []]);
+const selectedIndicators = ref(null);
 const indicators = ref([]);
 
 const fetchInds = async () => {
@@ -46,27 +50,43 @@ const fetchInds = async () => {
     }
 };
 
-const filteredIndicators = ref([]);
+const openDialog = async () => {
+    const addedIds = new Set(props.rawIndicators.map(ind => ind.id));
+    const availableIndicators = indicators.value.filter(ind => !addedIds.has(ind.id));
 
-const searchIndicators = (event) => {
-    const query = event.query.toLowerCase();
-    filteredIndicators.value = indicators.value.filter(ind =>
-        ind.title.toLowerCase().includes(query)
-    );
-};
+    pickListValue.value = [availableIndicators, []];
+    visible.value = true;
+} 
 
 const closeDialog = () => {
-    selectedInd.value = '';
+    pickListValue.value = [ indicators.value, [] ];
+    selectedIndicators.value = [];
     visible.value = false;
 } 
 
 const addIndtoSeason = async () => {
     try {
-        await axiosInstance.post(`/api/rating/seasons/${props.seasonId}/indicators/${selectedInd.value.id}`);
-        emit('added');
+        const selectedInd = pickListValue.value[1][0];
+        await axiosInstance.post(`/api/rating/seasons/${props.seasonId}/indicators/${selectedInd.id}`);
+        const createdIndId = selectedInd.id;
+        emit('added', createdIndId);
         closeDialog();
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: { 
+                severity: 'success', 
+                summary: 'Рейтинг', 
+                detail: `Показатель добавлен в сезон`,
+            }
+        }));
     } catch(error) {
         console.error('Ошибка при добавлении показателя: ', error);
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: { 
+                severity: 'danger', 
+                summary: 'Рейтинг', 
+                detail: `Ошибка при добавлении показателя`,
+            }
+        }));
     }
 }
 
