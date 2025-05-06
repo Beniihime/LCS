@@ -35,6 +35,14 @@ export function startTokenWorker() {
             localStorage.setItem("refreshToken", event.data.refreshToken);
             localStorage.setItem("refreshTokenExpired", event.data.refreshTokenExpired);
             localStorage.setItem("accessTokenExpired", event.data.accessTokenExpired);
+        } else if (event.data.action === "refreshFailed") {
+            console.error("[TokenService] Worker reported refresh failure. Logging out.");
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('refreshTokenExpired');
+            localStorage.removeItem('accessTokenExpired');
+            window.location.href = '/auth';
         }
     };
 
@@ -43,6 +51,14 @@ export function startTokenWorker() {
     };
 
     console.debug("[TokenService] Background token worker started!");
+}
+
+export function stopTokenWorker() {
+    if (tokenWorker) {
+        console.debug("[TokenService] Stopping background token worker.");
+        tokenWorker.terminate();
+        tokenWorker = null;
+    }
 }
 
 export function refreshTokenThroughWorker() {

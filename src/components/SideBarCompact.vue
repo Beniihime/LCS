@@ -94,6 +94,7 @@ import ThemeSwitcher from './Utils/ThemeSwitcher.vue';
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 import { useRouter } from 'vue-router';
+import { stopTokenWorker } from '@/utils/TokenService.js';
 
 const confirm = useConfirm();
 const toast = useToast();
@@ -196,6 +197,7 @@ const logout = async () => {
     localStorage.removeItem('userId');
     await permissionStore.clearPermissions();
     await permissionStore.$reset();
+    stopTokenWorker();
     
     router.push('/auth');
 };
