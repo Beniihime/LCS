@@ -80,7 +80,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onBeforeMount } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import LogoutSvg from '@/assets/logout.svg';
 import axiosInstance from '@/utils/axios.js';
 
@@ -204,7 +204,7 @@ const logout = async () => {
 
 const showRequestsMenu = ref(false);
 
-onBeforeMount(async () => {
+onMounted(async () => {
     try {
         const response = await axiosInstance.get('/api/users/me/info');
         firstName.value = response.data.firstName;
@@ -298,9 +298,9 @@ onBeforeMount(async () => {
     top: 0;
     left: 0;
     width: 100%;
-    opacity: 0.5;
+    opacity: 0.8;
     height: 100%;
-    background-image: url('/src/assets/backgrounds/spring.webp');
+    background-image: url('/src/assets/backgrounds/autism.webp');
     background-position: center;
     background-repeat: no-repeat;
     

@@ -30,12 +30,6 @@
             <div class="row mb-5">
                 <div class="col">
                     <FloatLabel>
-                        <InputText id="login" name="login" v-model="login" class="form-input" />
-                        <label for="login">Логин</label>
-                    </FloatLabel>
-                </div>
-                <div class="col">
-                    <FloatLabel>
                         <InputText id="email" name="email" v-model="email" class="form-input" />
                         <label for="email">E-mail</label>
                     </FloatLabel>
@@ -83,10 +77,8 @@ const Iduser = ref('');
 const firstName = ref('');
 const lastName = ref('');
 const middleName = ref('');
-const login = ref('');
 const email = ref('');
 
-const originalLogin = ref('');
 const originalEmail = ref('');
 
 
@@ -100,11 +92,9 @@ const fetchUserData = async () => {
         firstName.value = userData.firstName;
         lastName.value = userData.lastName;
         middleName.value = userData.middleName;
-        login.value = userData.login;
         email.value = userData.email;
         
         selectedRoles.value = userData.roles.map(role => role.id);
-        originalLogin.value = userData.login;
         originalEmail.value = userData.email;
 
         userPriority.value = userData.roles[0]?.priority;
@@ -125,19 +115,8 @@ const updateRolesList = async () => {
     }
 };
 
-const checkLoginAndEmail = async () => {
-    let isLoginOccupied = false;
+const checkEmail = async () => {
     let isEmailOccupied = false;
-
-    if (login.value !== originalLogin.value) {
-        const loginResponse = await axiosInstance.get('/api/users/checking/occupy-login', {
-            params: { login: login.value }
-        });
-        isLoginOccupied = loginResponse.data === true;
-        if (isLoginOccupied) {
-            toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Логин уже занят', life: 3000 });
-        }
-    }
 
     if (email.value !== originalEmail.value) {
         const emailResponse = await axiosInstance.get('/api/users/checking/occupy-email', {
@@ -149,11 +128,11 @@ const checkLoginAndEmail = async () => {
         }
     }
 
-    return !isLoginOccupied && !isEmailOccupied;
+    return !isEmailOccupied;
 }
 
 const updateUserData = async () => {
-    const isAvailable = await checkLoginAndEmail();
+    const isAvailable = await checkEmail();
     if (!isAvailable) return;
     
     try {
@@ -161,7 +140,6 @@ const updateUserData = async () => {
             firstName: firstName.value,
             lastName: lastName.value,
             middleName: middleName.value,
-            login: login.value,
             email: email.value,
             roleIds: selectedRoles.value
         };

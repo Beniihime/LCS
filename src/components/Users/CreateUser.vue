@@ -24,21 +24,13 @@
                 </div>
             </div>
 
+            <Divider class="my-2 py-1"/>
+
             <div class="row">
                 <div class="col">
                     <label for="email" class="ms-2">E-mail <span class="text-danger">*</span></label>
                     <InputText v-model="email" id="email" name="email" class="form-input" required @blur="checkEmail" :invalid="isInvalid(email)" placeholder="Введите E-mail"/>
                     <Message v-if="emailMessage" :severity="emailSeverity" size="small">{{ emailMessage }}</Message>
-                </div>
-            </div>
-
-            <Divider class="my-2 py-1"/>
-
-            <div class="row mb-1">
-                <div class="col">
-                    <label for="login" class="ms-2">Логин <span class="text-danger">*</span></label>
-                    <InputText v-model="login" id="login" name="login" class="form-input" required @blur="checkLogin" :invalid="isInvalid(login)" placeholder="Введите логин"/>
-                    <Message v-if="loginMessage" :severity="loginSeverity" size="small">{{ loginMessage }}</Message>
                 </div>
             </div>
 
@@ -90,13 +82,10 @@ const firstName = ref('');
 const middleName = ref('');
 const lastName = ref('');
 const email = ref('');
-const login = ref('');
 const pass = ref('');
 const confirmPass = ref('');
 const emailMessage = ref('');
 const emailSeverity = ref('');
-const loginMessage = ref('');
-const loginSeverity = ref('');
 const selectedRoles = ref([]);
 const visible = ref(false);
 const roles = ref([]);
@@ -137,29 +126,11 @@ const isInvalid = (value) => {
     return !value || (typeof value === 'string' && value.trim().length === 0);
 };
 
-const checkLogin = async () => {
-    if (!login.value) {
-        loginMessage.value = 'Логин обязателен';
-        loginSeverity.value = 'error';
-        return;
-    }
-
-    try {
-        const response = await axiosInstance.get('/api/users/checking/occupy-login', { params: { login: login.value } });
-        loginMessage.value = response.data ? 'Логин уже занят' : 'Логин доступен';
-        loginSeverity.value = response.data ? 'error' : 'success';
-    } catch {
-        loginMessage.value = 'Ошибка проверки логина';
-        loginSeverity.value = 'error';
-    }
-};
-
 const createUser = async () => {
     
     try {
         const roleIds = selectedRoles.value.map(role => role.id);
         const payload = {
-            login: login.value,
             password: pass.value,
             firstName: firstName.value,
             middleName: middleName.value,

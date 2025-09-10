@@ -12,11 +12,11 @@
                     </div>
                     <div class="content second-plan">
                         <i class="pi pi-chart-bar me-2"></i>
-                        <span>Показателей: {{ item.indicators }}</span>
+                        <span>Показателей: {{ item.indicatorsCount }}</span>
                     </div>
                     <div class="content second-plan">
                         <i class="pi pi-users me-2"></i>
-                        <span>Сотрудников: {{ item.employees }}</span>
+                        <span>Сотрудников: {{ item.pointsCount }}</span>
                     </div>
                     <div class="menu">
                         <Button type="button" icon="pi pi-ellipsis-h" class="edit-btn" @click.stop="(event) => toggle(event, index)" aria-haspopup="true" aria-controls="overlay_menu" v-tooltip="'Действия'" />
@@ -85,9 +85,7 @@ const fetchSeasons = async () => {
 
             return {
                 ...season,
-                period,
-                indicators: 0,  // заглушка
-                employees: 0    // заглушка
+                period
             }
         }).sort((a, b) => {
             // Split the title into year and quarter
@@ -136,6 +134,7 @@ onMounted(async () => {
 
 <style scoped>
 main {
+    position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;

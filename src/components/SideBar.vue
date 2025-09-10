@@ -117,7 +117,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onBeforeMount, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import LogoutSvg from '@/assets/logout.svg';
 import axiosInstance from '@/utils/axios.js';
 
@@ -244,9 +244,10 @@ const logout = async () => {
 
 const showRequestsMenu = ref(false);
 
-onBeforeMount(async () => {
+onMounted(async () => {
     try {
         const response = await axiosInstance.get('/api/users/me/info');
+
         firstName.value = response.data.firstName;
         lastName.value = response.data.lastName;
         email.value = response.data.email;
@@ -256,26 +257,41 @@ onBeforeMount(async () => {
 
         userId.value = response.data.id;
         roleId.value = response.data.roles[0].id;
-        const statusResponse = await axiosInstance.get(`/api/infra-manager/db/users/${userId.value}/status`);
-        if (statusResponse) {
-            localStorage.setItem("InfraStatus", true);
-        } else {
-            localStorage.setItem("InfraStatus", false);
-        }
-        localStorage.setItem("infraManagerUserId",statusResponse.data.infraManagerUserId);
+
         localStorage.setItem('firstName', response.data.firstName);
-        if (statusResponse.data.personalAccountUserId && statusResponse.data.infraManagerUserId) {
-            showRequestsMenu.value = true;
-        } else {
-            showRequestsMenu.value = false;
-        }
+
+        axiosInstance.get(`/api/infra-manager/db/users/${userId.value}/status`)
+            .then(statusResponse => {
+                const data = statusResponse.data;
+                localStorage.setItem("InfraStatus", true);
+                localStorage.setItem("infraManagerUserId", data.infraManagerUserId);
+
+                showRequestsMenu.value = !!(data.personalAccountUserId && data.infraManagerUserId);
+            })
+            .catch(() => {
+                localStorage.setItem("InfraStatus", false);
+                showRequestsMenu.value = false;
+            })
+
+        // const statusResponse = await axiosInstance.get(`/api/infra-manager/db/users/${userId.value}/status`);
+        // if (statusResponse) {
+        //     localStorage.setItem("InfraStatus", true);
+        // } else {
+        //     localStorage.setItem("InfraStatus", false);
+        // }
+        // localStorage.setItem("infraManagerUserId",statusResponse.data.infraManagerUserId);
+        
+        // if (statusResponse.data.personalAccountUserId && statusResponse.data.infraManagerUserId) {
+        //     showRequestsMenu.value = true;
+        // } else {
+        //     showRequestsMenu.value = false;
+        // }
     } catch (error) {
         console.debug('Ошибка при получении информации о пользователе: ', error);
     }
 
     checkIsMobile();
     window.addEventListener('resize', checkIsMobile);
-    
 });
 
 onBeforeUnmount(() => {
@@ -419,9 +435,9 @@ const checkIsMobile = () => {
     top: 0;
     left: 0;
     width: 100%;
-    opacity: 0.5;
+    opacity: 0.8;
     height: 100%;
-    background-image: url('/src/assets/backgrounds/spring.webp'); /* Укажите путь к изображению */
+    background-image: url('/src/assets/backgrounds/autism.webp'); /* Укажите путь к изображению */
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

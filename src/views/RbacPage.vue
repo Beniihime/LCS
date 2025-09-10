@@ -1,6 +1,6 @@
 <template>
-    <WelcomeScreen :visible="loading" />
     <main>
+        <WelcomeScreen :visible="loading" />
         <div class="content-wrapper">
             <h2 class="mb-2">Настройки ролей</h2>
             <div class="statistics">
@@ -163,22 +163,17 @@ const fetchRoles = async () => {
 const fetchUsers = async () => {
     let page = 1;
     let pageSize = 500;
-    const params = {
-        page,
-        pageSize
-    }
     try {
-        const response = await axiosInstance.get('/api/users', {
-            params,
-            paramsSerializer: params => {
-                return qs.stringify(params, { arrayFormat: 'repeat' });
-            }
-        });
+        const payload = {
+            page: page,
+            pageSize: pageSize,
+        };
+        const response = await axiosInstance.post('/api/users/list', payload);
 
         const userResponse = await axiosInstance.get('/api/users/me/info');
         userRole.value = userResponse.data.roles[0] || {};
         
-        users.value = response.data.users;
+        users.value = response.data.entities;
     } catch (error) {
         console.debug('Ошибка при получении пользователей: ', error);
     }
@@ -323,6 +318,7 @@ p {
     font-size: 0.8rem;
 }
 main {
+    position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;

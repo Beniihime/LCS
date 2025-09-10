@@ -33,6 +33,7 @@ const seasons = () => {
 
 <style scoped>
 main {
+    position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;

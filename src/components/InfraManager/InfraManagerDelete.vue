@@ -52,14 +52,15 @@ const searchLKSUsers = async (event) => {
     const query = event.query;
 
     try {
-        const response = await axiosInstance.get('/api/users', {
-            params: {
-                page: 1,
-                pageSize: 30
-            }
-        });
+        const payload = {
+            page: 1,
+            pageSize: 500,
+            isBlocked: false
+        };
 
-        filteredLKSUsers.value = response.data.users
+        const response = await axiosInstance.post('/api/users/list', payload);
+
+        filteredLKSUsers.value = response.data.entities
             .filter(user =>
                 `${user.firstName} ${user.middleName ?? ''} ${user.lastName}`.toLowerCase().includes(query.toLowerCase())
             )

@@ -77,15 +77,19 @@
                         </template>
                     </Column>
 
-                    <Column header="Оценка и баллы" style="max-width: 100px;">
+                    <Column header="Оценка и баллы" style="max-width: 220px;">
                         <template #body="{ data }">
-                            <div v-if="data.target">
-                                <div v-for="(target, index) in data.target" :key="index" class="target-row">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span>{{ target }}</span>
-                                        <Tag :value="data.point[index]" 
-                                             :severity="getSeverity(index, data.point)" />
-                                    </div>
+                            <div v-if="data.statistics" class="stats-table">
+                                <div 
+                                    v-for="(stat, index) in data.statistics" 
+                                    :key="index" 
+                                    class="stats-row d-flex justify-content-between align-items-center"
+                                >
+                                    <span class="stats-title">{{ stat.title }}</span>
+                                    <Tag 
+                                        :value="stat.point"
+                                        v-bind="getTagStyle(stat.point, data.statistics)"
+                                    />
                                 </div>
                             </div>
                         </template>
@@ -296,6 +300,32 @@ const getSeverity = (index, points) => {
     return 'warn';
 };
 
+const getTagStyle = (points, allPoints) => {
+    if (!allPoints || allPoints.length === 0) {
+        return { severity: 'info' };
+    }
+
+    if (allPoints.length === 1) {
+        return { severity: 'info' };
+    }
+
+    const min = Math.min(...allPoints.map(p => Number(p.point)));
+    const max = Math.max(...allPoints.map(p => Number(p.point)));
+    const val = Number(points);
+
+    const ratio = (val - min) / (max - min || 1);
+
+    const hue = 0 + ratio * 120;
+
+    return {
+        style: {
+            backgroundColor: `hsl(${hue}, 60%, 40%)`,
+            color: '#fff',
+            border: 'none'
+        }
+    }
+}
+
 const calculateIndicatorsTotal = (groupName) => {
     return formattedIndicators.value.filter(ind => ind.group === groupName).length;
 }
@@ -384,8 +414,7 @@ const fetchIndicators = async (highlightId = null) => {
                         periodicity: ind.periodicityIndicators.map(p => p.title).join(', '),
                         points: v.points
                     })),
-                    target: relatedValues.map(v => v.target),
-                    point: relatedValues.map(v => v.value),
+                    statistics: ind.statistics
                 };
             });
         });
@@ -424,6 +453,7 @@ onMounted(async () => {
 
 <style scoped>
 main {
+    position: relative;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
@@ -485,12 +515,25 @@ header {
     border-radius: 12px;
     transition: all 0.5s;
 }
-.target-row {
-    padding: 0.25rem 0;
-    border-bottom: 1px solid var(--p-grey-3);
+.stats-table {
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--p-grey-7);
 }
-.target-row:last-child {
+.stats-row {
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--p-grey-3);
+    font-size: 0.9rem;
+}
+.stats-row:last-child {
     border-bottom: none;
+}
+
+.stats-title {
+    color: var(--p-text-color);
+    font-weight: 500;
 }
 :deep(.p-datatable-row-group-header) {
     background-color: var(--p-grey-7);

@@ -1,9 +1,9 @@
 <template>
-    <WelcomeScreen :visible="loading" />
     <div class="schedule-container">
         <header class="header">
             <h2 class="title">Расписание занятий</h2>
         </header>
+        <WelcomeScreen :visible="loading" />
         <div class="year-selection row">
             <h3>Учебный год</h3>
             <div class="col" v-for="year in years" :key="year">
@@ -250,12 +250,13 @@ onMounted(() => {
 
 <style scoped>
 .schedule-container {
-  margin: auto;
-  height: 100px;
-  color: var(--p-text-color);
-  padding: 20px 8rem;
-  border-radius: 10px;
-  transition: all 0.5s;
+    /* position: relative; */
+    margin: auto;
+    height: 100px;
+    color: var(--p-text-color);
+    padding: 20px 8rem;
+    border-radius: 10px;
+    transition: all 0.5s;
 }
 
 .header {

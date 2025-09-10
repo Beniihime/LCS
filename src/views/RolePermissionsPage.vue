@@ -1,7 +1,7 @@
 <template>
     <main>
-        <WelcomeScreen :visible="loading" />
         <div class="permissions-wrapper">
+            <WelcomeScreen :visible="loading" />
             <div class="d-flex justify-content-between align-items-center">
                 <h2 class="m-0">Полномочия роли</h2>
                 <Button class="back-btn m-0" icon="pi pi-arrow-left" label="Назад" @click="goBack" text />
@@ -252,6 +252,7 @@ onMounted(async () => {
     background: transparent;
 }
 .permissions-wrapper {
+    position: relative;
     padding: 1.25rem 8rem;
     color: var(--p-text-color);
 }

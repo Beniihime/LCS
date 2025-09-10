@@ -29,14 +29,6 @@
 
             <!-- Изменить о себе -->
             <div v-if="isCurrentUser">
-                <Button label="Сменить логин" text icon="pi pi-user" class="d-flex justify-content-between w-100" iconPos="right" @click="visibleLogin = true" />
-                <Dialog v-model:visible="visibleLogin" modal header="Сменить логин" :style="{ 'max-width': '25rem' }">
-                    <div>
-                        <label for="newLogin" class="ms-2">Новый логин</label>
-                        <InputText id="newLogin" v-model="newLogin" class="form-input w-100" />
-                    </div>
-                    <Button label="Сохранить" icon="pi pi-check" class="w-100 mt-4" @click="changeLogin"/>
-                </Dialog>
                 <Button label="Сменить пароль" text icon="pi pi-key" class="d-flex justify-content-between w-100" iconPos="right" @click="visiblePass = true" />
                 <Dialog v-model:visible="visiblePass" modal header="Сменить пароль" :style="{ 'max-width': '25rem' }">
                     <Form>
@@ -239,7 +231,6 @@ const route = useRoute();
 const srcAvatar = ref(null);
 const loading = ref(true);
 const visible = ref(false);
-const visibleLogin = ref(false);
 const visiblePass = ref(false);
 const visibleEmail = ref(false);
 const fileInput = ref(null);
@@ -252,9 +243,7 @@ const middleName = ref('');
 const fullName = ref('');
 const email = ref('');
 const userRole = ref([]);
-const login = ref('');
 
-const newLogin = ref('');
 const newEmail = ref('');
 const oldPass = ref('');
 const newPass = ref('');
@@ -357,7 +346,6 @@ const fetchUserProfile = async (id) => {
             response = await axiosInstance.get(`/api/users/${id}`);
         }
 
-        login.value = response.data.login;
         firstName.value = response.data.firstName;
         lastName.value = response.data.lastName;
         middleName.value = response.data.middleName;
@@ -413,28 +401,6 @@ watch(() => route.query.id, async (newId) => {
     await fetchUserProfile(userId.value);
 });
 
-const changeLogin = async () => {
-    try {
-        await axiosInstance.patch('/api/users/me/login', newLogin.value.toString());
-        window.dispatchEvent(new CustomEvent('toast', {
-            detail: { 
-                severity: 'success', 
-                summary: 'Мой профиль', 
-                detail: `Логин успешно изменен`,
-            }
-        }));
-        fetchUserProfile(userId.value);
-    } catch (error) {
-        console.debug('Ошибка при обновлении логина: ', error);
-        window.dispatchEvent(new CustomEvent('toast', {
-            detail: { 
-                severity: 'danger', 
-                summary: 'Мой профиль', 
-                detail: `Ошибка при обновлении логина`,
-            }
-        }));
-    }
-}
 const changeEmail = async () => {
     try {
         await axiosInstance.patch('/api/users/me/email', newEmail.value.toString());
@@ -494,6 +460,7 @@ onMounted(async () => {
 
 <style scoped>
 main {
+    position: relative;
     display: flex;
     height: 100%;
     padding: 10px;

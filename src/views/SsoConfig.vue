@@ -1,6 +1,6 @@
 <template>
-    <WelcomeScreen :visible="loading" />
     <main>
+        <WelcomeScreen :visible="loading" />
         <div class="header">
             <h2 class="m-0">Настройка SSO</h2>
         </div>
@@ -126,6 +126,7 @@ const loadConfigs = async () => {
 
 <style scoped>
 main {
+    position: relative;
     display: flex;
     flex-direction: column;
     height: 100vh;

@@ -17,16 +17,8 @@
         </Popover>
 
         <Dialog v-model:visible="showEditDialog" modal header="Редактировать профиль" :style="{ 'max-width': '30rem' }">
-            <div class="row mt-2 mb-4">
-                <div class="col">
-                    <FloatLabel variant="on">
-                        <InputText v-model="login" id="login" name="login" class="form-input" required />
-                        <label for="login">Новый логин</label>
-                    </FloatLabel>
-                </div>
-            </div>
 
-            <div class="row mb-2">
+            <div class="row mt-2 mb-2">
                 <div class="col d-flex align-items-center">
                     <Checkbox v-model="shouldChangePassword" binary />
                     <label for="shouldChangePassword" class="ms-2">Изменить пароль?</label>

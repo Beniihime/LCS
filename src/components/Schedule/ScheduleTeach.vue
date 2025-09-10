@@ -280,7 +280,7 @@ const isDateAvailable = (dateObj) => {
 
 // Очистка названия дисциплины от "лек.", "лаб.", "пр."
 const cleanDiscipline = (discipline) => {
-    const match = discipline.match(/^(лек|лаб|пр.|экз|зач)\s*/i, '');
+    const match = discipline.match(/^(лек|лаб|пр|экз|зач)\s*/i, '');
     let type = "";
     let color = "";
     if (match) {
@@ -294,7 +294,7 @@ const cleanDiscipline = (discipline) => {
                 type = "Лабораторная";
                 color = "purple";
                 break;
-            case "пр.":
+            case "пр":
                 type = "Практика";
                 color = "amber";
                 break;

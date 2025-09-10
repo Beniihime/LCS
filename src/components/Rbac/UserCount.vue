@@ -34,7 +34,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import axiosInstance from '@/utils/axios.js';
-import qs from 'qs';
 
 const props = defineProps({
     roleId: {
@@ -60,21 +59,16 @@ const users = ref([]);
 const selectedRoleUsers = ref([]);
 
 const fetchUsers = async () => {
-    let page = 1;
-    let pageSize = 500;
-    const params = {
-        page,
-        pageSize
-    };
     try {
-        const response = await axiosInstance.get('/api/users', {
-            params,
-            paramsSerializer: params => {
-                return qs.stringify(params, { arrayFormat: 'repeat' });
-            }
-        });
+        const payload = {
+            page: 1,
+            pageSize: 500,
+            isBlocked: false
+        };
+        
+        const response = await axiosInstance.post('/api/users/list', payload);
 
-        users.value = response.data.users;
+        users.value = response.data.entities;
     } catch (error) {
         console.debug('Ошибка при получении пользователей: ', error);
     }

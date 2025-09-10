@@ -511,6 +511,7 @@ onMounted(async () => {
 
 <style scoped>
 .content {
+    position: relative;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;

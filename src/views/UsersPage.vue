@@ -222,21 +222,23 @@ const getRoleTypeClass = (role) => {
 const onPage = async (event) => {
     currentPage.value = event.page + 1;
     rowsPerPage.value = event.rows;
+    await fetchCustomers();
 }
 
 const fetchCustomers = async () => {
     try {
-        const response = await axiosInstance.get('/api/users', { 
-            params: {
-                page: 1,
-                pageSize: rowsPerPage.value * 2,
-            },
-            paramsSerializer: params => {
-                return qs.stringify(params, { arrayFormat: 'repeat' });
-            }
-        });
+        const payload = {
+            page: currentPage.value,
+            pageSize: rowsPerPage.value,
+            lastName: filters.value.fullName?.value || null,
+            email: filters.value.email?.value || null,
+            roleIds: filters.value.roleIds?.value || null,
+            isBlocked: filters.value.isBlocked?.value
+        };
+
+        const response = await axiosInstance.post('/api/users/list', payload);
         
-        customers.value = response.data.users.map((user) => ({
+        customers.value = response.data.entities.map((user) => ({
             ...user,
             fullName: `${user.firstName} ${user.lastName} ${user.middleName}`,
             roleIds: user.roles.map(role => role.title),
@@ -284,6 +286,7 @@ h3 {
     box-sizing: border-box;
 }
 .content-wrapper {
+    position: relative;
     flex-grow: 1;
     align-content: center;
     padding: 10px;

@@ -12,9 +12,9 @@
                     <form @submit.prevent="auth">
                         <InputGroup class="my-2">
                             <InputGroupAddon>
-                                <i class="pi pi-user"></i>
+                                <i class="pi pi-at"></i>
                             </InputGroupAddon>
-                            <InputText placeholder="Логин" id="login" name="login" v-model="login" required/>
+                            <InputText placeholder="Email" id="email" name="email" v-model="email" required/>
                         </InputGroup>
                         <InputGroup class="my-2">
                             <InputGroupAddon>
@@ -45,7 +45,7 @@ import axiosInstance from '@/utils/axios.js';
 import ThemeSwitcher from '@/components/Utils/ThemeSwitcher.vue';
 import WelcomeLogin from '@/components/Utils/WelcomeLogin.vue';
 
-const login = ref('');
+const email = ref('');
 const password = ref('');
 const errorMessage = ref('');
 const toast = useToast();
@@ -57,7 +57,7 @@ const auth = async () => {
 
     try {
         const response = await axiosInstance.post('/api/auth/login', {
-            login: login.value,
+            email: email.value,
             password: password.value
         }, {
             headers: {
