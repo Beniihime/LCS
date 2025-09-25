@@ -11,7 +11,6 @@
             <DataTable
                 v-if="!loading"
                 :value="calls"
-                :filters="filters"
                 filterDisplay="row"
                 paginator
                 :rows="rowsPerPage"
@@ -28,7 +27,15 @@
                         <div class="col d-flex justify-content-start">
                             <h3 class="title m-0">Ваши заявки</h3>
                         </div>
-                        <div class="col d-flex justify-content-end">
+                        <div class="col d-flex justify-content-end gap-2">
+                            <MultiSelect
+                                :modelValue="selectedColumns"
+                                :options="columns"
+                                optionLabel="header"
+                                display="chip"
+                                placeholder="Выберите поля"
+                                @update:modelValue="onToggle"
+                            />
                             <CreateRequest @refreshRequests="(id) => fetchCalls(id)"/>
                         </div>
                     </div>
@@ -43,11 +50,82 @@
                         </OverlayBadge>
                     </template>
                 </Column>
-                <Column field="number" header="#" sortable :showFilterMenu="false" style="min-width: 180px" class="openCall">
+
+                <Column 
+                    v-for="col in selectedColumns"
+                    :key="col.field"
+                    :field="col.field"
+                    :header="col.header"
+                    :sortable="true"
+                    :showFilterMenu="false"
+                    :frozen="col.field === 'number'"
+                    style="min-width: 300px;"
+                >
                     <template #body="{ data }">
-                        {{ data.number }}
+                        <template v-if="col.field === 'entityStateName'">
+                            <Tag :value="data.entityStateName" :severity="getStatusSeverity(data.entityStateName)" :icon="getStatusIcon(data.entityStateName)"/>
+                        </template>
+                        <template v-else-if="col.field === 'priorityName'">
+                            <div class="d-flex align-items-center">
+                                <Tag :value="data.priorityName" :severity="data.priorityName === 'Высокий' ? 'danger' : data.priorityName === 'Низкий' ? 'success' : 'info'" />
+                            </div>
+                        </template>
+
+                        <template v-else>
+                            {{ data[col.field] }}
+                        </template>
                     </template>
-                    <template #filter="{ filterModel, filterCallback }">
+                    <template #filter v-if="col.filterable">
+                        <InputText 
+                            v-if="col.filterType === 'text'"
+                            v-model="filters[col.field]"
+                            :placeholder="col.placeholder"
+                            @input="handleFilterInput(col.field, filters[col.field])"
+                            class="w-75"
+                        />
+                        <MultiSelect 
+                            v-else-if="col.filterType === 'multiselect'"
+                            v-model="filters[col.filterField]"
+                            :options="col.options"
+                            optionLabel="label"
+                            optionValue="value"
+                            class="w-75"
+                            :placeholder="col.placeholder"
+                            @change="handleFilterInput(col.filterField, filters[col.filterField])"
+                        />
+                        <Select
+                            v-else-if="col.filterType === 'select' && col.filterField === 'serviceName'"
+                            v-model="filters[col.filterField]"
+                            :options="col.options"
+                            optionLabel="label"
+                            optionValue="value"
+                            class="w-75"
+                            :placeholder="col.placeholder"
+                            @change="handleFilterInput(col.filterField, filters[col.filterField])"
+                        />
+                        <Select
+                            v-else-if="col.filterType === 'select'"
+                            v-model="filters[col.filterField]"
+                            :options="col.options"
+                            optionLabel="name"
+                            optionValue="id"
+                            class="w-75"
+                            :placeholder="col.placeholder"
+                            @change="handleFilterInput(col.filterField, filters[col.filterField])"
+                        />
+                        <Button 
+                            icon="pi pi-filter-slash"
+                            text
+                            severity="contrast"
+                            class="ms-2"
+                            v-if="filters[col.filterField] && (Array.isArray(filters[col.filterField]) ? filters[col.filterField].length : true)"
+                            @click="clearFilter(col.filterField)"
+                        />
+                    </template>
+                </Column>
+
+                <!-- <Column field="number" header="№" sortable :showFilterMenu="false" style="min-width: 180px" class="openCall" frozen>
+                    <template #filter="{ filterCallback }">
                         <div class="d-flex align-items-center">
                             <InputText 
                                 v-model="filters.number"
@@ -66,7 +144,7 @@
                         </div>
                     </template>
                 </Column>
-                <Column field="entityStateName" header="Статус" sortable :showFilterMenu="false" style="max-width: 200px;">
+                <Column field="entityStateName" header="Статус" sortable :showFilterMenu="false" style="max-width: 300px;">
                     <template #body="{ data }">
                         <Tag :value="data.entityStateName" :severity="getStatusSeverity(data.entityStateName)" :icon="getStatusIcon(data.entityStateName)"/>
                     </template>
@@ -121,20 +199,9 @@
                         </div>
                     </template>
                 </Column>
-                <Column field="initiatorFullName" header="Инициатор" sortable style="min-width: 200px">
-                    <template #body="{ data }">
-                        {{ data.initiatorFullName }}
-                    </template>
-                </Column>
-                <Column field="clientFullName" header="Клиент" sortable style="min-width: 200px">
-                    <template #body="{ data }">
-                        {{ data.clientFullName }}
-                    </template>
-                </Column>
+                <Column field="initiatorFullName" header="Инициатор" sortable style="min-width: 200px" />
+                <Column field="clientFullName" header="Клиент" sortable style="min-width: 200px" />
                 <Column field="callSummaryName" header="Сводка" :showFilterMenu="false" style="min-width: 150px">
-                    <template #body="{ data }">
-                        {{ data.callSummaryName }}
-                    </template>
                     <template #filter="{ filterCallback }">
                         <div class="d-flex align-items-center">
                             <InputText 
@@ -161,20 +228,11 @@
                 </Column>
                 <Column field="solution" header="Решение" style="max-width: 150px;">
                     <template #body="{ data }">
-                       <div style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;" v-tooltip="{ value: data.solution, showDelay: 800, hideDelay: 300 }">{{ data.solution }}</div>
+                        <div style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;" v-tooltip="{ value: data.solution, showDelay: 800, hideDelay: 300 }">{{ data.solution }}</div>
                     </template>
                 </Column>
-                <Column field="serviceItemFullName" header="Элемент сервиса" style="min-width: 350px">
-                    <template #body="{ data }">
-                        {{ data.serviceItemFullName }}
-                    </template>
-                </Column>
-
-                <Column field="serviceAttendanceFullName" header="Выполнил" sortable style="min-width: 150px">
-                    <template #body="{ data }">
-                        {{ data.accomplisherFullName }}
-                    </template>
-                </Column>
+                <Column field="serviceItemFullName" header="Элемент сервиса" style="min-width: 350px" />
+                <Column field="serviceAttendanceFullName" header="Выполнил" sortable style="min-width: 150px" />
                 <Column field="serviceName" header="Сервис" :showFilterMenu="false" style="max-width: 250px">
                     <template #body="{ data }">
                         <div style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;" v-tooltip="{ value: data.serviceName, showDelay: 800, hideDelay: 300 }">{{ data.serviceName }}</div>
@@ -202,36 +260,12 @@
                         </div>
                     </template>
                 </Column>
-                <Column field="callTypeFullName" header="Тип заявки" style="min-width: 100px">
-                    <template #body="{ data }">
-                        {{ data.callTypeFullName }}
-                    </template>
-                </Column>
-                <Column field="ownerFullName" header="Владелец" sortable style="min-width: 200px">
-                    <template #body="{ data }">
-                        {{ data.ownerFullName }}
-                    </template>
-                </Column>
-                <Column field="executorFullName" header="Исполнитель" sortable style="min-width: 200px">
-                    <template #body="{ data }">
-                        {{ data.executorFullName }}
-                    </template>
-                </Column>
-                <Column field="utcDateRegistered" header="Дата регистрации" sortable style="min-width: 290px">
-                    <template #body="{ data }">
-                        {{ formatUTCToOmsk(data.utcDateRegistered) }}
-                    </template>
-                </Column>
-                <Column field="utcDateModified" header="Дата изменения" style="min-width: 290px">
-                    <template #body="{ data }">
-                        {{ formatUTCToOmsk(data.utcDateModified) }}
-                    </template>
-                </Column>
-                <Column field="utcDateClosed" header="Дата закрытия" style="min-width: 290px">
-                    <template #body="{ data }">
-                        {{ formatUTCToOmsk(data.utcDateClosed) }}
-                    </template>
-                </Column>
+                <Column field="callTypeFullName" header="Тип заявки" style="min-width: 100px" />
+                <Column field="ownerFullName" header="Владелец" sortable style="min-width: 200px" />
+                <Column field="executorFullName" header="Исполнитель" sortable style="min-width: 200px" />
+                <Column field="utcDateRegistered" header="Дата регистрации" sortable style="min-width: 290px" />
+                <Column field="utcDateModified" header="Дата изменения" style="min-width: 290px" />
+                <Column field="utcDateClosed" header="Дата закрытия" style="min-width: 290px" /> -->
 
                 <template #paginatorstart>
                     <div class="d-flex justify-content-between align-items-center">
@@ -260,7 +294,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch, reactive } from 'vue';
+import { ref, onMounted, nextTick, watch, reactive, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { debounce } from 'lodash';
 import qs from 'qs';
@@ -293,64 +327,111 @@ const rowsPerPageOptions = [
     { label: '50', value: 50 },
 ];
 
+const columns = ref([
+    { field: 'number', header: '№', placeholder: 'Введите номер...', filterable: true, filterField: 'number', filterType: 'text' },
+    { field: 'entityStateName', header: 'Статус', placeholder: 'Выберите статус', filterable: true, filterField: 'entityStateNames', filterType: 'multiselect', options: stateOptions },
+    { field: 'priorityName', header: 'Приоритет', placeholder: 'Выберите приоритет', filterable: true, filterField: 'priorityId', filterType: 'select', options: priorityOptions },
+    { field: 'clientFullName', header: 'Клиент' },
+    { field: 'callSummaryName', header: 'Сводка', placeholder: 'Введите...', filterable: true, filterField: 'callSummaryName', filterType: 'text' },
+    { field: 'description', header: 'Описание' },
+    { field: 'solution', header: 'Решение' },
+    { field: 'serviceItemFullName', header: 'Элемент сервиса' },
+    { field: 'serviceAttendanceFullName', header: 'Выполнил' },
+    { field: 'serviceName', header: 'Сервис', placeholder: 'Выберите сервис', filterable: true, filterField: 'serviceName', filterType: 'select', options: serviceOptions },
+    { field: 'callTypeFullName', header: 'Тип заявки' },
+    { field: 'ownerFullName', header: 'Владелец' },
+    { field: 'executorFullName', header: 'Исполнитель' },
+    { field: 'utcDateRegistered', header: 'Дата регистрации' },
+    { field: 'utcDateModified', header: 'Дата изменения' },
+    { field: 'utcDateClosed', header: 'Дата закрытия' }
+]);
+
+const defaultColumns = ['number', 'entityStateName', 'priorityName', 'callSummaryName', 'clientFullName', 'executorFullName'];
+const selectedColumnFields = ref(defaultColumns);
+
+const selectedColumns = computed(() => 
+    columns.value.filter(c => selectedColumnFields.value.includes(c.field))
+);
+
+const onToggle = (val) => {
+    selectedColumnFields.value = val.map(col => col.field);
+};
+
 // Получение цвета статуса
 const getStatusSeverity = (status) => {
-  switch (status) {
-    case 'Открыта':
-      return 'info';
-    case 'Закрыта':
-      return 'success';
-    case 'Ожидает':
-      return 'secondary';
-    case 'Зарегистрирована':
-      return 'warn';
-    case 'Инициирована':
-      return '';
-    default:
-      return null;
-  }
-}
+    switch (status) {
+        case 'Открыта':
+            return 'info';
+        case 'Закрыта':
+            return 'success';
+        case 'Ожидает':
+            return 'secondary';
+        case 'Зарегистрирована':
+            return 'warn';
+        case 'Инициирована':
+            return '';
+        default:
+            return null;
+    }
+    }
 
 // Получение иконки статуса
 const getStatusIcon = (status) => {
-  switch (status) {
-    case 'Открыта':
-      return 'pi pi-info-circle';
-    case 'Закрыта':
-      return 'pi pi-check';
-    case 'Ожидает':
-      return 'pi pi-hourglass';
-    case 'Зарегистрирована':
-      return 'pi pi-book';
-    case 'Инициирована':
-      return 'pi pi-eject';
-    default:
-      return null;
-  }
+    switch (status) {
+        case 'Открыта':
+            return 'pi pi-info-circle';
+        case 'Закрыта':
+            return 'pi pi-check';
+        case 'Ожидает':
+            return 'pi pi-hourglass';
+        case 'Зарегистрирована':
+            return 'pi pi-book';
+        case 'Инициирована':
+            return 'pi pi-eject';
+        default:
+            return null;
+    }
 }
 
 const formatUTCToOmsk = (utcString) => {
-  if (!utcString) return '';
+    if (!utcString) return '';
 
-  // Добавляем 'Z', чтобы обозначить, что строка — в формате UTC
-  const date = new Date(`${utcString}Z`);
+    // Добавляем 'Z', чтобы обозначить, что строка — в формате UTC
+    const date = new Date(`${utcString}Z`);
 
-  // Добавляем 6 часов для Омского времени
-  date.setHours(date.getUTCHours() + 6);
+    // Добавляем 6 часов для Омского времени
+    date.setHours(date.getUTCHours() + 6);
 
-  // Форматируем дату с учётом 24-часового формата и Омского времени
-  return new Intl.DateTimeFormat('ru-RU', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(date);
+    // Форматируем дату с учётом 24-часового формата и Омского времени
+    return new Intl.DateTimeFormat('ru-RU', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+    }).format(date);
 };
 
 const rowClass = (data) => {
     return [{ 'removed-row': data.removed , 'not-allowed': data.removed, 'pointer': !data.removed, 'highlighted-row': data.id === lastCreatedId.value }];
+};
+
+const formatUtcFields = (obj) => {
+    if (Array.isArray(obj)) {
+        return obj.map(formatUtcFields);
+    } else if (obj !== null && typeof obj === 'object') {
+        const newObj = {};
+        for (const key in obj) {
+            if (key.startsWith('utc') && obj[key]) {
+                newObj[key] = formatUTCToOmsk(obj[key]);
+            } else {
+                newObj[key] = formatUtcFields(obj[key]);
+            }
+        }
+        return newObj;
+    }
+    return obj;
 };
 
 const lastCreatedId = ref(null);
@@ -363,23 +444,18 @@ const fetchCalls = async (highlightId = null) => {
         const response = await axiosInstance.get('/api/infra-manager/users/me/calls', {
             params: {
                 page: 1,
-                pageSize: rowsPerPage.value * 10,
-                number: route.query.number || null,
-                callSummaryName: route.query.callSummaryName || null,
-                serviceName: route.query.serviceName || null,
-                priorityId: route.query.priorityId || null,
-                entityStateNames: route.query.entityStateNames || ['Инициирована', 'Открыта', 'Зарегистрирована', 'Ожидает']
+                pageSize: rowsPerPage.value * 5,
+                ...filters,
             },
                 
-            paramsSerializer: (params) => {
-                return qs.stringify(params, { arrayFormat: 'repeat' })
-            }
+            paramsSerializer: (params) => qs.stringify(params, { arrayFormat: 'repeat' })
         });
 
         if (response.data?.entities) {
-            calls.value = response.data.entities;
+            calls.value = formatUtcFields(response.data.entities);
             totalRecords.value = response.data.countAllEntities;
             totalPages.value = response.data.countAllPages;
+            loadedPages.value = 5;
         }
 
         if (highlightId) {
@@ -401,19 +477,15 @@ const loadMorePages = async () => {
     try {
         const response = await axiosInstance.get('/api/infra-manager/users/me/calls', {
             params: {
-                page: loadedPages.value / 10 + 1,
-                pageSize: rowsPerPage.value * 10,
-                number: route.query.number || null,
-                callSummaryName: route.query.callSummaryName || null,
-                serviceName: route.query.serviceName || null,
-                priorityId: route.query.priorityId || null,
-                entityStateNames: route.query.entityStateNames || []
+                page: loadedPages.value / 5 + 1,
+                pageSize: rowsPerPage.value * 5,
+                ...filters
             },
         });
 
         if (response.data?.entities) {
-            calls.value.push(...response.data.entities);
-            loadedPages.value += 10;
+            calls.value.push(...formatUtcFields(response.data.entities));
+            loadedPages.value += 5;
         }
     } catch (erorr) {
         console.debug('Ошибка при загрузке: ', error);
@@ -425,7 +497,9 @@ const onPage = async (event) => {
     currentPage.value = event.page + 1;
     rowsPerPage.value = event.rows;
 
-    if (currentPage.value === loadedPages.value) {
+    if ((currentPage.value >= loadedPages.value - 1 && 
+            calls.value.length != totalRecords.value) || 
+            (currentPage.value === loadedPages.value && calls.value.length != totalRecords.value)) {
         await loadMorePages();
     }
 };
@@ -439,7 +513,11 @@ const fetchFilterOptions = async () => {
         ]);
 
         serviceOptions.value = services.data.map(service => ({ label: service, value: service }));
-        priorityOptions.value = priorities.data;
+        console.log(serviceOptions.value);
+        priorityOptions.value = [
+            { id: '', name: 'Все' },
+            ...priorities.data
+        ]
         stateOptions.value = states.data.map(state => ({ label: state, value: state }));
     } catch (error) {
         console.debug('Ошибка загрузки данных для фильтров: ', error);
@@ -470,9 +548,8 @@ const debouncedUpdateQuery = debounce((key, value) => {
     router.push({ query });
 }, 750);
 
-const clearFilter = (key, filterCallback) => {
+const clearFilter = (key) => {
     filters[key] = '';
-    filterCallback();
     debouncedUpdateQuery(key, '');
 }
 
@@ -489,7 +566,6 @@ watch (
     },
     { immediate: true }
 );
-
 
 const callDetailsRef = ref(null); // Ссылка на дочерний компонент InfraManagerCalls
 
@@ -525,10 +601,6 @@ onMounted(async () => {
     transition: all 0.5s;
     height: 100%;
 }
-.openCall:hover {
-    text-decoration: underline;
-    cursor: pointer;
-}
 .pi {
     font-size: 2rem;
 }
@@ -538,8 +610,8 @@ onMounted(async () => {
     transition: all 0.5s;
 }
 .skeleton-table {
-  border-radius: 12px;
-  background-color: var(--p-grey-3);
+    border-radius: 12px;
+    background-color: var(--p-grey-3);
 }
 .scroll-hint {
     position: absolute;
@@ -549,15 +621,12 @@ onMounted(async () => {
     background: var(--p-blue-500);
     color: white;
     padding: 10px 20px;
-    border-radius: 8px;
+    border-radius: 12px;
     font-size: 14px;
     text-align: center;
     z-index: 1000;
     cursor: pointer;
     animation: fadeInOut 5s forwards;
-}
-:deep(.p-datatable-tbody > tr:hover) {
-    background-color: var(--p-blue-500-low-op) !important;
 }
 
 @keyframes fadeInOut {

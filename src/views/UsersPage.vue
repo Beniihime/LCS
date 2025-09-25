@@ -1,27 +1,32 @@
 <template>
     <div class="content">
         <div class="content-wrapper">                
-            <WelcomeScreen :visible="loading" />
+            <WelcomeScreen v-if="isFirstLoadDone" :visible="loading" />
             <DataTable
-                v-if="!loading && customers.length"
-                v-model:filters="filters"
+                lazy
+                v-if="isFirstLoadDone"
                 :value="customers" 
-                paginator 
-                filterDisplay="row" 
+                paginator
                 scrollable
                 stripedRows
                 :rows="rowsPerPage"
                 :rowClass="rowClass"
-                @row-click="(event) => navigateToProfile(event.data.id, event.data.roles[0].id)"
+                @row-click="(event) => navigateToProfile(event.data.id, event.data.roles[0]?.id)"
                 :totalRecords="totalRecords"
                 @page="onPage"
-                :globalFilterFields="['fullName', 'email', 'roles', 'status']"
+                :rowsPerPageOptions="[5, 10, 15]"
+                filterDisplay="row"
             >
                 <template #header>
                     <div class="d-flex justify-content-between align-items-center">
-                        <h3 class="m-0 ps-4">Список пользователей</h3>
-                        <CreateUser v-if="hasPermission('User', 'Create')"/>
+                        <h3 class="m-0 ps-4">Пользователи</h3>
+                        <div class="d-flex gap-2">
+                            <MultiSelect :modelValue="selectedColumns" :options="columns" optionLabel="header" @update:modelValue="onToggle"
+                                display="chip" placeholder="Выберите поля" />
+                            <CreateUser v-if="hasPermission('User', 'Create')"/>
+                        </div>
                     </div>
+                    
                 </template>
 
                 <template #paginatorstart>
@@ -31,57 +36,33 @@
                 </template>
 
                 <template #paginatorend>
-                    <div class="d-flex align-items-center">
-                        <span>Показать</span>
-                        <Select 
-                            v-model="rowsPerPage"
-                            :options="rowsPerPageOptions"
-                            optionLabel="label"
-                            optionValue="value"
-                            class="search mx-1 px-1"
-                        />
-                        <span>строк</span>
-                    </div>
+                    <Button disabled type="button" icon="pi pi-download" text />
                 </template>
 
                 <template #empty>Не найдено.</template>
                 <template #loading>Данные загружаются. Подождите.</template>
 
-                <Column field="fullName" header="ФИО" :showFilterMenu="false" style="min-width: 20rem;">
-                    <template #body="{ data }">
-                        <span class="text-nowrap">
-                            {{ data.firstName }} {{ data.lastName }} {{ data.middleName }}
-                        </span>
-                    </template>
-                    <template #filter="{ filterModel, filterCallback }">
+                <Column 
+                    v-for="col in ordinaryColumns"
+                    :field="col.field"
+                    :key="col.field"
+                    :header="col.header"
+                    :showFilterMenu="false"
+                >
+                    <template #filter>
                         <InputText 
-                            v-model="filterModel.value" 
-                            placeholder="Поиск по ФИО" 
-                            @input="filterCallback()"
+                            :value="filters[col.field]" 
+                            :placeholder="col.placeholder" 
+                            @input="event => onFilter(col.field, event.target.value)"
                             autocomplete="off"
+                            class="w-75"
                         />
                     </template>
                 </Column>
                 
-                <Column field="email" header="E-mail" :showFilterMenu="false" style="min-width: 12rem;">
-                    <template #body="{ data }">
-                        <span class="text-nowrap">
-                            {{ data.email }}
-                        </span>
-                    </template>
-                    <template #filter="{ filterModel, filterCallback }">
-                        <InputText 
-                            v-model="filterModel.value" 
-                            placeholder="Поиск по E-mail" 
-                            @input="filterCallback()"
-                            autocomplete="off"
-                        />
-                    </template>
-                </Column>
-                <Column field="roleIds" header="Роли" :showFilterMenu="false" style="min-width: 12rem;">
+                <Column field="roleIds" header="Роли" :showFilterMenu="false" v-if="selectedColumnFields.includes('roleIds')">
                     <template #body="{ data }">
                         <div class="role-label-container">
-                            <!-- Показываем первую роль -->
                             <Chip v-if="data.roles.length > 0" class="role-label">
                                 <span class="roleType" :class="getRoleTypeClass(data.roles[0])">
                                     {{ data.roles[0].type.charAt(0) }}
@@ -89,7 +70,6 @@
                                 <span>{{ data.roles[0].title }}</span>
                             </Chip>
                             
-                            <!-- Если ролей больше одной, показываем Popover для дополнительных ролей -->
                             <Button v-if="data.roles.length > 1" rounded text class="p-2 ms-2" icon="pi pi-ellipsis-h" @click.stop="(event) => togglePopover($refs['popover' + data.id], event)" />
 
                             <Popover :ref="'popover' + data.id">
@@ -107,19 +87,19 @@
                             </Popover>
                         </div>
                     </template>
-                    <template #filter="{ filterModel, filterCallback }">
+                    <template #filter>
                         <MultiSelect 
-                            v-model="filterModel.value"
+                            v-model="filters.roleIds"
                             :options="roles"
                             optionLabel="title"
-                            optionValue="title"
+                            optionValue="id"
                             :maxSelectedLabels="1"
                             placeholder="Выберите роли"
-                            @change="filterCallback()"
+                            @change="onFilter"
                         />
                     </template>
                 </Column>
-                <Column field="isBlocked" header="Статус" :showFilterMenu="false" style="min-width: 4rem;">
+                <Column field="isBlocked" header="Статус" :showFilterMenu="false" v-if="selectedColumnFields.includes('isBlocked')">
                     <template #body="{ data }">
                         <Tag 
                             :severity="data.isBlocked ? 'danger' : 'success'" 
@@ -127,31 +107,30 @@
                             :icon="data.isBlocked ? 'pi pi-times' : 'pi pi-check'"
                         />
                     </template>
-                    <template #filter="{ filterModel, filterCallback }">
+                    <template #filter>
                         <Select 
-                            v-model="filterModel.value" 
+                            v-model="filters.isBlocked" 
                             :options="statusOptions"
                             optionLabel="label"
                             optionValue="value"
                             placeholder="Выберите статус" 
-                            @change="filterCallback()" 
+                            @change="onFilter" 
                         />
                     </template>
                 </Column>
                 
             </DataTable>
             
-            <Skeleton v-else width="100%" height="100%" class="skeleton-table" />
+            <Skeleton v-else-if="!isFirstLoadDone && loading" width="100%" height="100%" class="skeleton-table" />
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue';
+import { ref, onMounted, nextTick, computed } from 'vue';
 import axiosInstance from '@/utils/axios.js';
-import { FilterMatchMode } from '@primevue/core/api';
-import qs from 'qs';
 import { useRouter } from 'vue-router';
+import { debounce } from 'lodash';
 
 import CreateUser from '@/components/Users/CreateUser.vue';
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
@@ -162,30 +141,56 @@ const router = useRouter();
 const customers = ref([]);
 const totalRecords = ref(0);
 const loading = ref(true);
-const roles = ref([]);
+const isFirstLoadDone = ref(false);
 
+const roles = ref([]);
 const userPriority = ref(null);
 
 const permissionStore = usePermissionStore();
 const hasPermission = (type, action) => permissionStore.hasPermission(type, action);
 
-
 const filters = ref({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    fullName: { value: '', matchMode: FilterMatchMode.CONTAINS },
-    email: { value: '', matchMode: FilterMatchMode.STARTS_WITH },
-    roleIds: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    isBlocked: { value: null, matchMode: FilterMatchMode.EQUALS },
+    firstName: null,
+    lastName: null,
+    middleName: null,
+    email: null,
+    roleIds: [],
+    isBlocked: null,
 });
+
+const columns = ref([
+    { field: 'lastName', header:'Фамилия', placeholder: 'Поиск по фамилии' },
+    { field: 'firstName', header: 'Имя', placeholder: 'Поиск по имени' },
+    { field: 'middleName', header: 'Отчество', placeholder: 'Поиск по отчеству' },
+    { field: 'email', header: 'E-mail', placeholder: 'Поиск по E-mail' },
+    { field: 'roleIds', header: 'Роли', placeholder: 'Выберите роли' },
+    { field: 'isBlocked', header: 'Статус', placeholder: 'Выберите статус' }
+]);
+const defaultColumns = ['lastName', 'firstName', 'middleName', 'roleIds'];
+
+const selectedColumnFields = ref(defaultColumns);
+const selectedColumns = computed(() => 
+    columns.value.filter(c => selectedColumnFields.value.includes(c.field))
+);
+const onToggle = (val) => {
+    selectedColumnFields.value = val.map(col => col.field);
+};
+const ordinaryColumns = computed(() => 
+    columns.value.filter(c => selectedColumnFields.value.includes(c.field) && !['roleIds','isBlocked'].includes(c.field))
+);
 
 const currentPage = ref(1);
 const rowsPerPage = ref(10);
 
-const rowsPerPageOptions = [
-    { label: '5', value: 5 },
-    { label: '10', value: 10 },
-    { label: '15', value: 15 },
-];
+const onFilter = (field, value) => {
+    filters.value[field] = value;
+    currentPage.value = 1;
+    debouncedFetchCustomers()
+}
+
+const debouncedFetchCustomers = debounce(async () => {
+    await fetchCustomers()
+}, 500)
 
 const statusOptions = [
     { label: "Все", value: null },
@@ -227,36 +232,29 @@ const onPage = async (event) => {
 
 const fetchCustomers = async () => {
     try {
+        loading.value = true;
         const payload = {
             page: currentPage.value,
             pageSize: rowsPerPage.value,
-            lastName: filters.value.fullName?.value || null,
-            email: filters.value.email?.value || null,
-            roleIds: filters.value.roleIds?.value || null,
-            isBlocked: filters.value.isBlocked?.value
+            ...filters.value,
+            roleIds: filters.value.roleIds?.length ? filters.value.roleIds : null,
         };
 
-        const response = await axiosInstance.post('/api/users/list', payload);
-        
-        customers.value = response.data.entities.map((user) => ({
-            ...user,
-            fullName: `${user.firstName} ${user.lastName} ${user.middleName}`,
-            roleIds: user.roles.map(role => role.title),
-        }));
-        totalRecords.value = response.data.countEntities;      
+        const { data } = await axiosInstance.post('/api/users/list', payload)
+        customers.value = data.entities;
+        totalRecords.value = data.countEntities;      
     } catch (error) {
         console.debug('Ошибка при получении пользователей: ', error);
+    } finally {
+        loading.value = false;
+        isFirstLoadDone.value = true;
     }
 };
 
 
 onMounted(async () => {
-    loading.value = true;
-    await fetchCustomers(); // Дождёмся загрузки пользователей
-    await fetchRoles(); // Дождёмся загрузки ролей
-    nextTick(() => {
-        loading.value = false;
-    });
+    await fetchCustomers();
+    await fetchRoles();
 });
 
 const fetchRoles = async () => {
@@ -302,31 +300,6 @@ h3 {
 .text-nowrap {
     white-space: nowrap;
 }
-.status-label {
-    display: inline-block;
-    padding: 5px 10px;
-    border-radius: 12px;
-    font-weight: 400;
-    font-size: 12pt;
-    color: white;
-    text-align: center;
-}
-.blocked {
-    background-color: #FF453A;
-}
-.active {
-    border: 1px solid var(--p-green-500);
-    color: var(--p-green-500);
-}
-.filters {
-    margin-bottom: 20px;
-}
-.filter-group {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    align-items: center;
-}
 .roles-container {
     display: flex;
     flex-direction: column;
@@ -354,10 +327,8 @@ h3 {
     background-color: var(--p-purple-500);
 }
 .skeleton-table {
-  border-radius: 12px;
-  background-color: var(--p-grey-3);
+    border-radius: 12px;
+    background-color: var(--p-grey-3);
 }
-:deep(.p-datatable-tbody > tr:hover) {
-    background-color: var(--p-blue-500-low-op) !important;
-}
+
 </style>
