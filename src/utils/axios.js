@@ -59,19 +59,24 @@ axiosInstance.interceptors.response.use(
                     localStorage.setItem("accessToken", tokens.accessToken);
                     localStorage.setItem("refreshToken", tokens.refreshToken);
                     localStorage.setItem("refreshTokenExpired", tokens.refreshTokenExpired);
+                    localStorage.setItem("accessTokenExpired", tokens.accessTokenExpired);
 
                     onRefreshed(tokens.accessToken);
 
                     originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
                     return axiosInstance(originalRequest);
+                } else {
+                    throw new Error("No access token received");
                 }
             } catch (e) {
                 console.debug("[Interceptor] Token refresh failed:", e);
                 localStorage.removeItem("accessToken");
                 localStorage.removeItem("refreshToken");
                 localStorage.removeItem("refreshTokenExpired");
+                localStorage.removeItem("accessTokenExpired");
                 localStorage.removeItem("userId");
                 router.push("/auth");
+                return Promise.reject(e);
             } finally {
                 isRefreshing = false;
             }

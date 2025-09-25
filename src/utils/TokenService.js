@@ -35,8 +35,19 @@ export function startTokenWorker() {
             localStorage.setItem("refreshToken", event.data.refreshToken);
             localStorage.setItem("refreshTokenExpired", event.data.refreshTokenExpired);
             localStorage.setItem("accessTokenExpired", event.data.accessTokenExpired);
+
+            if (tokenWorker) {
+                tokenWorker.postMessage({
+                    action: "updateToken",
+                    refreshToken: event.data.refreshToken,
+                    userId: event.data.userId,
+                    refreshTokenExpired: event.data.refreshTokenExpired,
+                    accessTokenExpired: event.data.accessTokenExpired
+                });
+            }
         } else if (event.data.action === "refreshFailed") {
             console.error("[TokenService] Worker reported refresh failure. Logging out.");
+            stopTokenWorker();
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
             localStorage.removeItem('userId');
@@ -48,6 +59,7 @@ export function startTokenWorker() {
 
     tokenWorker.onerror = (error) => {
         console.error("[TokenService] Worker encountered an error:", error);
+        stopTokenWorker();
     };
 
     console.debug("[TokenService] Background token worker started!");
@@ -56,6 +68,7 @@ export function startTokenWorker() {
 export function stopTokenWorker() {
     if (tokenWorker) {
         console.debug("[TokenService] Stopping background token worker.");
+        tokenWorker.postMessage({ action: "stop" });
         tokenWorker.terminate();
         tokenWorker = null;
     }
@@ -75,16 +88,19 @@ export function refreshTokenThroughWorker() {
         const timeout = setTimeout(() => {
             reject("Worker response timeout");
             worker.terminate();
-        }, 5000);
+        }, 10000);
 
         worker.onmessage = (event) => {
             if (event.data.action === "updateToken") {
                 clearTimeout(timeout);
                 resolve(event.data);
                 worker.terminate();
+            } else if (event.data.action === "refreshFailed") {
+                clearTimeout(timeout);
+                reject(new Error("Token refresh failed"));
+                worker.terminate();
             }
         };
-
         worker.onerror = (err) => {
             clearTimeout(timeout);
             reject(err);

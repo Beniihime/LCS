@@ -267,7 +267,6 @@ onMounted(async () => {
 }
 .card {
     border-radius: 12px;
-    transition: transform 0.3s ease;
     background-color: var(--p-grey-7);
     color: var(--p-text-color);
     display: flex;

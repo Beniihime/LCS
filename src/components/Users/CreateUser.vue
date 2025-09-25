@@ -213,7 +213,6 @@ label {
     color: var(--p-red-500);
 }
 .search {
-    border-radius: 12px;
     transition: all 0.5s;
 }
 </style>

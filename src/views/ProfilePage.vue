@@ -135,12 +135,18 @@
                         </div> -->
                         <div>
                             <div class="field">Роль</div>
-                            <Chip class="role-label">
-                                <span class="roleType" :class="getRoleTypeClass()">
-                                    {{ userRole?.type?.[0] }}
-                                </span>
-                                <span>{{ userRole.title }}</span>
-                            </Chip>
+                            <div v-if="userRole">
+                                <Chip class="role-label">
+                                    <span class="roleType" :class="getRoleTypeClass()">
+                                        {{ userRole?.type?.[0] }}
+                                    </span>
+                                    <span>{{ userRole.title }}</span>
+                                </Chip>
+                            </div>
+                            <div v-else>
+                                <Tag severity="warn">Нет ролей</Tag>
+                            </div>
+                            
                         </div>
                     </div>
                 </div>
@@ -534,7 +540,7 @@ main {
     align-items: center;
     background-color: rgba(0, 0, 0, 0.5);
     opacity: 0;
-    transition: opacity 0.5s ease;
+    transition: opacity 0.5s;
 }
 .avatar-wrapper:hover .avatar-overlay {
     opacity: 1;

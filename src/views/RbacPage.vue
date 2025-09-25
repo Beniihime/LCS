@@ -302,7 +302,7 @@ p {
 }
 .edit-btn, .delete-btn, .perm-btn {
     width: 100%;
-    border-radius: 8px;
+    border-radius: 12px;
     padding: 5px;
     color: white;
     font-size: 0.9rem;

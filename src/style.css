@@ -176,6 +176,21 @@ svg.lcs {
   background-color: var(--p-blue-500-low-op) ;
 } */
 
+.p-datatable-tbody > tr:hover,
+.p-datatable-tbody > tr:hover > td.p-datatable-frozen-column
+{
+    background: var(--p-blue-500-low-op) !important;
+    transition: all 0.5s !important;
+}
+.p-datatable-tbody > tr > td.p-datatable-frozen-column {
+    transition: all 0.5s !important;
+    background: inherit !important;
+}
+
+/* .p-datatable-tbody > tr {
+  background-color: var(--p-bg-color-2) !important;
+} */
+
 :root {
   --p-bg-color-0: rgba(255, 255, 255, 0.5);
   --p-bg-color-1: rgba(255,255,255,1.0);
@@ -212,6 +227,7 @@ svg.lcs {
   /* --p-datatable-header-cell-selected-color: var(--p-blue-500) !important; */
 
   --p-transition-duration: 0.5s !important;
+  --p-datatable-transition-duration: 0.5s !important;
   --p-transition-property: all !important;
   --p-tooltip-gutter: 0.5rem !important;
   --p-tooltip-background: var(--p-blue-500) !important;

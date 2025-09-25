@@ -248,6 +248,7 @@
                             <Select 
                                 v-model="rowsPerPage"
                                 :options="rowsPerPageOptions"
+                                @change="resetPagination()"
                                 optionLabel="label"
                                 optionValue="value"
                                 class="search mx-1 px-1"
@@ -383,11 +384,7 @@ const fetchCalls = async () => {
             params: {
                 page: 1,
                 pageSize: rowsPerPage.value * 10,
-                number: route.query.number || null,
-                callSummaryName: route.query.callSummaryName || null,
-                serviceName: route.query.serviceName || null,
-                priorityId: route.query.priorityId || null,
-                entityStateNames: route.query.entityStateNames
+                ...filters
             },
 
             paramsSerializer: (params) => {
@@ -399,6 +396,7 @@ const fetchCalls = async () => {
             calls.value = response.data.entities;
             totalRecords.value = response.data.countAllEntities;
             totalPages.value = response.data.countAllPages;
+            loadedPages.value = 10;
         }
         loading.value = false;
     } catch (error) {
@@ -413,11 +411,7 @@ const loadMorePages = async () => {
             params: {
                 page: loadedPages.value / 10 + 1,
                 pageSize: rowsPerPage.value * 10,
-                number: route.query.number || null,
-                callSummaryName: route.query.callSummaryName || null,
-                serviceName: route.query.serviceName || null,
-                priorityId: route.query.priorityId || null,
-                entityStateNames: route.query.entityStateNames
+                ...filters
             },
             paramsSerializer: (params) => {
                 return qs.stringify(params, { arrayFormat: 'repeat' })
@@ -433,33 +427,21 @@ const loadMorePages = async () => {
     }
 };
 
-const resetPagination = () => {
+const resetPagination = async () => {
     currentPage.value = 1;
+    console.log(1)
     loadedPages.value = 10;
     calls.value = [];
+    await fetchCalls();
 }
 
 // При изменении страницы
 const onPage = async (event) => {
-    const newRowsPerPage = event.rows;
 
-    // Если изменилось количество строк на странице, сбросить пагинацию
-    if (newRowsPerPage !== rowsPerPage.value) {
-        rowsPerPage.value = newRowsPerPage;
-        resetPagination();
-        await fetchCalls();
-    } else {
-        currentPage.value = event.page + 1;
-
-        // Подгружаем дополнительные страницы, если достигли конца загруженных данных
-        if (currentPage.value = loadedPages.value) {
-            await loadMorePages();
-        }
-    }
     currentPage.value = event.page + 1;
     rowsPerPage.value = event.rows;
 
-    if (currentPage.value === loadedPages.value) {
+    if ((currentPage.value >= loadedPages.value - 1 && calls.value.length != totalRecords.value) || (currentPage.value === loadedPages.value && calls.value.length != totalRecords.value)) {
         await loadMorePages();
     }
 };

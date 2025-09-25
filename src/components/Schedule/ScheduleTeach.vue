@@ -531,7 +531,7 @@ h4 {
     background: var(--p-blue-500);
     color: var(--p-text-color);
     padding: 10px 20px;
-    border-radius: 8px;
+    border-radius: 12px;
     font-size: 14px;
     text-align: center;
     z-index: 1000;
