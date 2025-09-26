@@ -336,4 +336,4 @@ const smartTableParser = (htmlOrText) => {
     });
 };
 
-export default smartTableParser;
+export { smartTableParser, extractPointsAndFormula, normalizeText }

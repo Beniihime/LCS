@@ -92,7 +92,10 @@
                                                 <i class="pi pi-folder group-icon"></i>
                                                 <div class="group-info">
                                                     <span class="group-name">{{ node.data.group }}</span>
-                                                    <span class="group-stats">{{ calculateIndicatorsTotal(node.data.group) }} показателей</span>
+                                                    <span class="group-stats">
+                                                        {{ calculateIndicatorsTotal(node.data.group) }} показателей,
+                                                        {{ node.data.totalEmployeeScores }} оценок
+                                                    </span>
                                                 </div>
                                             </div>
 
@@ -100,11 +103,14 @@
                                                 <i class="pi pi-folder-open subgroup-icon"></i>
                                                 <div class="subgroup-info">
                                                     <span class="subgroup-name">{{ node.data.subGroup }}</span>
-                                                    <span class="subgroup-stats">{{ node.children?.length || 0 }} показателей</span>
+                                                    <span class="subgroup-stats">
+                                                        {{ node.children?.length || 0 }} показателей,
+                                                        {{ node.data.totalEmployeeScores || '' }}
+                                                    </span>
                                                 </div>
                                             </div>
 
-                                            <div v-else class="indicator-node">
+                                            <div v-else class="indicator-node" @click="openIndicatorDialog(node)" v-tooltip.top="'Нажмите для просмотра оценок'">
                                                 <div class="indicator-header">
                                                     <span class="indicator-number">{{ node.data.number }}</span>
                                                     <span class="indicator-name">{{ node.data.indicator }}</span>
@@ -167,6 +173,13 @@
                 </div>
             </div>
         </div>
+        <ViewIndicatorScores 
+            v-model:visible="dialogVisible"
+            :indicatorData="selectedIndicator"
+            :seasonId="seasonId"
+            :employeeIndicatorValues="employeeIndicatorValues"
+            :employees="employees"
+        />
     </main>
 </template>
 
@@ -180,28 +193,34 @@ import WelcomeScreen from "@/components/Utils/WelcomeScreen.vue";
 import DeleteIndicator from "@/components/Microservice/Rating/Methods/DeleteIndicator.vue";
 import AddIndToSeason from "@/components/Microservice/Rating/Methods/AddIndToSeason.vue";
 import AddEmpToInd from "@/components/Microservice/Rating/Methods/AddEmpToInd.vue";
+import ViewIndicatorScores from "@/components/Microservice/Rating/Methods/ViewIndicatorScores.vue";
 
 const router = useRouter();
 const route = useRoute();
 
-const seasonId = route.params.idSeason;
+const seasonId = ref(parseInt(route.params.idSeason));
 const certainSeason = ref({});
 const loading = ref(true);
 const rawIndicators = ref([]);
+const employeeIndicatorValues = ref([]);
+const employees = ref([]);
 const expandedKeys = ref({});
 const allExpanded = ref(false);
 const lastAddedIndicatorId = ref(null);
+
+const dialogVisible = ref(false);
+const selectedIndicator = ref(null);
 
 // Computed properties
 const headerStats = computed(() => [
     {
         icon: 'pi pi-chart-line',
-        value: rawIndicators.value.length,
+        value: certainSeason.value.indicatorsCount,
         label: 'Всего показателей'
     },
     {
         icon: 'pi pi-users',
-        value: calculateTotalEmployeeScores(),
+        value: certainSeason.value.pointsCount,
         label: 'Оценки сотрудников'
     },
     {
@@ -213,6 +232,12 @@ const headerStats = computed(() => [
 
 const totalIndicators = computed(() => rawIndicators.value.length);
 
+const getEmployeeScoresCountForIndicator = (indicatorId) => {
+    return employeeIndicatorValues.value.filter(eiv => 
+        eiv.indicator.id === indicatorId && eiv.season.id === seasonId.value
+    ).length;
+};
+
 const groupedIndicators = computed(() => {
     const groupsMap = {};
 
@@ -223,15 +248,18 @@ const groupedIndicators = computed(() => {
         const subNum = ind.subGroupIndicator?.numberInOrder || 'N';
         const indNum = ind.numberInOrder || 'N';
 
+        const employeeScoresCount = getEmployeeScoresCountForIndicator(ind.id);
+
         if (!groupsMap[group]) {
-            groupsMap[group] = { group, subGroups: {} };
+            groupsMap[group] = { group, subGroups: {}, totalEmployeeScores: 0 };
         }
 
         if (!groupsMap[group].subGroups[subGroup]) {
             groupsMap[group].subGroups[subGroup] = {
                 subGroup,
                 uniqueKey: `${group}_${subGroup}`,
-                indicators: []
+                indicators: [],
+                totalEmployeeScores: 0
             };
         }
 
@@ -241,9 +269,12 @@ const groupedIndicators = computed(() => {
             indicator: ind.title,
             periodicity: ind.periodicityIndicators?.map(p => p.title).join(", ") || "",
             responsible: ind.responsibleIndicators?.map(r => r.title).join(", ") || "",
-            employees: ind.employees || [],
+            employeeScoresCount: employeeScoresCount,
             raw: ind
         });
+
+        groupsMap[group].subGroups[subGroup].totalEmployeeScores += employeeScoresCount;
+        groupsMap[group].totalEmployeeScores += employeeScoresCount;
     });
 
     return Object.values(groupsMap).map(group => ({
@@ -258,12 +289,6 @@ const treeNodes = computed(() => {
 
 // Methods
 const goBack = () => router.back();
-
-const calculateTotalEmployeeScores = () => {
-    return rawIndicators.value.reduce((total, indicator) => {
-        return total + (indicator.employees?.length || 0);
-    }, 0);
-};
 
 const calculateIndicatorsTotal = (groupName) => {
     return rawIndicators.value.filter(ind => {
@@ -283,14 +308,24 @@ const buildTreeNodes = (groups) => {
             }));
             return {
                 key: subKey,
-                data: { subGroup: s.subGroup, isGroup: false, isSubGroup: true },
+                data: { 
+                    subGroup: s.subGroup, 
+                    isGroup: false, 
+                    isSubGroup: true, 
+                    totalEmployeeScores: s.totalEmployeeScores 
+                },
                 children: indicatorNodes
             };
         });
 
         return {
             key: groupKey,
-            data: { group: g.group, isGroup: true, isSubGroup: false },
+            data: { 
+                group: g.group, 
+                isGroup: true, 
+                isSubGroup: false, 
+                totalEmployeeScores: g.totalEmployeeScores 
+            },
             children: subNodes
         };
     });
@@ -299,6 +334,13 @@ const buildTreeNodes = (groups) => {
 const onToggle = (e) => {
     expandedKeys.value = e.value || {};
     syncAllExpanded();
+};
+
+const openIndicatorDialog = (node) => {
+    if (!node.data.isGroup && !node.data.isSubGroup) {
+        selectedIndicator.value = node.data;
+        dialogVisible.value = true;
+    }
 };
 
 const syncAllExpanded = () => {
@@ -348,17 +390,28 @@ const onIndicatorAdded = (id) => {
 const fetchIndicators = async () => {
     loading.value = true;
     try {
-        const [{ data: indicatorsData }, { data: seasonData }] = await Promise.all([
-            axiosInstance.get(`/api/rating/seasons/${seasonId}/indicators`),
-            axiosInstance.get(`/api/rating/seasons/${seasonId}`),
+        const [
+            { data: indicatorsData }, 
+            { data: seasonData }, 
+            { data: employeeValuesData },
+            { data: employeesData }
+        ] = await Promise.all([
+            axiosInstance.get(`/api/rating/seasons/${seasonId.value}/indicators`),
+            axiosInstance.get(`/api/rating/seasons/${seasonId.value}`),
+            axiosInstance.get('/api/rating/employee-indicators-value'),
+            axiosInstance.get('/api/rating/employees')
         ]);
 
         rawIndicators.value = indicatorsData || [];
         certainSeason.value = seasonData || {};
+        employeeIndicatorValues.value = employeeValuesData  || [];
+        employees.value = employeesData?.employees || [];
     } catch (error) {
         console.error('Ошибка при загрузке: ', error);
         rawIndicators.value = [];
         certainSeason.value = {};
+        employeeIndicatorValues.value = [];
+        employees.value = [];
     } finally {
         loading.value = false;
     }
@@ -523,7 +576,7 @@ onMounted(fetchIndicators);
 
 .stat-label {
     font-size: 0.875rem;
-    color: #7f8c8d;
+    color: var(--p-grey-2);
     font-weight: 500;
 }
 
@@ -615,6 +668,8 @@ onMounted(fetchIndicators);
     background: transparent;
 }
 
+
+
 /* Node Styles */
 .node-content {
     display: flex;
@@ -665,6 +720,14 @@ onMounted(fetchIndicators);
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.indicator-node:hover {
+    background-color: rgba(var(--p-primary-color), 0.05);
 }
 
 .indicator-header {

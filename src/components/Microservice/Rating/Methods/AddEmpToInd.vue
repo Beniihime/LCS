@@ -45,41 +45,93 @@
                         Система оценивания
                     </h3>
 
-                    <!-- Переключатель между табличным и списковым видом -->
-                    <div class="view-toggle">
-                        <Button 
-                            :label="showTableView ? 'Списком' : 'Таблицей'" 
-                            icon="pi pi-table" 
-                            text
-                            size="small"
-                            @click="showTableView = !showTableView"
-                        />
-                    </div>
-
-                    <!-- Табличное представление -->
-                    <div v-if="showTableView && parsedTableData.length > 0" class="table-view">
-                        <div class="table-container" v-html="indicatorData.scores[0]?.description?.table || ''"></div>
-                    </div>
-
-                    <!-- Списковое представление -->
-                    <div v-else-if="parsedScores.length > 0" class="scores-container">
-                        <div class="scores-header">
-                            <span>Критерий оценивания</span>
-                            <span>Баллы</span>
+                    <div class="input-mode-toggle">
+                        <div class="toggle-buttons">
+                            <Button 
+                                label="Выбрать из критериев"
+                                :severity="inputMode === 'criteria' ? 'primary' : 'secondary'"
+                                :outlined="inputMode !== 'criteria'"
+                                @click="inputMode = 'criteria'"
+                                size="small"
+                            />
+                            <Button 
+                                label="Ручной ввод"
+                                :severity="inputMode === 'manual' ? 'primary' : 'secondary'"
+                                :outlined="inputMode !== 'manual'"
+                                @click="switchToManualMode"
+                                size="small"
+                            />
                         </div>
-                        <div class="scores-list">
-                            <div v-for="(score, index) in parsedScores" :key="index"
-                                class="score-item" :class="{ 'selected': selectedScore === score.points }"
-                                @click="selectScore(score)"
-                            >
-                                <span class="score-criteria" v-html="score.criteria"></span>
-                                <span class="score-points">{{ score.points }}</span>
+                    </div>
+
+                    <div v-if="inputMode === 'criteria'">
+                        <!-- Переключатель между табличным и списковым видом -->
+                        <div class="view-toggle">
+                            <Button 
+                                :label="showTableView ? 'Списком' : 'Таблицей'" 
+                                icon="pi pi-table" 
+                                text
+                                size="small"
+                                @click="showTableView = !showTableView"
+                            />
+                        </div>
+
+                        <!-- Табличное представление -->
+                        <div v-if="showTableView && parsedTableData.length > 0" class="table-view">
+                            <div class="table-container" v-html="indicatorData.scores[0]?.description?.table || ''"></div>
+                        </div>
+
+                        <!-- Списковое представление -->
+                        <div v-else-if="parsedScores.length > 0" class="scores-container">
+                            <div class="scores-header">
+                                <span>Критерий оценивания</span>
+                                <span>Баллы</span>
+                            </div>
+                            <div class="scores-list">
+                                <div v-for="(score, index) in parsedScores" :key="index"
+                                    class="score-item" :class="{ 'selected': selectedScore === score.points }"
+                                    @click="selectScore(score)"
+                                >
+                                    <span class="score-criteria" v-html="score.criteria"></span>
+                                    <span class="score-points">{{ score.points }}</span>
+                                </div>
                             </div>
                         </div>
+                        <div v-else class="no-scores">
+                            <i class="pi pi-exclamation-triangle"></i>
+                            <p>Нет доступных критериев оценивания</p>
+                        </div>
                     </div>
-                    <div v-else class="no-scores">
-                        <i class="pi pi-exclamation-triangle"></i>
-                        <p>Нет доступных критериев оценивания</p>
+
+                    <div v-else class="manual-input-section">
+                        <div class="manual-input-card">
+                            <h4 class="manual-title">
+                                <i class="pi pi-pencil"></i>
+                                Ручной ввод баллов
+                            </h4>
+                            <div class="manual-input-content">
+                                <div class="input-field">
+                                    <label for="manualPoints">Введите количество баллов:</label>
+                                    <InputNumber 
+                                        id="manualPoints"
+                                        v-model="manualPoints"
+                                        :min="-10.00"
+                                        :max="60.00"
+                                        mode="decimal"
+                                        :minFractionDigits="2"
+                                        :maxFractionDigits="2"
+                                        showButtons
+                                        :step="0.5"
+                                        class="manual-input"
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                                <div class="range-info">
+                                    <span class="range-label">Допустимый диапазон:</span>
+                                    <span class="range-value">от -10.00 до 60.00</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -157,20 +209,29 @@
                                 {{ selectedEmployee.lastName }} {{ selectedEmployee.firstName }} {{ selectedEmployee.middleName || '' }}
                             </span>
                         </div>
-                        <div v-if="selectedScore !== null" class="selected-score">
+
+                        <div class="selected-points">
+                            <span class="selected-label">Режим оценки:</span>
+                            <span class="selected-value">
+                                {{ inputMode === 'criteria' ? 'По критериям' : 'Ручной ввод' }}
+                            </span>
+                        </div>
+
+                        <div v-if="inputMode === 'criteria' && selectedScore !== null" class="selected-score">
                             <span class="selected-label">Выбранные баллы:</span>
                             <span class="selected-value">{{ selectedScore }}</span>
                         </div>
-                        <div v-if="manualPoints > 0" class="manual-points">
-                            <span class="selected-label">Ручной ввод:</span>
-                            <InputNumber 
-                                v-model="manualPoints"
-                                :min="-20.00"
-                                :max="100.00"
-                                size="small"
-                                @update:modelValue="selectManualPoints"
-                            />
+
+                        <div v-if="inputMode === 'manual'" class="manual-points-display">
+                            <span class="selected-label">Введенные баллы:</span>
+                            <span class="selected-value">{{ manualPoints }}</span>
                         </div>
+
+                        <div v-if="!hasValidPoints" class="points-warning">
+                            <i class="pi pi-exclamation-circle"></i>
+                            <span>Выберите критерий или введите баллы вручную</span>
+                        </div>
+                        
                     </div>
 
                     <div class="action-buttons">
@@ -198,9 +259,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import axiosInstance from '@/utils/axios';
-import smartTableParser from '@/utils/universalParser';
+import { smartTableParser, extractPointsAndFormula, normalizeText } from '@/utils/universalParser';
 
 const props = defineProps({
     indicatorId: Number,
@@ -217,6 +278,7 @@ const visible = ref(false);
 const loadingEmployees = ref(false);
 const submitting = ref(false);
 const showTableView = ref(false);
+const inputMode = ref('criteria'); 
 
 const allEmployees = ref([]);
 const filteredEmployees = ref([]);
@@ -226,7 +288,7 @@ const selectedEmployee = ref(null);
 const parsedScores = ref([]);
 const parsedTableData = ref([]);
 const selectedScore = ref(null);
-const manualPoints = ref(0.00);
+const manualPoints = ref(1.00);
 
 const openDialog = async () => {
     visible.value = true;
@@ -242,13 +304,32 @@ const closeDialog = () => {
 const resetForm = () => {
     selectedEmployee.value = null;
     selectedScore.value = null;
+    manualPoints.value = 0.00;
+    inputMode.value = 'criteria';
     searchQuery.value = '';
     filteredEmployees.value = allEmployees.value;
 }
 
-const canSubmit = computed(() =>{
-    return selectedEmployee.value !== null && selectedScore.value !== null;
+const hasValidPoints = computed(() => {
+    if (inputMode.value === 'criteria') {
+        return selectedScore.value !== null;
+    } else {
+        return manualPoints.value !== null && manualPoints.value !== 0.00;
+    }
 });
+
+const canSubmit = computed(() => {
+    return selectedEmployee.value !== null && hasValidPoints.value;
+});
+
+const switchToManualMode = () => {
+    inputMode.value = 'manual';
+    selectedScore.value = null;
+    // Устанавливаем минимальное значение если текущее равно 0
+    if (manualPoints.value === 0.00) {
+        manualPoints.value = 0.01;
+    }
+}
 
 const loadEmployees = async () => {
     loadingEmployees.value = true;
@@ -396,28 +477,34 @@ const parseScores = () => {
 const selectScore = (score) => {
     if (score.points !== null && !isNaN(score.points)) {
         selectedScore.value = score.points;
-        manualPoints.value = 0;
-    } else {
-        // Формулы — не выбираем автоматически. Пользователь вводит manualPoints в UI.
+        inputMode.value = 'criteria';
+    } else if (score.formula) {
+        inputMode.value = 'manual';
         selectedScore.value = null;
-        manualPoints.value = 0;
-        // Можно показывать тултип, если нужно.
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: { 
+                severity: 'info', 
+                summary: 'Ручной ввод', 
+                detail: `Выбран критерий с формулой. Введите значение вручную.`,
+            }
+        }));
     }
 };
 
-const selectManualPoints = (value) => {
-    if (value !== null && value !== undefined) {
-        manualPoints.value = value;
-        selectedScore.value = null;
+// Валидация ручного ввода
+watch(manualPoints, (newValue) => {
+    if (newValue !== null) {
+        if (newValue < -20) manualPoints.value = -20;
+        if (newValue > 100) manualPoints.value = 100;
     }
-};
+});
 
 const submitEvaluation = async () => {
     if (!canSubmit.value) return;
 
     submitting.value = true;
     try {
-        const pointsToSubmit = selectedScore.value !== null ? selectedScore.value : manualPoints.value;
+        const pointsToSubmit = inputMode.value === 'criteria' ? selectedScore.value : manualPoints.value;
 
         await axiosInstance.post('/api/rating/employee-indicators-value', {
             employeeId: selectedEmployee.value.id,
@@ -452,7 +539,6 @@ const submitEvaluation = async () => {
     }
 };
 
-
 </script>
 
 <style scoped>
@@ -484,6 +570,70 @@ const submitEvaluation = async () => {
     margin: 0 0 1rem 0;
     font-size: 1.1rem;
     color: var(--p-text-color);
+    font-weight: 600;
+}
+
+/* Стили для переключателя режима ввода */
+.input-mode-toggle {
+    margin-bottom: 1rem;
+}
+
+.toggle-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* Стили для ручного ввода */
+.manual-input-section {
+    margin-top: 1rem;
+}
+
+.manual-input-card {
+    border: 2px solid var(--p-primary-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    background: var(--p-grey-6);
+}
+
+.manual-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 1rem 0;
+    color: var(--p-primary-color);
+    font-weight: 600;
+}
+
+.manual-input-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.input-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.input-field label {
+    font-weight: 600;
+    color: var(--p-text-color);
+}
+
+.manual-input {
+    width: 100%;
+}
+
+.range-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    color: var(--p-text-color-secondary);
+}
+
+.range-label {
     font-weight: 600;
 }
 
@@ -565,6 +715,14 @@ const submitEvaluation = async () => {
     color: white;
 }
 
+.score-item.has-formula {
+    border-left: 4px solid var(--p-warning-color);
+}
+
+.score-item.has-formula:hover {
+    background: var(--p-warning-color-light);
+}
+
 .score-criteria {
     flex: 1;
     line-height: 1.4;
@@ -581,7 +739,6 @@ const submitEvaluation = async () => {
     padding: 2rem;
     color: var(--p-text-color-secondary);
 }
-
 
 /* Стили для информации о показателе */
 .indicator-details {
@@ -728,7 +885,8 @@ const submitEvaluation = async () => {
 
 .selected-employee,
 .selected-score,
-.manual-points {
+.selected-points,
+.manual-points-display {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
@@ -745,10 +903,12 @@ const submitEvaluation = async () => {
     font-weight: 500;
 }
 
-.manual-points {
+.points-warning {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
+    color: var(--p-warning-color);
+    font-size: 0.875rem;
 }
 
 /* Стили для кнопок */
@@ -796,6 +956,10 @@ const submitEvaluation = async () => {
     
     .detail-label {
         min-width: auto;
+    }
+    
+    .toggle-buttons {
+        flex-direction: column;
     }
 }
 

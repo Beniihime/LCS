@@ -16,7 +16,7 @@
                     </div>
                     <div class="content second-plan">
                         <i class="pi pi-users me-2"></i>
-                        <span>Сотрудников: {{ item.pointsCount }}</span>
+                        <span>Оценок сотрудников: {{ item.pointsCount }}</span>
                     </div>
                     <div class="menu">
                         <Button type="button" icon="pi pi-ellipsis-h" class="edit-btn" @click.stop="(event) => toggle(event, index)" aria-haspopup="true" aria-controls="overlay_menu" v-tooltip="'Действия'" />
