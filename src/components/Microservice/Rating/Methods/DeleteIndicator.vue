@@ -1,5 +1,5 @@
 <template>
-    <Button icon="pi pi-trash" outlined rounded severity="danger" @click="showDeleteDialog(props.item)" />
+    <Button icon="pi pi-minus" outlined rounded severity="danger" @click="showDeleteDialog(props.item)" />
     <Dialog v-model:visible="deleteDialogVisible" modal header="Удалить показатель"
             :style="{ width: '30rem' }">
         <span>Вы уверены, что хотите удалить этот показатель ?<Tag>{{ props.item.indicator }}</Tag></span>
@@ -46,7 +46,7 @@ const confirmDelete = async () => {
             console.error('Ошибка при удалении: ', error);
             window.dispatchEvent(new CustomEvent('toast', {
                 detail: { 
-                    severity: 'danger', 
+                    severity: 'error', 
                     summary: 'Рейтинг', 
                     detail: `Ошибка при удалении показателя для сезона `,
                 }

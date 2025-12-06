@@ -1,26 +1,74 @@
 <template>
     <main>
         <WelcolmeScreen :visible="loading"/>
-        <div class="content-wrapper">
-            <h2 class="mb-4">Выберите сезон</h2>
+
+        <!-- Секция сезонов -->
+        <section class="content-wrapper">
+            <div class="section-header">
+                <div class="section-title-wrapper">
+                    <i class="pi pi-calendar section-icon"></i>
+                    <h2 class="section-title">Сезоны</h2>
+                </div>
+            </div>
             <div class="seasons-grid">
-                <div v-for="(item, index) in seasons" :key="item.id" class="season" @click="goToSeason(item.id)">
-                    <h3>{{ item.title }}</h3>
-                    <div class="content mb-4">
-                        <i class="pi pi-calendar me-2"></i>
-                        <span>{{ item.period }}</span>
+                <div 
+                    v-for="(item, index) in seasons" 
+                    :key="item.id" 
+                    class="season-card card-animated" 
+                    :class="{'season-closed': item.isClosed}"
+                    @click="goToSeason(item.id)"
+                >
+                    <div class="card-status-indicator" :class="item.isClosed ? 'status-closed' : 'status-open'"></div>
+                    <div class="season-top-row">
+                        <div class="season-header">
+                            <h3 class="card-title">{{ item.title }}</h3>
+                        </div>
+                        <div class="menu">
+                            <Button 
+                                type="button" 
+                                icon="pi pi-ellipsis-v" 
+                                class="edit-btn" 
+                                text
+                                rounded
+                                @click.stop="(event) => toggle(event, index)" 
+                                aria-haspopup="true" 
+                                aria-controls="overlay_menu" 
+                                v-tooltip.top="'Действия'" 
+                            />
+                            <Menu :ref="(el) => { if (el) menus[index] = el }" :model="menuItems[index]" :popup="true" id="season_edit"/>
+                        </div>
                     </div>
-                    <div class="content second-plan">
-                        <i class="pi pi-chart-bar me-2"></i>
-                        <span>Показателей: {{ item.indicatorsCount }}</span>
-                    </div>
-                    <div class="content second-plan">
-                        <i class="pi pi-users me-2"></i>
-                        <span>Оценок сотрудников: {{ item.pointsCount }}</span>
-                    </div>
-                    <div class="menu">
-                        <Button type="button" icon="pi pi-ellipsis-h" class="edit-btn" @click.stop="(event) => toggle(event, index)" aria-haspopup="true" aria-controls="overlay_menu" v-tooltip="'Действия'" />
-                        <Menu :ref="(el) => { if (el) menus[index] = el }" :model="menuItems[index]" :popup="true" id="season_edit"/>
+
+                    <Tag :severity="item.isClosed ? 'danger' : 'success'" class="status-badge">
+                        <span class="status-dot" :class="item.isClosed ? 'closed' : 'open'"></span>
+                        {{ item.isClosed ? 'Закрыт' : 'Открыт' }}
+                    </Tag>
+                    
+                    <div class="card-content">
+                        <div class="info-item primary-info">
+                            <div class="info-icon-wrapper">
+                                <i class="pi pi-calendar"></i>
+                            </div>
+                            <span class="info-text">{{ item.period }}</span>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-icon-wrapper">
+                                <i class="pi pi-chart-bar"></i>
+                            </div>
+                            <div class="info-details">
+                                <span class="info-label">Показателей</span>
+                                <span class="info-value">{{ item.indicatorsCount }}</span>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-icon-wrapper">
+                                <i class="pi pi-users"></i>
+                            </div>
+                            <div class="info-details">
+                                <span class="info-label">Оценок сотрудников</span>
+                                <span class="info-value">{{ item.pointsCount }}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -28,45 +76,109 @@
                 <UpdateSeason @edited="fetchSeasons" :season="selectedSeason" v-model:visible="showEditDialog" />
                 <DeleteSeason @deleted="fetchSeasons" :season="selectedSeason" v-model:visible="showDeleteDialog"/>
             </div>
-        </div>
+        </section>
+
+        <!-- Секция сотрудников -->
+        <EmployeeTable />
+
+        <!-- Секция должностей -->
     </main>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from "vue-router";
 import axiosInstance from "@/utils/axios.js";
 import { getQuarterPeriod } from '@/utils/formatSeason.js';
 
 import WelcolmeScreen from "@/components/Utils/WelcomeScreen.vue";
-import CreateSeason from "@/components/Microservice/Rating/Methods/CreateSeason.vue";
-import UpdateSeason from "@/components/Microservice/Rating/Methods/UpdateSeason.vue";
-import DeleteSeason from "@/components/Microservice/Rating/Methods/DeleteSeason.vue";
 
-const menus = ref([]);
+import CreateSeason from "@/components/Microservice/Rating/Methods/Seasons/CreateSeason.vue";
+import UpdateSeason from "@/components/Microservice/Rating/Methods/Seasons/UpdateSeason.vue";
+import DeleteSeason from "@/components/Microservice/Rating/Methods/Seasons/DeleteSeason.vue";
+
+import EmployeeTable from '@/components/Microservice/Rating/Tables/EmployeeTable.vue'
+
+import CreateJobPosition from "@/components/Microservice/Rating/Methods/JobPositions/CreateJobPosition.vue";
+import UpdateJobPosition from "@/components/Microservice/Rating/Methods/JobPositions/UpdateJobPosition.vue";
+import DeleteJobPosition from "@/components/Microservice/Rating/Methods/JobPositions/DeleteJobPosition.vue";
+
+import CreateDepartment from "@/components/Microservice/Rating/Methods/Departments/CreateDepartment.vue";
+import UpdateDepartment from "@/components/Microservice/Rating/Methods/Departments/UpdateDepartment.vue";
+import DeleteDepartment from "@/components/Microservice/Rating/Methods/Departments/DeleteDepartment.vue";
+
 const router = useRouter();
+
+// Меню для сезонов
+const menus = ref([]);
 const seasons = ref([]);
-const loading = ref(true);
-
 const menuItems = ref([]);
-
 const selectedSeason = ref(null);
-
 const showEditDialog = ref(false);
 const showDeleteDialog = ref(false);
 
+// Общие опции
+const rowsPerPageOptions = [
+    { label: '5', value: 5 },
+    { label: '10', value: 10 },
+    { label: '20', value: 20 },
+    { label: '50', value: 50 },
+];
+
+const jobPositions = ref([]);
+const jobPositionMenus = ref([]);
+const jobPositionMenuItems = ref([]);
+const selectedJobPosition = ref(null);
+const showEditJobPositionDialog = ref(false);
+const showDeleteJobPositionDialog = ref(false);
+const showCreateJobPosition = ref(false);
+
+const departments = ref([]);
+const departmentMenus = ref([]);
+const departmentMenuItems = ref([]);
+const selectedDepartment = ref(null);
+const showEditDepartmentDialog = ref(false);
+const showDeleteDepartmentDialog = ref(false);
+const showCreateDepartment = ref(false);
+
+const loading = ref(true);
+
+// Debounce таймеры
+let jobPositionDebounceTimer;
+let departmentDebounceTimer;
+
 const openEditDialog = (season) => {
-  selectedSeason.value = season;
-  showEditDialog.value = true;
+    selectedSeason.value = season;
+    showEditDialog.value = true;
 };
 
 const openDeleteDialog = (season) => {
-  selectedSeason.value = season;
-  showDeleteDialog.value = true;
+    selectedSeason.value = season;
+    showDeleteDialog.value = true;
 };
 
 const toggle = (event, index) => {
     menus.value[index].toggle(event);
+};
+
+const openEditJobPositionDialog = (jobPosition) => {
+    selectedJobPosition.value = jobPosition;
+    showEditJobPositionDialog.value = true;
+};
+
+const openDeleteJobPositionDialog = (jobPosition) => {
+    selectedJobPosition.value = jobPosition;
+    showDeleteJobPositionDialog.value = true;
+};
+
+const openEditDepartmentDialog = (department) => {
+    selectedDepartment.value = department;
+    showEditDepartmentDialog.value = true;
+};
+
+const openDeleteDepartmentDialog = (department) => {
+    selectedDepartment.value = department;
+    showDeleteDepartmentDialog.value = true;
 };
 
 const goToSeason = (seasonId) => {
@@ -88,17 +200,14 @@ const fetchSeasons = async () => {
                 period
             }
         }).sort((a, b) => {
-            // Split the title into year and quarter
             const [yearA, quarterA] = a.title.split('/');
             const [yearB, quarterB] = b.title.split('/');
             
-            // Compare years first
             if (yearA !== yearB) {
-                return parseInt(yearB) - parseInt(yearA); // Descending order for years
+                return parseInt(yearB) - parseInt(yearA);
             }
             
-            // If years are equal, compare quarters
-            return parseInt(quarterB) - parseInt(quarterA); // Descending order for quarters
+            return parseInt(quarterB) - parseInt(quarterA);
         });
 
         showEditDialog.value = false;
@@ -108,7 +217,7 @@ const fetchSeasons = async () => {
             label: 'Действия',
             items: [
                 {
-                    label: 'Изменить',
+                    label: 'Редактировать',
                     icon: 'pi pi-pencil',
                     command: () => openEditDialog(season)
                 },
@@ -126,13 +235,74 @@ const fetchSeasons = async () => {
     }
 };
 
+const fetchJobPositions = async () => {
+    try {
+        const { data } = await axiosInstance.get('/api/rating/job-positions');
+        jobPositions.value = data;
+        
+        showEditJobPositionDialog.value = false;
+        showDeleteJobPositionDialog.value = false;
+
+        jobPositionMenuItems.value = jobPositions.value.map(jobPosition => ([{
+            label: 'Действия',
+            items: [
+                {
+                    label: 'Редактировать',
+                    icon: 'pi pi-pencil',
+                    command: () => openEditJobPositionDialog(jobPosition)
+                },
+                {
+                    label: 'Удалить',
+                    icon: 'pi pi-trash',
+                    command: () => openDeleteJobPositionDialog(jobPosition)
+                }
+            ]
+        }]));
+    } catch (error) {
+        console.error('Ошибка при получении должностей: ', error);
+    }
+};
+
+const fetchDepartments = async () => {
+    try {
+        const { data } = await axiosInstance.get('/api/rating/departments');
+        departments.value = data;
+        
+        showEditDepartmentDialog.value = false;
+        showDeleteDepartmentDialog.value = false;
+
+        departmentMenuItems.value = departments.value.map(department => ([{
+            label: 'Действия',
+            items: [
+                {
+                    label: 'Редактировать',
+                    icon: 'pi pi-pencil',
+                    command: () => openEditDepartmentDialog(department)
+                },
+                {
+                    label: 'Удалить',
+                    icon: 'pi pi-trash',
+                    command: () => openDeleteDepartmentDialog(department)
+                }
+            ]
+        }]));
+    } catch (error) {
+        console.error('Ошибка при получении отделов: ', error);
+    }
+};
+
 onMounted(async () => {
-  await fetchSeasons();
+    await Promise.all([
+        fetchSeasons(),
+        // fetchJobPositions(),
+        // fetchDepartments(),
+    ]);
 });
 
 </script>
 
 <style scoped>
+/* ========== Основные стили ========== */
 main {
     position: relative;
     display: flex;
@@ -140,56 +310,394 @@ main {
     height: 100%;
     box-sizing: border-box;
 }
+
+h3 {
+    margin: 0;
+}
+
+/* ========== Секция контента ========== */
 .content-wrapper {
     flex-shrink: 1;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    padding: 20px 8rem;
+    padding: 2.5rem 8rem;
     overflow: hidden;
     color: var(--p-text-color);
 }
-.seasons-grid {
-    display: grid;
-    gap: 20px;
-    grid-template-columns: repeat(4, 1fr);
-}
-.season {
-    padding: 20px;
-    background-color: var(--p-grey-7);
-    border-radius: 18px;
-    transition: all 0.5s;
-    position: relative;
-}
-.menu {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-} 
-.season:hover {
-    cursor: pointer;
-    background-color: var(--p-blue-500-low-op);
-    color: var(--p-color-icon-menu);
-}
-.content {
-    display: flex;
-    align-items: center;
-    font-size: 18px;
+
+.content-wrapper:not(:last-child) {
+    border-bottom: 1px solid var(--p-surface-200);
 }
 
-.pi {
-    font-size: 20px;
+.p-dark .content-wrapper:not(:last-child) {
+    border-bottom: 1px solid var(--p-surface-700);
 }
-.second-plan {
-    color: var(--p-grey-1);
+
+/* ========== Заголовки секций ========== */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
 }
-.edit-btn {
-    border-radius: 8px;
-    color: white;
+
+.section-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.section-icon {
+    font-size: 1.75rem;
+    color: var(--p-text-color);
+    padding: 0.75rem;
+    background: linear-gradient(135deg, var(--p-primary-100), var(--p-primary-50));
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(var(--p-primary-color-rgb, 59, 130, 246), 0.15);
+}
+
+.p-dark .section-icon {
+    background: linear-gradient(135deg, var(--p-primary-700), var(--p-primary-600));
+    box-shadow: 0 2px 8px rgba(var(--p-primary-color-rgb, 59, 130, 246), 0.25);
+}
+
+.section-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0;
+    background: var(--p-text-color);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ========== Сетка карточек ========== */
+.seasons-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+/* ========== Базовые стили карточек ========== */
+.season-card,
+.employee-card,
+.simple-card {
+    padding: 1.5rem;
+    background: var(--p-surface-0);
+    border-radius: 16px;
+    border: 1px solid var(--p-surface-200);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.5s;
+}
+
+.p-dark .season-card,
+.p-dark .employee-card,
+.p-dark .simple-card {
+    background: var(--p-surface-900);
+    border: 1px solid var(--p-surface-700);
+}
+
+/* ========== Анимация карточек ========== */
+.card-animated {
+    transition: all 0.5s;
+}
+
+.season-card:hover {
+    cursor: pointer;
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.p-dark .season-card:hover {
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+}
+
+.employee-card:hover,
+.simple-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.p-dark .employee-card:hover,
+.p-dark .simple-card:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* ========== Индикатор статуса для сезонов ========== */
+.card-status-indicator {
     position: absolute;
     top: 0;
-    right: 0;
-    width: 30px;
-    height: 30px;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    border-radius: 16px 0 0 16px;
+}
+
+.status-open {
+    background: linear-gradient(180deg, var(--p-green-500), var(--p-green-600));
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+}
+
+.status-closed {
+    background: linear-gradient(180deg, var(--p-red-500), var(--p-red-600));
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+}
+
+/* ========== Верхняя часть карточки ========== */
+.season-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.season-header {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--p-text-color);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.status-badge {
+    font-size: 0.813rem;
+    font-weight: 500;
+    display: flex;
+    margin-bottom: 1.25rem;
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 4px;
+}
+
+.open.status-dot {
+    background: var(--p-green-600);
+    box-shadow: 0 0 6px var(--p-green-400);
+}
+
+.closed.status-dot {
+    background: var(--p-red-600);
+    box-shadow: 0 0 6px var(--p-red-400);
+}
+
+/* ========== Меню действий ========== */
+.menu {
+    position: static;
+    flex-shrink: 0;
+}
+
+.edit-btn {
+    width: 2rem;
+    height: 2rem;
+    transition: all 0.5s;
+    color: var(--p-text-color) !important;
+}
+
+.edit-btn:hover {
+    background: var(--p-primary-100) !important;
+}
+
+.p-dark .edit-btn:hover {
+    background: var(--p-primary-500) !important;
+}
+
+/* ========== Контент карточки ========== */
+.card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 0.625rem 0;
+}
+
+.info-item.primary-info {
+    padding: 0.875rem;
+    background: var(--p-surface-100);
+    border-radius: 10px;
+    margin-bottom: 0.5rem;
+}
+
+.p-dark .info-item.primary-info {
+    background: var(--p-surface-800);
+}
+
+.info-icon-wrapper {
+    width: 2.25rem;
+    height: 2.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--p-surface-200);
+    border-radius: 10px;
+    color: var(--p-text-secondary-color);
+    flex-shrink: 0;
+    transition: all 0.5s;
+}
+
+.p-dark .info-icon-wrapper {
+    background: var(--p-surface-700);
+}
+
+.info-icon-wrapper.primary {
+    background: linear-gradient(135deg, var(--p-primary-500), var(--p-primary-600));
+    color: white;
+    box-shadow: 0 2px 8px rgba(var(--p-primary-color-rgb, 59, 130, 246), 0.3);
+}
+
+.info-icon-wrapper i {
+    font-size: 1.125rem;
+}
+
+.info-text {
+    font-size: 1rem;
+    color: var(--p-text-color);
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.info-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-label {
+    font-size: 0.813rem;
+    color: var(--p-text-secondary-color);
+    font-weight: 500;
+}
+
+.info-value {
+    font-size: 1rem;
+    color: var(--p-text-color);
+    font-weight: 600;
+}
+
+/* ========== Должности ========== */
+.card-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    flex: 1;
+}
+
+/* ========== Отделы ========== */
+.department-header {
+    flex: 1;
+}
+
+.department-number {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--p-text-secondary-color);
+    padding: 0.375rem 0.75rem;
+    background: var(--p-surface-100);
+    border-radius: 8px;
+    width: fit-content;
+}
+
+.p-dark .department-number {
+    background: var(--p-surface-800);
+}
+
+.department-number i {
+    font-size: 0.875rem;
+}
+
+/* ========== Теги должностей ========== */
+.job-positions-item {
+    flex-wrap: wrap;
+}
+
+.job-positions-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.job-positions-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.job-position-tag {
+    font-size: 0.813rem;
+    padding: 0.375rem 0.75rem;
+    font-weight: 500;
+    border-radius: 8px;
+}
+
+/* ========== Адаптивность ========== */
+@media (max-width: 1400px) {
+    .content-wrapper {
+        padding: 2rem 4rem;
+    }
+    
+    .seasons-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 1024px) {
+    .content-wrapper {
+        padding: 1.5rem 2rem;
+    }
+    
+    .seasons-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 1.25rem;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .content-wrapper {
+        padding: 1.25rem 1rem;
+    }
+    
+    .seasons-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .section-title-wrapper {
+        gap: 0.75rem;
+    }
+    
+    .section-icon {
+        font-size: 1.5rem;
+        padding: 0.625rem;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+    }
 }
 </style>

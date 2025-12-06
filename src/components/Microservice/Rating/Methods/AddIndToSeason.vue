@@ -16,12 +16,14 @@
                     <template #body="{ node }">
                         <div class="node-content">
                             <div v-if="node.data.isGroup" class="group-node">
-                                <i class="pi pi-folder group-icon"></i>
+                                <!-- <i class="pi pi-folder group-icon"></i> -->
+                                <span class="indicator-number">{{ node.data.number }}</span>
                                 <span class="group-name">{{ node.data.group }}</span>
                             </div>
 
                             <div v-else-if="node.data.isSubGroup" class="subgroup-node">
-                                <i class="pi pi-folder-open subgroup-icon"></i>
+                                <i v-if="node.data.number === 'N'" class="pi pi-folder-open subgroup-icon"></i>
+                                <span v-else class="indicator-number">{{ node.data.number }}</span>
                                 <span class="subgroup-name">{{ node.data.subGroup }}</span>
                             </div>
 
@@ -155,18 +157,33 @@ const buildTreeNodes = () => {
     availableIndicators.forEach((ind) => {
         if (!ind) return;
         
-        const group = ind.groupIndicator?.title || "—";
-        const subGroup = ind.subGroupIndicator?.title || "—";
-        const groupNum = ind.groupIndicator?.numberInOrder || 'N';
-        const subNum = ind.subGroupIndicator?.numberInOrder || 'N';
+        const hasParentGroup = !!ind.groupIndicator?.parentGroupIndicator;
+        
+        const mainGroup = hasParentGroup
+            ? ind.groupIndicator?.parentGroupIndicator?.title
+            : ind.groupIndicator?.title || "—";
+            
+        const subGroup = hasParentGroup 
+            ? ind.groupIndicator?.title 
+            : "—";
+
+        const mainGroupNum = hasParentGroup 
+            ? ind.groupIndicator?.parentGroupIndicator?.numberInOrder 
+            : ind.groupIndicator?.numberInOrder || 'N';
+            
+        const subGroupNum = hasParentGroup 
+            ? ind.groupIndicator?.numberInOrder 
+            : 'N';
+
         const indNum = ind.numberInOrder || 'N';
 
-        const groupKey = `group_${group}`;
-        const subGroupKey = `subgroup_${group}_${subGroup}`;
+        const groupKey = `group_${mainGroup}`;
+        const subGroupKey = `subgroup_${mainGroup}_${subGroup}`;
 
         if (!groupsMap[groupKey]) {
             groupsMap[groupKey] = { 
-                group, 
+                mainGroupNum,
+                mainGroup, 
                 key: groupKey,
                 subGroups: {} 
             };
@@ -174,16 +191,24 @@ const buildTreeNodes = () => {
 
         if (!groupsMap[groupKey].subGroups[subGroupKey]) {
             groupsMap[groupKey].subGroups[subGroupKey] = {
+                subGroupNum,
                 subGroup,
                 key: subGroupKey,
                 indicators: []
             };
         }
 
+        let indicatorFullNumber;
+        if (hasParentGroup) {
+            indicatorFullNumber = `${mainGroupNum}${subGroupNum !== 'N' ? '.' + subGroupNum : ''}${indNum !== 'N' ? '.' + indNum : ''}`;
+        } else {
+            indicatorFullNumber = `${mainGroupNum}${indNum !== 'N' ? '.' + indNum : '.N.N'}`;
+        }
+
         groupsMap[groupKey].subGroups[subGroupKey].indicators.push({
             id: ind.id,
             key: `indicator_${ind.id}`,
-            number: `${groupNum}.${subNum}.${indNum}`,
+            number: indicatorFullNumber,
             name: ind.title,
             periodicity: ind.periodicityIndicators?.map(p => p.title).join(", ") || "",
             responsible: ind.responsibleIndicators?.map(r => r.title).join(", ") || "",
@@ -196,9 +221,12 @@ const buildTreeNodes = () => {
         const subGroupsArray = Object.values(g.subGroups || {});
         
         const subNodes = subGroupsArray.map((s) => {
+            const subgroupNumber = s.subGroup === "—" ? 'N' : `${g.mainGroupNum}${s.subGroupNum !== 'N' ? '.' + s.subGroupNum : ''}`;
+            
             return {
                 key: s.key,
                 data: { 
+                    number: subgroupNumber,
                     subGroup: s.subGroup, 
                     isGroup: false, 
                     isSubGroup: true 
@@ -213,7 +241,8 @@ const buildTreeNodes = () => {
         return {
             key: g.key,
             data: { 
-                group: g.group, 
+                number: g.mainGroupNum,
+                group: g.mainGroup, 
                 isGroup: true, 
                 isSubGroup: false 
             },
@@ -240,22 +269,12 @@ const addIndicatorsToSeason = async () => {
     loading.value = true;
     
     try {
-        const ids = [...selectedIndicators.value];
+        const indicatorIds = selectedIndicators.value.map(id => parseInt(id));
 
-        const results = await Promise.allSettled(
-            ids.map(indicatorId =>
-                axiosInstance.post(`/api/rating/seasons/${props.seasonId}/indicators/${indicatorId}`)
-            )
+        const response = await axiosInstance.post(
+            `/api/rating/seasons/${props.seasonId}/indicators`,
+            indicatorIds
         );
-
-        const succeeded = results
-            .filter(r => r.status === 'fulfilled')
-            .map(r => r.value?.data?.id || null)
-            .filter(id => id !== null);
-
-        const failed = results
-            .filter(r => r.status === 'rejected')
-            .map(r => r.reason);
 
         emit('added');
         
@@ -263,22 +282,27 @@ const addIndicatorsToSeason = async () => {
         
         window.dispatchEvent(new CustomEvent('toast', {
             detail: {
-                severity: failed.length === 0 ? 'success' : 'warn',
+                severity: 'success',
                 summary: 'Рейтинг',
-                detail: failed.length === 0
-                ? `Добавлено показателей: ${succeeded.length}`
-                : `Добавлено: ${succeeded.length}. Не удалось добавить: ${failed.length}`,
+                detail: `Добавлено показателей: ${indicatorIds.length}`,
             }
         }));
 
-        if (failed.length > 0) console.error('Не добавились индикаторы:', failed);
     } catch(error) {
         console.error('Ошибка при добавлении показателей: ', error);
+
+        let errorMessage = 'Ошибка при добавлении показателей';
+        if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+
         window.dispatchEvent(new CustomEvent('toast', {
             detail: { 
                 severity: 'error', 
                 summary: 'Рейтинг', 
-                detail: `Ошибка при добавлении показателей: ${error.message}`,
+                detail: errorMessage,
             }
         }));
     } finally {

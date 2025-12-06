@@ -60,9 +60,18 @@
                         
                         <div class="toolbar-right">
                             <AddIndToSeason 
-                                :seasonId="seasonId" 
-                                @added="onIndicatorAdded" 
-                                :rawIndicators="rawIndicators" 
+                            :seasonId="seasonId" 
+                            @added="onIndicatorAdded" 
+                            :rawIndicators="rawIndicators" 
+                            />
+                            <Button 
+                                icon="pi pi-download"
+                                label="Скачать отчет"
+                                outlined
+                                severity="success"
+                                class="ms-3 toggle-button"
+                                @click="downloadReport"
+                                :loading="downloading"
                             />
                         </div>
                     </div>
@@ -89,28 +98,34 @@
                                     <template #body="{ node }">
                                         <div class="node-content">
                                             <div v-if="node.data.isGroup" class="group-node">
-                                                <i class="pi pi-folder group-icon"></i>
+                                                <span class="indicator-number">{{ node.data.number }}</span>
                                                 <div class="group-info">
-                                                    <span class="group-name">{{ node.data.group }}</span>
+                                                    <div class="group-header">
+                                                        
+                                                        <span class="group-name">{{ node.data.group }}</span>
+                                                    </div>
                                                     <span class="group-stats">
-                                                        {{ calculateIndicatorsTotal(node.data.group) }} показателей,
-                                                        {{ node.data.totalEmployeeScores }} оценок
+                                                        {{ calculateIndicatorsTotal(node.data.group) }} {{ getIndicatorWord(calculateIndicatorsTotal(node.data.group)) }},
+                                                        {{ node.data.totalEmployeeScores }} {{ getScoreWord(node.data.totalEmployeeScores) }}
                                                     </span>
                                                 </div>
                                             </div>
 
                                             <div v-else-if="node.data.isSubGroup" class="subgroup-node">
-                                                <i class="pi pi-folder-open subgroup-icon"></i>
+                                                <i v-if="node.data.number === 'N'" class="pi pi-folder-open subgroup-icon"></i>
+                                                <span v-else class="indicator-number">{{ node.data.number }}</span>
                                                 <div class="subgroup-info">
-                                                    <span class="subgroup-name">{{ node.data.subGroup }}</span>
+                                                    <div class="subgroup-header">
+                                                        <span class="subgroup-name">{{ node.data.subGroup }}</span>
+                                                    </div>
                                                     <span class="subgroup-stats">
-                                                        {{ node.children?.length || 0 }} показателей,
-                                                        {{ node.data.totalEmployeeScores || '' }}
+                                                        {{ node.children?.length || 0 }} {{ getIndicatorWord(node.children?.length || 0) }},
+                                                        {{ node.data.totalEmployeeScores || '' }} {{ getScoreWord(node.data.totalEmployeeScores || 0) }}
                                                     </span>
                                                 </div>
                                             </div>
 
-                                            <div v-else class="indicator-node" @click="openIndicatorDialog(node)" v-tooltip.top="'Нажмите для просмотра оценок'">
+                                            <div v-else class="indicator-node">
                                                 <div class="indicator-header">
                                                     <span class="indicator-number">{{ node.data.number }}</span>
                                                     <span class="indicator-name">{{ node.data.indicator }}</span>
@@ -128,6 +143,7 @@
                                                         severity="success" 
                                                         class="meta-tag"
                                                     />
+                                                    
                                                 </div>
                                             </div>
                                         </div>
@@ -138,10 +154,11 @@
                                 <Column header="Действия" style="width: 140px">
                                     <template #body="{ node }">
                                         <div v-if="!node.data.isGroup && !node.data.isSubGroup" class="actions">
-                                            <AddEmpToInd 
-                                                :indicatorId="node.data.id"
+                                            <IndicatorScoresManager
+                                                :indicatorData="node.data"
                                                 :seasonId="seasonId"
-                                                :indicatorData="node.data.raw"
+                                                :employeeIndicatorValues="employeeIndicatorValues"
+                                                :employees="employees"
                                                 @updated="fetchIndicators"
                                             />
                                             <DeleteIndicator 
@@ -173,13 +190,6 @@
                 </div>
             </div>
         </div>
-        <ViewIndicatorScores 
-            v-model:visible="dialogVisible"
-            :indicatorData="selectedIndicator"
-            :seasonId="seasonId"
-            :employeeIndicatorValues="employeeIndicatorValues"
-            :employees="employees"
-        />
     </main>
 </template>
 
@@ -192,8 +202,7 @@ import { getQuarterPeriod } from '@/utils/formatSeason.js';
 import WelcomeScreen from "@/components/Utils/WelcomeScreen.vue";
 import DeleteIndicator from "@/components/Microservice/Rating/Methods/DeleteIndicator.vue";
 import AddIndToSeason from "@/components/Microservice/Rating/Methods/AddIndToSeason.vue";
-import AddEmpToInd from "@/components/Microservice/Rating/Methods/AddEmpToInd.vue";
-import ViewIndicatorScores from "@/components/Microservice/Rating/Methods/ViewIndicatorScores.vue";
+import IndicatorScoresManager from "@/components/Microservice/Rating/IndicatorScoresManager.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -207,9 +216,72 @@ const employees = ref([]);
 const expandedKeys = ref({});
 const allExpanded = ref(false);
 const lastAddedIndicatorId = ref(null);
+const downloading = ref(false);
 
 const dialogVisible = ref(false);
 const selectedIndicator = ref(null);
+
+const getIndicatorWord = (count) => {
+    if (count % 10 === 1 && count % 100 !== 11) {
+        return 'показатель';
+    } else if ([2, 3, 4].includes(count % 10) && ![12, 13, 14].includes(count % 100)) {
+        return 'показателя';
+    } else {
+        return 'показателей';
+    }
+};
+
+const getScoreWord = (count) => {
+    if (count % 10 === 1 && count % 100 !== 11) {
+        return 'оценка';
+    } else if ([2, 3, 4].includes(count % 10) && ![12, 13, 14].includes(count % 100)) {
+        return 'оценки';
+    } else {
+        return 'оценок';
+    }
+};
+
+const downloadReport = async () => {
+    downloading.value = true;
+    try {
+        const response = await axiosInstance.get(`/api/rating/season/${seasonId.value}/report/excel`, {
+            responseType: 'blob'
+        });
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+
+        const fileName = `rating_report_${certainSeason.value.title.replace('/', '_')}.xlsx`;
+
+        link.setAttribute('download', fileName);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: {
+                severity: 'success',
+                summary: 'Рейтинг',
+                detail: 'Excel отчет успешно скачан',
+            }
+        }));
+
+    } catch (error) {
+        console.error('Ошибка при скачивании Excel отчета: ', error);
+        
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: { 
+                severity: 'error', 
+                summary: 'Рейтинг', 
+                detail: 'Ошибка при скачивании Excel отчета',
+            }
+        }));
+    } finally {
+        downloading.value = false;
+    }
+}
 
 // Computed properties
 const headerStats = computed(() => [
@@ -242,30 +314,60 @@ const groupedIndicators = computed(() => {
     const groupsMap = {};
 
     rawIndicators.value.forEach(ind => {
-        const group = ind.groupIndicator?.title || "—";
-        const subGroup = ind.subGroupIndicator?.title || "—";
-        const groupNum = ind.groupIndicator?.numberInOrder || 'N';
-        const subNum = ind.subGroupIndicator?.numberInOrder || 'N';
+        const hasParentGroup = !!ind.groupIndicator?.parentGroupIndicator;
+
+        const mainGroup = hasParentGroup
+            ? ind.groupIndicator?.parentGroupIndicator?.title
+            : ind.groupIndicator?.title || "—";
+        
+        const subGroup = hasParentGroup 
+            ? ind.groupIndicator?.title 
+            : "—";
+
+        const mainGroupNum = hasParentGroup 
+            ? ind.groupIndicator?.parentGroupIndicator?.numberInOrder 
+            : ind.groupIndicator?.numberInOrder || 'N';
+            
+        const subGroupNum = hasParentGroup 
+            ? ind.groupIndicator?.numberInOrder 
+            : 'N';
+
         const indNum = ind.numberInOrder || 'N';
 
         const employeeScoresCount = getEmployeeScoresCountForIndicator(ind.id);
 
-        if (!groupsMap[group]) {
-            groupsMap[group] = { group, subGroups: {}, totalEmployeeScores: 0 };
+        if (!groupsMap[mainGroup]) {
+            groupsMap[mainGroup] = { 
+                mainGroupNum, 
+                mainGroup, 
+                subGroups: {}, 
+                totalEmployeeScores: 0 
+            };
         }
 
-        if (!groupsMap[group].subGroups[subGroup]) {
-            groupsMap[group].subGroups[subGroup] = {
+        if (!groupsMap[mainGroup].subGroups[subGroup]) {
+            groupsMap[mainGroup].subGroups[subGroup] = {
+                subGroupNum,
                 subGroup,
-                uniqueKey: `${group}_${subGroup}`,
+                uniqueKey: `${mainGroup}_${subGroup}`,
                 indicators: [],
                 totalEmployeeScores: 0
             };
         }
 
-        groupsMap[group].subGroups[subGroup].indicators.push({
+        // Формируем полный номер показателя
+        let indicatorFullNumber;
+        if (hasParentGroup) {
+            // Двухуровневая структура: группа.подгруппа.показатель
+            indicatorFullNumber = `${mainGroupNum}${subGroupNum !== 'N' ? '.' + subGroupNum : ''}${indNum !== 'N' ? '.' + indNum : ''}`;
+        } else {
+            // Одноуровневая структура: группа.показатель
+            indicatorFullNumber = `${mainGroupNum}${indNum !== 'N' ? '.' + indNum : '.N.N'}`;
+        }
+
+        groupsMap[mainGroup].subGroups[subGroup].indicators.push({
             id: ind.id,
-            number: `${groupNum}.${subNum}.${indNum}`,
+            number: indicatorFullNumber,
             indicator: ind.title,
             periodicity: ind.periodicityIndicators?.map(p => p.title).join(", ") || "",
             responsible: ind.responsibleIndicators?.map(r => r.title).join(", ") || "",
@@ -273,8 +375,8 @@ const groupedIndicators = computed(() => {
             raw: ind
         });
 
-        groupsMap[group].subGroups[subGroup].totalEmployeeScores += employeeScoresCount;
-        groupsMap[group].totalEmployeeScores += employeeScoresCount;
+        groupsMap[mainGroup].subGroups[subGroup].totalEmployeeScores += employeeScoresCount;
+        groupsMap[mainGroup].totalEmployeeScores += employeeScoresCount;
     });
 
     return Object.values(groupsMap).map(group => ({
@@ -290,25 +392,33 @@ const treeNodes = computed(() => {
 // Methods
 const goBack = () => router.back();
 
-const calculateIndicatorsTotal = (groupName) => {
+const calculateIndicatorsTotal = (mainGroupName) => {
     return rawIndicators.value.filter(ind => {
-        const indicatorGroup = ind.groupIndicator?.title || "—";
-        return indicatorGroup === groupName;
+        const hasParentGroup = !!ind.groupIndicator?.parentGroupIndicator;
+        const indicatorMainGroup = hasParentGroup 
+            ? ind.groupIndicator?.parentGroupIndicator?.title 
+            : ind.groupIndicator?.title || "—";
+        return indicatorMainGroup === mainGroupName;
     }).length;
 };
 
 const buildTreeNodes = (groups) => {
     return groups.map((g, gIndex) => {
-        const groupKey = `group_${gIndex}_${g.group}`;
+        const groupKey = `group_${gIndex}_${g.mainGroup}`;
+        
         const subNodes = g.subGroups.map((s, sIndex) => {
             const subKey = `sub_${gIndex}_${sIndex}_${s.uniqueKey}`;
             const indicatorNodes = s.indicators.map(ind => ({
                 key: String(ind.id),
                 data: { ...ind, isGroup: false, isSubGroup: false, raw: ind.raw }
             }));
+            
+            const subgroupNumber = s.subGroup === "—" ? 'N' : `${g.mainGroupNum}${s.subGroupNum !== 'N' ? '.' + s.subGroupNum : ''}`;
+            
             return {
                 key: subKey,
-                data: { 
+                data: {
+                    number: subgroupNumber,
                     subGroup: s.subGroup, 
                     isGroup: false, 
                     isSubGroup: true, 
@@ -320,8 +430,9 @@ const buildTreeNodes = (groups) => {
 
         return {
             key: groupKey,
-            data: { 
-                group: g.group, 
+            data: {
+                number: g.mainGroupNum,
+                group: g.mainGroup, 
                 isGroup: true, 
                 isSubGroup: false, 
                 totalEmployeeScores: g.totalEmployeeScores 
@@ -353,7 +464,7 @@ const syncAllExpanded = () => {
 const expandAll = () => {
     const keys = {};
     groupedIndicators.value.forEach((g, gi) => {
-        const groupKey = `group_${gi}_${g.group}`;
+        const groupKey = `group_${gi}_${g.mainGroup}`;
         keys[groupKey] = true;
         g.subGroups.forEach((s, si) => {
             const subKey = `sub_${gi}_${si}_${s.uniqueKey}`;
@@ -479,6 +590,7 @@ onMounted(fetchIndicators);
     font-size: 2rem;
     font-weight: 700;
     background: linear-gradient(135deg, var(--p-primary-color), #3498db);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -700,6 +812,25 @@ onMounted(fetchIndicators);
     gap: 0.25rem;
 }
 
+.group-header, .subgroup-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.group-stats, .subgroup-stats {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: #7f8c8d;
+}
+
+.group-stats span, .subgroup-stats span {
+    display: flex;
+    align-items: center;
+    cursor: help;
+}
+
 .group-name {
     font-weight: 700;
     color: var(--p-text-color);
@@ -720,7 +851,6 @@ onMounted(fetchIndicators);
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    cursor: pointer;
     padding: 0.5rem;
     border-radius: 8px;
     transition: background-color 0.3s ease;
