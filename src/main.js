@@ -4,6 +4,7 @@ import App from './App.vue'
 import ToastService from 'primevue/toastservice';
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import "quill/dist/quill.core.css";
 import 'primeicons/primeicons.css';
 import PrimeVue from 'primevue/config';
 import ConfirmationService from 'primevue/confirmationservice';
@@ -19,6 +20,7 @@ import Toolbar from 'primevue/toolbar';
 import Avatar from 'primevue/avatar';
 import Divider from 'primevue/divider';
 import InputText from 'primevue/inputtext';
+import InputMask from 'primevue/inputmask';
 import Tree from 'primevue/tree';
 import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
@@ -60,7 +62,7 @@ import InputNumber from 'primevue/inputnumber';
 import PickList from 'primevue/picklist';
 import Chips from 'primevue/chips';
 import TreeTable from 'primevue/treetable';
-
+import Editor from 'primevue/editor';
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -103,6 +105,7 @@ app.component('Button', Button);
 app.component('Avatar', Avatar);
 app.component('Divider', Divider);
 app.component('InputText', InputText);
+app.component('InputMask', InputMask);
 app.component('Tree', Tree);
 app.component('Tag', Tag);
 app.component('Dialog', Dialog);
@@ -145,6 +148,7 @@ app.component('InputNumber', InputNumber);
 app.component('PickList', PickList);
 app.component('Chips', Chips);
 app.component('TreeTable', TreeTable);
+app.component('Editor', Editor);
 
 app.use(pinia)
 app.use(router);
