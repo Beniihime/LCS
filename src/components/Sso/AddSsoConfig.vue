@@ -70,7 +70,7 @@ const submitConfig = async () => {
         console.debug("Ошибка при сохранении конфигурации SSO: ", error);
         window.dispatchEvent(new CustomEvent('toast', {
             detail: { 
-                severity: 'success', 
+                severity: 'error', 
                 summary: 'SSO', 
                 detail: `Ошибка при сохранении конфигурации SSO`,
             }

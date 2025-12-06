@@ -39,7 +39,7 @@ const deleteConfig = async () => {
         console.debug("Ошибка при удалении конфигурации: ", error);
         window.dispatchEvent(new CustomEvent('toast', {
             detail: { 
-                severity: 'danger', 
+                severity: 'error', 
                 summary: 'SSO', 
                 detail: `Ошбика при удалении SSO конфигурации`,
             }
