@@ -92,7 +92,7 @@ main {
 .card:hover {
     border: 2px solid var(--p-blue-500);
     background-color: var(--p-blue-500-low-op);
-    color: var(--p-color-icon-menu);
+    color: rgb(var(--p-color-icon-menu));
     cursor: pointer;
 }
 .card-body {
