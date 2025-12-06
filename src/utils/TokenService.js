@@ -1,6 +1,7 @@
 import TokenWorker from "@/workers/tokenWorker.js?worker";
 
 let tokenWorker = null;
+let refreshPromise = null;
 
 export function startTokenWorker() {
     if (typeof window === "undefined" || !window.Worker) {
@@ -13,8 +14,6 @@ export function startTokenWorker() {
         return;
     }
 
-    tokenWorker = new TokenWorker();
-
     const refreshToken = localStorage.getItem("refreshToken");
     const userId = localStorage.getItem("userId");
     const refreshTokenExpired = parseInt(localStorage.getItem("refreshTokenExpired"), 10);
@@ -25,41 +24,59 @@ export function startTokenWorker() {
         return;
     }
 
-    tokenWorker.postMessage({ action: "start", refreshToken, userId, refreshTokenExpired, accessTokenExpired });
+    tokenWorker = new TokenWorker();
+    tokenWorker.postMessage({ 
+        action: "start", 
+        refreshToken, 
+        userId, 
+        refreshTokenExpired, 
+        accessTokenExpired 
+    });
 
     tokenWorker.onmessage = (event) => {
         if (event.data.action === "updateToken") {
             console.debug("[TokenService] New token from Worker:", event.data);
 
-            localStorage.setItem("accessToken", event.data.accessToken);
-            localStorage.setItem("refreshToken", event.data.refreshToken);
-            localStorage.setItem("refreshTokenExpired", event.data.refreshTokenExpired);
-            localStorage.setItem("accessTokenExpired", event.data.accessTokenExpired);
+            const { accessToken, refreshToken: newRefreshToken, refreshTokenExpired: newRefreshExpired, accessTokenExpired: newAccessExpired } = event.data;
+            
+            localStorage.setItem("accessToken", accessToken);
+            localStorage.setItem("refreshToken", newRefreshToken);
+            localStorage.setItem("refreshTokenExpired", newRefreshExpired);
+            localStorage.setItem("accessTokenExpired", newAccessExpired);
 
             if (tokenWorker) {
                 tokenWorker.postMessage({
                     action: "updateToken",
-                    refreshToken: event.data.refreshToken,
+                    refreshToken: newRefreshToken,
                     userId: event.data.userId,
-                    refreshTokenExpired: event.data.refreshTokenExpired,
-                    accessTokenExpired: event.data.accessTokenExpired
+                    refreshTokenExpired: newRefreshExpired,
+                    accessTokenExpired: newAccessExpired
                 });
+            }
+
+            if (refreshPromise) {
+                refreshPromise.resolve(event.data);
+                refreshPromise = null;
             }
         } else if (event.data.action === "refreshFailed") {
             console.error("[TokenService] Worker reported refresh failure. Logging out.");
-            stopTokenWorker();
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('userId');
-            localStorage.removeItem('refreshTokenExpired');
-            localStorage.removeItem('accessTokenExpired');
-            window.location.href = '/auth';
+            clearAuthData();
+            
+            if (refreshPromise) {
+                refreshPromise.reject(new Error("Token refresh failed"));
+                refreshPromise = null;
+            }
         }
     };
 
     tokenWorker.onerror = (error) => {
         console.error("[TokenService] Worker encountered an error:", error);
         stopTokenWorker();
+        
+        if (refreshPromise) {
+            refreshPromise.reject(error);
+            refreshPromise = null;
+        }
     };
 
     console.debug("[TokenService] Background token worker started!");
@@ -72,41 +89,108 @@ export function stopTokenWorker() {
         tokenWorker.terminate();
         tokenWorker = null;
     }
+    
+    if (refreshPromise) {
+        refreshPromise.reject(new Error("Token worker stopped"));
+        refreshPromise = null;
+    }
+}
+
+function clearAuthData() {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('refreshTokenExpired');
+    localStorage.removeItem('accessTokenExpired');
+    stopTokenWorker();
+    window.location.href = '/auth';
 }
 
 export function refreshTokenThroughWorker() {
+    if (refreshPromise) {
+        return refreshPromise.promise;
+    }
+
     const refreshToken = localStorage.getItem("refreshToken");
     const userId = localStorage.getItem("userId");
 
     if (!refreshToken || !userId) {
-        return Promise.reject("Missing credentials for worker refresh");
+        return Promise.reject(new Error("Missing credentials for worker refresh"));
     }
 
-    return new Promise((resolve, reject) => {
-        const worker = new TokenWorker();
+    // Проверяем, истек ли refresh token
+    const refreshTokenExpired = parseInt(localStorage.getItem("refreshTokenExpired"), 10);
+    const currentTime = Math.floor(Date.now() / 1000);
+    
+    if (!isNaN(refreshTokenExpired) && currentTime >= refreshTokenExpired) {
+        console.error("[TokenService] Refresh token has expired");
+        clearAuthData();
+        return Promise.reject(new Error("Refresh token expired"));
+    }
 
+    let resolve, reject;
+    const promise = new Promise((res, rej) => {
+        resolve = res;
+        reject = rej;
+    });
+
+    refreshPromise = { promise, resolve, reject };
+
+    if (tokenWorker) {
+        tokenWorker.postMessage({ action: "refreshOnce", refreshToken, userId });
+    } else {
+        const tempWorker = new TokenWorker();
+        
         const timeout = setTimeout(() => {
-            reject("Worker response timeout");
-            worker.terminate();
-        }, 10000);
+            reject(new Error("Worker response timeout"));
+            tempWorker.terminate();
+            refreshPromise = null;
+        }, 15000);
 
-        worker.onmessage = (event) => {
+        tempWorker.onmessage = (event) => {
+            clearTimeout(timeout);
+            
             if (event.data.action === "updateToken") {
-                clearTimeout(timeout);
                 resolve(event.data);
-                worker.terminate();
             } else if (event.data.action === "refreshFailed") {
-                clearTimeout(timeout);
                 reject(new Error("Token refresh failed"));
-                worker.terminate();
             }
+            
+            tempWorker.terminate();
+            refreshPromise = null;
         };
-        worker.onerror = (err) => {
+
+        tempWorker.onerror = (err) => {
             clearTimeout(timeout);
             reject(err);
-            worker.terminate();
+            tempWorker.terminate();
+            refreshPromise = null;
         };
 
-        worker.postMessage({ action: "refreshOnce", refreshToken, userId });
-    });
+        tempWorker.postMessage({ action: "refreshOnce", refreshToken, userId });
+    }
+
+    return promise;
+}
+
+export function isAccessTokenExpiringSoon(thresholdSeconds = 300) {
+    const accessTokenExpired = parseInt(localStorage.getItem("accessTokenExpired"), 10);
+    
+    if (isNaN(accessTokenExpired)) {
+        return true; // Считаем что истекает если нет информации
+    }
+    
+    const currentTime = Math.floor(Date.now() / 1000);
+    return (accessTokenExpired - currentTime) <= thresholdSeconds;
+}
+
+export function isRefreshTokenValid() {
+    const refreshTokenExpired = parseInt(localStorage.getItem("refreshTokenExpired"), 10);
+    
+    if (isNaN(refreshTokenExpired)) {
+        return false;
+    }
+    
+    const currentTime = Math.floor(Date.now() / 1000);
+    return currentTime < refreshTokenExpired;
 }

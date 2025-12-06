@@ -1,6 +1,6 @@
 import axios from "axios";
 import router from "../router";
-import { refreshTokenThroughWorker } from "@/utils/TokenService";
+import { refreshTokenThroughWorker, isAccessTokenExpiringSoon } from "@/utils/TokenService";
 
 const axiosInstance = axios.create({
     baseURL: 'https://development.sibadi.org',
@@ -11,11 +11,23 @@ const axiosInstance = axios.create({
 });
 
 axiosInstance.interceptors.request.use(
-    config => {
-        const token = localStorage.getItem('accessToken');
+    async config => {
+        let token = localStorage.getItem('accessToken');
+        
+        if (token && isAccessTokenExpiringSoon(60)) {
+            try {
+                console.debug("[Axios] Access token expiring soon, refreshing proactively...");
+                const tokens = await refreshTokenThroughWorker();
+                token = tokens.accessToken;
+            } catch (error) {
+                console.warn("[Axios] Proactive token refresh failed:", error);
+            }
+        }
+        
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+        
         return config;
     },
     error => Promise.reject(error)
@@ -53,14 +65,10 @@ axiosInstance.interceptors.response.use(
             isRefreshing = true;
 
             try {
+                console.debug("[Axios] Received 401, attempting token refresh...");
                 const tokens = await refreshTokenThroughWorker();
 
                 if (tokens?.accessToken) {
-                    localStorage.setItem("accessToken", tokens.accessToken);
-                    localStorage.setItem("refreshToken", tokens.refreshToken);
-                    localStorage.setItem("refreshTokenExpired", tokens.refreshTokenExpired);
-                    localStorage.setItem("accessTokenExpired", tokens.accessTokenExpired);
-
                     onRefreshed(tokens.accessToken);
 
                     originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
@@ -68,15 +76,20 @@ axiosInstance.interceptors.response.use(
                 } else {
                     throw new Error("No access token received");
                 }
-            } catch (e) {
-                console.debug("[Interceptor] Token refresh failed:", e);
+            } catch (refreshError) {
+                console.error("[Axios] Token refresh failed:", refreshError);
+                
                 localStorage.removeItem("accessToken");
                 localStorage.removeItem("refreshToken");
                 localStorage.removeItem("refreshTokenExpired");
                 localStorage.removeItem("accessTokenExpired");
                 localStorage.removeItem("userId");
+                
+                refreshSubscribers.forEach(callback => callback(null));
+                refreshSubscribers = [];
+                
                 router.push("/auth");
-                return Promise.reject(e);
+                return Promise.reject(refreshError);
             } finally {
                 isRefreshing = false;
             }

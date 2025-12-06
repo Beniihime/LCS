@@ -20,6 +20,32 @@ const normalizeText = (s) => {
     return decoded.replace(/\s+/g, ' ').trim();
 };
 
+const extractAdditionalPoints = (text) => {
+    const normalizedText = normalizeText(text);
+
+    const patterns = [
+        // Прямое добавление к показателям
+        /добавляются?\s*(\d+(?:[.,]\d+)?)\s*балл[а-я]*\s*к\s*указанным\s*показателям/i,
+        /добавляется?\s*(\d+(?:[.,]\d+)?)\s*балл[а-я]*\s*к\s*указанным\s*показателям/i,
+        /прибавляются?\s*(\d+(?:[.,]\d+)?)\s*балл[а-я]*\s*к\s*указанным\s*показателям/i,
+
+        // Общие случаи
+        /(?:добавляются?|прибавляются?)\s*(\d+(?:[.,]\d+)?)\s*балл/i,
+        /\+(\d+(?:[.,]\d+)?)\s*балл/i
+    ];
+
+    for (const pattern of patterns) {
+        const match = normalizedText.match(pattern);
+        if (match) {
+            const num = match[1].replace(',', '.');
+            const points = parseFloat(num);
+            if (!isNaN(points)) return points;
+        }
+    }
+
+    return null;
+}
+
 /**
     * Извлекает либо формулу, либо числовое значение.
     * Правила:
@@ -287,15 +313,48 @@ const parseHtmlTableUniversal = (htmlString) => {
     * Если нет <table>, парсим plain text / формулы построчно
 */
 const smartTableParser = (htmlOrText) => {
-    if (!htmlOrText) return [];
+    if (!htmlOrText) return { scores: [], additionalPoints: null };
+    
+    let additionalPoints = null;
+    let scores = [];
+
     if (/<table[\s>]/i.test(htmlOrText)) {
-        const parsed = parseHtmlTableUniversal(htmlOrText);
-        if (parsed && parsed.length) return parsed;
+        try {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlOrText, 'text/html');
+            const table = doc.querySelector('table');
+            if (table) {
+                // Ищем дополнительные баллы в последней ячейке таблицы
+                const lastRow = table.rows[table.rows.length - 1];
+                if (lastRow) {
+                    const lastCell = lastRow.cells[lastRow.cells.length - 1];
+                    if (lastCell) {
+                        const lastCellText = normalizeText(lastCell.textContent);
+                        additionalPoints = extractAdditionalPoints(lastCellText);
+                    }
+                }
+                
+                const parsed = parseHtmlTableUniversal(htmlOrText);
+                scores = parsed;
+            }
+        } catch (err) {
+            console.error('Ошибка при парсинге таблицы:', err);
+        }
     }
 
+    // Если не нашли в таблице, ищем в тексте
+    if (additionalPoints === null) {
+        const lines = htmlOrText.replace(/\r\n/g, '\n').split('\n').map(l => normalizeText(l)).filter(Boolean);
+        for (const line of lines) {
+            additionalPoints = extractAdditionalPoints(line);
+            if (additionalPoints !== null) break;
+        }
+    }
+
+    // Парсим обычные баллы
     const lines = htmlOrText.replace(/\r\n/g, '\n').split('\n').map(l => normalizeText(l)).filter(Boolean);
-    const results = [];
     const footerKeywords = ['где', 'примечание', 'баллы начисляются', 'при подготовке'];
+    
     for (const line of lines) {
         const low = line.toLowerCase();
         if (footerKeywords.some(k => low.includes(k))) continue;
@@ -305,7 +364,7 @@ const smartTableParser = (htmlOrText) => {
             const tail = parts[parts.length - 1].trim();
             const extracted = extractPointsAndFormula(tail);
             if (extracted && (extracted.points !== null || extracted.formula)) {
-                results.push({
+                scores.push({
                     criteria: desc || extracted.raw || tail,
                     points: (extracted.points !== null && !isNaN(extracted.points)) ? extracted.points : null,
                     formula: extracted.formula || null,
@@ -316,7 +375,7 @@ const smartTableParser = (htmlOrText) => {
         }
         const extracted = extractPointsAndFormula(line);
         if (extracted && (extracted.points !== null || extracted.formula)) {
-            results.push({
+            scores.push({
                 criteria: extracted.formula ? extracted.raw : line,
                 points: (extracted.points !== null && !isNaN(extracted.points)) ? extracted.points : null,
                 formula: extracted.formula || null,
@@ -326,7 +385,7 @@ const smartTableParser = (htmlOrText) => {
     }
 
     const seen = new Set();
-    return results.filter(it => {
+    const finalScores = scores.filter(it => {
         const key = `${(it.criteria||'').trim()}|${it.points !== null ? it.points : ''}|${it.formula || ''}`;
         if (seen.has(key)) return false;
         seen.add(key);
@@ -334,6 +393,8 @@ const smartTableParser = (htmlOrText) => {
         if (IGNORED_HEADER_TITLES.has(low)) return false;
         return true;
     });
+
+    return { scores: finalScores, additionalPoints };
 };
 
-export { smartTableParser, extractPointsAndFormula, normalizeText }
+export { smartTableParser, extractPointsAndFormula, normalizeText, extractAdditionalPoints }
