@@ -7,8 +7,14 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue';
 
 const firstName = localStorage.getItem('firstName');
+
+onMounted(() => {
+    const cleanUrl = window.location.origin + window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+});
 </script>
 
 <style scoped>

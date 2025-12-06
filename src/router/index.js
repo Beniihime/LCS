@@ -28,6 +28,13 @@ const routes = [
             title: '404',
         }
     },
+    {
+        path: "/auth/sso",
+        component: () => import('@/views/SsoCallbackPage.vue'),
+        meta: {
+            title: 'Ожидание авторизации'
+        }
+    },
     { 
         path: "/", 
         component: () => import('@/views/HomePage.vue'),
@@ -184,14 +191,22 @@ const routes = [
             },
             // SSO
             {
-                path: "/sso",
+                path: "/sso/config",
                 component: () => import('@/views/SsoConfig.vue'),
                 meta: {
                     requiresAuth: true,
                     title: 'Настройка SSO'
                 }
+            },
+            // AutoRoleAssigner
+            {
+                path: "/autorole",
+                component: () => import('@/views/AutoRolesManagerPage.vue'),
+                meta: {
+                    requiresAuth: true,
+                    title: 'Авто Роли'
+                }
             }
-            
         ]
     }, 
     {

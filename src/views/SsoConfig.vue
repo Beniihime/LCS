@@ -25,8 +25,10 @@
                     </div>
                 </template>
 
+                <Column field="clientId" header="ID клиента" />
                 <Column field="clientName" header="Клиент" />
                 <Column field="clientSecret" header="Secret клиента" />
+                <Column field="clientUri" header="URI клиента" />
                 <Column field="applicationType" header="Тип приложения" />
                 <Column header="Grant Types">
                     <template #body="{ data }">

@@ -9,6 +9,15 @@
                     <div class="brand">
                         <h2>Вход в ЛКС</h2>
                     </div>
+
+                    <Button 
+                        class="sso-button my-2"
+                        icon="pi pi-users"
+                        label="Система единого входа"
+                        outlined
+                        @click="ssoLogin"
+                        :loading="ssoLoading"
+                    />
                     <form @submit.prevent="auth">
                         <InputGroup class="my-2">
                             <InputGroupAddon>
@@ -51,6 +60,7 @@ const errorMessage = ref('');
 const toast = useToast();
 
 const isLoading = ref(false);
+const ssoLoading = ref(false);
 
 const auth = async () => {
     errorMessage.value = '';
@@ -89,6 +99,37 @@ const auth = async () => {
     } catch (error) {
         errorMessage.value = error.response?.data?.message || 'Неверный логин или пароль';
         // toast.add({ severity: 'error', summary: 'Ошибка', detail: errorMessage.value, life: 3000 });
+    }
+};
+
+const ssoLogin = async () => {
+    ssoLoading.value = true;
+    errorMessage.value ='';
+
+    try {
+        const response = await axiosInstance.get('/api/auth/sso/redirection', {
+            headers: {
+                'accept': 'text/plain'
+            }
+        });
+
+        if (response.data) {
+            window.location.href = response.data;
+        } else {
+            throw new Error('Не удалось получить URL для SSO авторизации');
+        }
+
+    } catch (error) {
+        console.error('SSO login error:', error);
+        errorMessage.value = 'Ошибка при подключении к системе единого входа';
+        toast.add({ 
+            severity: 'error', 
+            summary: 'Ошибка SSO', 
+            detail: 'Не удалось подключиться к системе единого входа', 
+            life: 5000 
+        });
+    } finally {
+        ssoLoading.value = false;
     }
 };
 
@@ -163,6 +204,22 @@ const handleVideoEnded = () => {
     font-size: 1.25rem;
     border-radius: 12px;
 }
+
+.sso-button {
+    width: 100%;
+    height: 50px;
+    font-size: 1.1rem;
+    border-radius: 12px;
+    color: var(--p-blue-400);
+    border-color: var(--p-blue-400);
+    background: transparent;
+}
+
+.sso-button:hover {
+    background: var(--p-blue-400) !important;
+    color: white !important;
+}
+
 main {
     margin: 0;
     padding: 0;
@@ -267,6 +324,9 @@ form {
     }
     .forgot-password {
         font-size: 16px;
+    }
+    .sso-button {
+        font-size: 1rem;
     }
 }
 </style>

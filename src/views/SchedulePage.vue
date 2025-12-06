@@ -292,12 +292,12 @@ onMounted(() => {
 }
 .year-selection button:hover, .category-selection button:hover {
     background: var(--p-blue-500-low-op);
-    color: var(--p-color-icon-menu);
+    color: rgb(var(--p-color-icon-menu));
 }
 
 .year-selection button.active, .category-selection button.active {
   background: var(--p-blue-500-low-op);
-  color: var(--p-color-icon-menu);
+  color: rgb(var(--p-color-icon-menu));
 }
 
 .searchBar {
@@ -327,7 +327,7 @@ onMounted(() => {
 
 .schedule-card:hover {
     background: var(--p-blue-500-low-op);
-    color: var(--p-color-icon-menu);
+    color: rgb(var(--p-color-icon-menu));
     cursor: pointer;
 }
 .teacher-icon {

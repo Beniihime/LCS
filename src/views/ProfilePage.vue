@@ -422,7 +422,7 @@ const changeEmail = async () => {
         console.debug('Ошибка при обновлении email: ', error);
         window.dispatchEvent(new CustomEvent('toast', {
             detail: { 
-                severity: 'danger', 
+                severity: 'error', 
                 summary: 'Мой профиль', 
                 detail: `Ошибка при обновлении Email`,
             }
@@ -447,7 +447,7 @@ const changeMePass = async () => {
         console.debug('Ошибка при обновлении pass: ', error);
         window.dispatchEvent(new CustomEvent('toast', {
             detail: { 
-                severity: 'danger', 
+                severity: 'error', 
                 summary: 'Мой профиль', 
                 detail: `Ошибка при обновлении пароля`,
             }
@@ -487,11 +487,11 @@ main {
 }
 .menu-item:hover {
     background-color: var(--p-blue-500-low-op);
-    color: var(--p-color-icon-menu);
+    color: rgb(var(--p-color-icon-menu));
     border: 2px solid transparent;
 }
 .active-link {
-    color: var(--p-color-icon-menu);
+    color: rgb(var(--p-color-icon-menu));
     background-color: var(--p-blue-500-low-op);
 }
 .disabled {
