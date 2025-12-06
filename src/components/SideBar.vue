@@ -12,7 +12,7 @@
                 <InputIcon class="pi pi-search" />
                 <InputText id="searchQuery" name="searchQuery" class="search" v-model="searchQuery" placeholder="Поиск..." />
             </IconField>
-            <div class="menu mt-4">
+            <div class="menu mt-3">
                 <router-link to="/overview" class="menu-item" active-class="active-link">
                     <i class="pi pi-home"></i>
                     <div class="menucrumb">Главная</div>
@@ -30,7 +30,7 @@
                 </router-link>
             </div>
             <div class="menu">
-                <div class="general mt-4" v-if="menuItems">Сервисы</div>
+                <div class="general mt-2" v-if="menuItems">Сервисы</div>
                 <div v-for="item in menuItems">
                     <router-link 
                         :key="item.path" 
@@ -56,7 +56,7 @@
                 </router-link>
             </div>
             <div class="menu">
-                <div class="general mt-4" v-if="hasPermission('User', 'Read')">Администрирование</div>
+                <div class="general mt-2" v-if="hasPermission('User', 'Read')">Администрирование</div>
                 <div v-for="item in filteredMenuItems">
                     <router-link 
                         :key="item.path" 
@@ -167,8 +167,13 @@ const menuItemsAdmin = [
     },
     {
         name: 'Настройка SSO',
-        path: '/sso',
+        path: '/sso/config',
         icon: 'pi pi-cog'
+    },
+    {
+        name: 'Авто-Роли',
+        path: '/autorole',
+        icon: 'pi pi-objects-column'
     }
 ];
 
@@ -200,8 +205,10 @@ const checkPermission = (path) => {
         return hasPermission('User', 'Read');
     } else if (path === '/services') {
         return hasPermission('InfraManager', 'Read');
-    } else if (path === '/sso') {
+    } else if (path === '/sso/config') {
         return hasPermission('SsoResource', 'Read')
+    } else if (path === '/autorole') {
+        return hasPermission('RoleAutoAssigner', 'Read')
     }
     return true; // Для остальных путей
 };
@@ -366,7 +373,7 @@ const checkIsMobile = () => {
 .menu {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
     .pi {
         font-size: 1rem;
         position: absolute;
@@ -409,10 +416,10 @@ const checkIsMobile = () => {
 }
 .menu-item:hover {
     background-color: var(--p-blue-500-low-op);
-    color: var(--p-color-icon-menu);
+    color: rgb(var(--p-color-icon-menu));
 }
 .active-link {
-    color: var(--p-color-icon-menu);
+    color: rgb(var(--p-color-icon-menu));
     background-color: var(--p-blue-500-low-op);
 }
 .search {
