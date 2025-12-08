@@ -1,10 +1,4 @@
 <template>
-    <div class="add-card" @click="openCreateDialog">
-        <div class="add-card-content">
-            <i class="pi pi-plus-circle add-icon"></i>
-            <span class="add-text">Добавить сотрудника</span>
-        </div>
-    </div>
     <Dialog v-model:visible="showCreateDialog" modal header="Добавить сотрудника" :style="{ width: '500px' }">
         <div class="dialog-content">
             <div class="form-grid">

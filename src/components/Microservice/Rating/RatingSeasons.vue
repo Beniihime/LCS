@@ -82,11 +82,15 @@
         <EmployeeTable />
 
         <!-- Секция должностей -->
+        <JobPositionTable />
+        
+        <!-- Секция отделов -->
+        <DepartmentTable />
     </main>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from "vue-router";
 import axiosInstance from "@/utils/axios.js";
 import { getQuarterPeriod } from '@/utils/formatSeason.js';
@@ -97,15 +101,9 @@ import CreateSeason from "@/components/Microservice/Rating/Methods/Seasons/Creat
 import UpdateSeason from "@/components/Microservice/Rating/Methods/Seasons/UpdateSeason.vue";
 import DeleteSeason from "@/components/Microservice/Rating/Methods/Seasons/DeleteSeason.vue";
 
-import EmployeeTable from '@/components/Microservice/Rating/Tables/EmployeeTable.vue'
-
-import CreateJobPosition from "@/components/Microservice/Rating/Methods/JobPositions/CreateJobPosition.vue";
-import UpdateJobPosition from "@/components/Microservice/Rating/Methods/JobPositions/UpdateJobPosition.vue";
-import DeleteJobPosition from "@/components/Microservice/Rating/Methods/JobPositions/DeleteJobPosition.vue";
-
-import CreateDepartment from "@/components/Microservice/Rating/Methods/Departments/CreateDepartment.vue";
-import UpdateDepartment from "@/components/Microservice/Rating/Methods/Departments/UpdateDepartment.vue";
-import DeleteDepartment from "@/components/Microservice/Rating/Methods/Departments/DeleteDepartment.vue";
+import EmployeeTable from '@/components/Microservice/Rating/Tables/EmployeeTable.vue';
+import JobPositionTable from '@/components/Microservice/Rating/Tables/JobPositionTable.vue';
+import DepartmentTable from '@/components/Microservice/Rating/Tables/DepartmentTable.vue';
 
 const router = useRouter();
 
@@ -117,35 +115,7 @@ const selectedSeason = ref(null);
 const showEditDialog = ref(false);
 const showDeleteDialog = ref(false);
 
-// Общие опции
-const rowsPerPageOptions = [
-    { label: '5', value: 5 },
-    { label: '10', value: 10 },
-    { label: '20', value: 20 },
-    { label: '50', value: 50 },
-];
-
-const jobPositions = ref([]);
-const jobPositionMenus = ref([]);
-const jobPositionMenuItems = ref([]);
-const selectedJobPosition = ref(null);
-const showEditJobPositionDialog = ref(false);
-const showDeleteJobPositionDialog = ref(false);
-const showCreateJobPosition = ref(false);
-
-const departments = ref([]);
-const departmentMenus = ref([]);
-const departmentMenuItems = ref([]);
-const selectedDepartment = ref(null);
-const showEditDepartmentDialog = ref(false);
-const showDeleteDepartmentDialog = ref(false);
-const showCreateDepartment = ref(false);
-
 const loading = ref(true);
-
-// Debounce таймеры
-let jobPositionDebounceTimer;
-let departmentDebounceTimer;
 
 const openEditDialog = (season) => {
     selectedSeason.value = season;
@@ -159,26 +129,6 @@ const openDeleteDialog = (season) => {
 
 const toggle = (event, index) => {
     menus.value[index].toggle(event);
-};
-
-const openEditJobPositionDialog = (jobPosition) => {
-    selectedJobPosition.value = jobPosition;
-    showEditJobPositionDialog.value = true;
-};
-
-const openDeleteJobPositionDialog = (jobPosition) => {
-    selectedJobPosition.value = jobPosition;
-    showDeleteJobPositionDialog.value = true;
-};
-
-const openEditDepartmentDialog = (department) => {
-    selectedDepartment.value = department;
-    showEditDepartmentDialog.value = true;
-};
-
-const openDeleteDepartmentDialog = (department) => {
-    selectedDepartment.value = department;
-    showDeleteDepartmentDialog.value = true;
 };
 
 const goToSeason = (seasonId) => {
@@ -235,67 +185,9 @@ const fetchSeasons = async () => {
     }
 };
 
-const fetchJobPositions = async () => {
-    try {
-        const { data } = await axiosInstance.get('/api/rating/job-positions');
-        jobPositions.value = data;
-        
-        showEditJobPositionDialog.value = false;
-        showDeleteJobPositionDialog.value = false;
-
-        jobPositionMenuItems.value = jobPositions.value.map(jobPosition => ([{
-            label: 'Действия',
-            items: [
-                {
-                    label: 'Редактировать',
-                    icon: 'pi pi-pencil',
-                    command: () => openEditJobPositionDialog(jobPosition)
-                },
-                {
-                    label: 'Удалить',
-                    icon: 'pi pi-trash',
-                    command: () => openDeleteJobPositionDialog(jobPosition)
-                }
-            ]
-        }]));
-    } catch (error) {
-        console.error('Ошибка при получении должностей: ', error);
-    }
-};
-
-const fetchDepartments = async () => {
-    try {
-        const { data } = await axiosInstance.get('/api/rating/departments');
-        departments.value = data;
-        
-        showEditDepartmentDialog.value = false;
-        showDeleteDepartmentDialog.value = false;
-
-        departmentMenuItems.value = departments.value.map(department => ([{
-            label: 'Действия',
-            items: [
-                {
-                    label: 'Редактировать',
-                    icon: 'pi pi-pencil',
-                    command: () => openEditDepartmentDialog(department)
-                },
-                {
-                    label: 'Удалить',
-                    icon: 'pi pi-trash',
-                    command: () => openDeleteDepartmentDialog(department)
-                }
-            ]
-        }]));
-    } catch (error) {
-        console.error('Ошибка при получении отделов: ', error);
-    }
-};
-
 onMounted(async () => {
     await Promise.all([
         fetchSeasons(),
-        // fetchJobPositions(),
-        // fetchDepartments(),
     ]);
 });
 
@@ -305,9 +197,6 @@ onMounted(async () => {
 /* ========== Основные стили ========== */
 main {
     position: relative;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
     box-sizing: border-box;
 }
 
@@ -380,9 +269,7 @@ h3 {
 }
 
 /* ========== Базовые стили карточек ========== */
-.season-card,
-.employee-card,
-.simple-card {
+.season-card {
     padding: 1.5rem;
     background: var(--p-surface-0);
     border-radius: 16px;
@@ -392,9 +279,7 @@ h3 {
     transition: all 0.5s;
 }
 
-.p-dark .season-card,
-.p-dark .employee-card,
-.p-dark .simple-card {
+.p-dark .season-card {
     background: var(--p-surface-900);
     border: 1px solid var(--p-surface-700);
 }
@@ -412,17 +297,6 @@ h3 {
 
 .p-dark .season-card:hover {
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
-}
-
-.employee-card:hover,
-.simple-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-}
-
-.p-dark .employee-card:hover,
-.p-dark .simple-card:hover {
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
 /* ========== Индикатор статуса для сезонов ========== */
@@ -589,66 +463,6 @@ h3 {
     font-size: 1rem;
     color: var(--p-text-color);
     font-weight: 600;
-}
-
-/* ========== Должности ========== */
-.card-title-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 0.875rem;
-    flex: 1;
-}
-
-/* ========== Отделы ========== */
-.department-header {
-    flex: 1;
-}
-
-.department-number {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-    font-size: 0.875rem;
-    color: var(--p-text-secondary-color);
-    padding: 0.375rem 0.75rem;
-    background: var(--p-surface-100);
-    border-radius: 8px;
-    width: fit-content;
-}
-
-.p-dark .department-number {
-    background: var(--p-surface-800);
-}
-
-.department-number i {
-    font-size: 0.875rem;
-}
-
-/* ========== Теги должностей ========== */
-.job-positions-item {
-    flex-wrap: wrap;
-}
-
-.job-positions-wrapper {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    flex: 1;
-}
-
-.job-positions-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    align-items: center;
-}
-
-.job-position-tag {
-    font-size: 0.813rem;
-    padding: 0.375rem 0.75rem;
-    font-weight: 500;
-    border-radius: 8px;
 }
 
 /* ========== Адаптивность ========== */

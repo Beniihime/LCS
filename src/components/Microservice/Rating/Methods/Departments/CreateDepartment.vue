@@ -1,10 +1,4 @@
 <template>
-    <div class="add-card" @click="openCreateDialog">
-        <div class="add-card-content">
-            <i class="pi pi-plus-circle add-icon"></i>
-            <span class="add-text">Добавить отдел</span>
-        </div>
-    </div>
     <Dialog v-model:visible="internalVisible" modal header="Добавить отдел" :style="{ width: '400px' }" :draggable="false">
         <div class="form-grid">
             <div class="field">
