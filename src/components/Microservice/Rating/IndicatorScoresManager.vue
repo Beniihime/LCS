@@ -932,7 +932,7 @@ const submitEvaluation = async () => {
             seasonId: Number(props.seasonId),
             points: pointsToSubmit,
             jobPosition: jobPositionToSubmit,
-            department: selectedJobPosition.value.department?.name,
+            department: (selectedJobPosition.value.department?.name).toString(),
             comment: comment.value && comment.value !== '<p><br></p>' ? comment.value : '',
             pasAuthorUserId: localStorage.getItem('userId')
         });

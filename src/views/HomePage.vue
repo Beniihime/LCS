@@ -73,5 +73,6 @@ if (query.message) {
   height: 25px;
   width: 100%;
   border-radius: 0;
+  z-index: 1000;
 }
 </style>
