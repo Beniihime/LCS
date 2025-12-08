@@ -309,7 +309,7 @@ onMounted(async () => {
     width: 100%;
     opacity: 0.8;
     height: 100%;
-    background-image: url('/src/assets/backgrounds/autism.webp');
+    background-image: url('/src/assets/backgrounds/winter.webp');
     background-position: center;
     background-repeat: no-repeat;
     
@@ -363,18 +363,18 @@ onMounted(async () => {
     background-image: linear-gradient(to bottom, var(--p-blue-100), var(--p-bg-color-2) 95%);
 }
 .rectangle:before {
-  content: ' ';
-  display: block;
-  position: absolute;
-  left: 0;
-  filter: blur(1px);
-  top: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.8;
-  background-repeat: no-repeat;
-  background-position: 50% 0;
-  background-size: contain;
-  z-index: -1;
+    content: ' ';
+    display: block;
+    position: absolute;
+    left: 0;
+    filter: blur(1px);
+    top: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.8;
+    background-repeat: no-repeat;
+    background-position: 50% 0;
+    background-size: contain;
+    z-index: -1;
 }
 </style>
