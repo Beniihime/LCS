@@ -42,6 +42,16 @@
                 <template #empty>Не найдено.</template>
                 <template #loading>Данные загружаются. Подождите.</template>
 
+                <Column header="OTP" :showFilterMenu="false" :exportable="false">
+                    <template #body="{ data }">
+                        <GetOtpButton 
+                            :userId="data.id"
+                            :buttonClass="'p-button-sm me-2'"
+                            :showLabel="false"
+                        />
+                    </template>
+                </Column>
+
                 <Column 
                     v-for="col in ordinaryColumns"
                     :field="col.field"
@@ -133,6 +143,7 @@ import { useRouter } from 'vue-router';
 import { debounce } from 'lodash';
 
 import CreateUser from '@/components/Users/CreateUser.vue';
+import GetOtpButton from '@/components/Users/GetOtpButton.vue';
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import { usePermissionStore } from '@/stores/permissions.js';
 

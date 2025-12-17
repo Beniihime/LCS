@@ -10,15 +10,24 @@
                 <Button unstyled label="Полномочия" icon="pi pi-lock me-3" @click="setActiveProfile('permiss')" :class="{ 'active-link': activeProfile === 'permiss' }" class="menu-item w-100 mb-3"/>
             </div>
 
+            <GetOtpButton 
+                v-if="hasPermission('User', 'Update')"
+                :userId="userId"
+                :buttonLabel="'Получить OTP'"
+                :showLabel="true"
+                :buttonSeverity="'help'"
+                class="w-100 mb-3"
+            />
+
             <!-- Изменить пароль -->
             <Button class="w-100 mb-3" label="Сменить пароль" icon="pi pi-key" outlined @click="visible = true" v-if="!isCurrentUser && hasPermission('User', 'Update')" />
             <Dialog v-model:visible="visible" modal header="Изменить пароль" :style="{ 'max-width': '30rem' }">
-                <Form>
+                <form>
                     <FloatLabel class="mt-4">
                         <Password v-model="userPassword" inputId="userPassword" toggleMask class="form-input" @input="validatePassword" :feedback="false" :invalid="!passwordChecks.length || !passwordChecks.upperLower || !passwordChecks.number" />
                         <label for="userPassword">Пароль</label>
                     </FloatLabel>
-                </Form>
+                </form>
                 <div class="password-requirements my-3">
                     <p><i :class="passwordChecks.length ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Минимум 8 символов</p>
                     <p><i :class="passwordChecks.upperLower ? 'pi pi-thumbs-up text-success' : 'pi pi-thumbs-down text-danger'" class="me-2"/> Верхний и нижний регистры</p>
@@ -31,7 +40,7 @@
             <div v-if="isCurrentUser">
                 <Button label="Сменить пароль" text icon="pi pi-key" class="d-flex justify-content-between w-100" iconPos="right" @click="visiblePass = true" />
                 <Dialog v-model:visible="visiblePass" modal header="Сменить пароль" :style="{ 'max-width': '25rem' }">
-                    <Form>
+                    <form>
                         <div class="">
                             <label for="oldPass" class="ms-2">Старый пароль</label>
                             <Password :inputProps="{ autocomplete: 'off' }" inputId="oldPass" name="oldPass" v-model="oldPass" class="form-input w-100" :feedback="false" toggleMask placeholder="Введите пароль" />
@@ -50,7 +59,7 @@
                             <Password inputId="confirmPass" name="confirmPass" v-model="confirmPass" class="form-input w-100" :feedback="false" toggleMask :invalid="newPass !== confirmPass && confirmPass" />
                         </div>
                         <Button label="Сохранить" icon="pi pi-check" class="w-100 mt-4" @click="changeMePass"/>
-                    </Form>
+                    </form>
                 </Dialog>
                 <Button label="Сменить email" text icon="pi pi-at" class="d-flex justify-content-between w-100" iconPos="right" @click="visibleEmail = true" />
                 <Dialog v-model:visible="visibleEmail" modal header="Сменить e-mail" :style="{ 'max-width': '25rem' }">
@@ -61,7 +70,7 @@
                     <Button label="Сохранить" icon="pi pi-check" class="w-100 mt-4" @click="changeEmail"/>
                 </Dialog>
             </div>
-            
+
             
             <!-- Кнопка блокировки -->
             <Button 
@@ -223,13 +232,15 @@ import InfraManagerCallsMe from '@/components/InfraManager/InfraManagerCallsMe.v
 import InfraManagerServices from '@/components/InfraManager/InfraManagerServices.vue';
 import MePermissionsPage from '@/views/MePermissionsPage.vue';
 
+import GetOtpButton from '@/components/Users/GetOtpButton.vue';
+
 const currentUserId = localStorage.getItem('userId');
 const permissionStore = usePermissionStore();
 
 const hasPermission = (type, action) => permissionStore.hasPermission(type, action);
 
 const isCurrentUser = computed(() => {
-  return currentUserId === userId.value;
+    return currentUserId === userId.value;
 });
 
 const route = useRoute();
