@@ -1,8 +1,15 @@
 <template>
     <ConfirmDialog></ConfirmDialog>
-    <div class="sidebar-container" :class="['season-' + currentSeason, 'bg-image-' + currentSeason]" v-if="isMobile">
-        <div class="rectangle season-overlay">
-            <div v-if="debugMode" class="season-debug">
+    <div 
+        class="sidebar-container" 
+        :class="[
+            collapsed ? 'bg-image' : ['season-' + currentSeason, 'bg-image-' + currentSeason],
+            { 'sidebar-collapsed': collapsed, 'sidebar-expanded': !collapsed }
+        ]"
+        v-if="isMobile"
+    >
+        <div class="rectangle" :class="{ 'season-overlay': !collapsed, 'collapsed': collapsed }">
+            <div v-if="debugMode && !collapsed" class="season-debug">
                 <Button 
                     icon="pi pi-refresh"
                     @click="cycleSeason"
@@ -13,13 +20,13 @@
                 <Tag :value="seasonName" :severity="getSeasonSeverity(currentSeason)"/>
             </div>
 
-            <div class="d-flex align-items-center justify-content-center">
+            <div class="d-flex align-items-center justify-content-center logo-wrapper">
                 <router-link to="/overview" class="logoLCS">
                     <Lcs />
                 </router-link>
             </div>
             
-            <IconField class="searchBar">
+            <IconField v-if="!collapsed" class="searchBar">
                 <InputIcon class="pi pi-search" />
                 <InputText 
                     id="searchQuery" 
@@ -30,65 +37,95 @@
                 />
             </IconField>
 
-            <div class="menu mt-3">
-                <router-link to="/overview" class="menu-item" active-class="active-link">
-                    <i class="pi pi-home"></i>
-                    <div class="menucrumb">Главная</div>
+            <div class="menu" :class="{ 'mt-3': !collapsed, 'my-4': collapsed }">
+                <router-link 
+                    to="/overview" 
+                    class="menu-item" 
+                    active-class="active-link"
+                    v-tooltip.right="collapsed ? 'Главная' : ''"
+                >
+                    <div class="menu-item-content">
+                        <i class="pi pi-home"></i>
+                        <div v-if="!collapsed" class="menucrumb">Главная</div>
+                    </div>
                 </router-link>
-                <router-link to="/notif" class="menu-item" active-class="active-link">
-                    <i class="pi pi-bell"></i>
-                    <div class="menucrumb">
-                        <span>Уведомления</span>
+                <router-link 
+                    to="/notif" 
+                    class="menu-item" 
+                    active-class="active-link"
+                    v-tooltip.right="collapsed ? 'Уведомления' : ''"
+                >
+                    <div class="menu-item-content">
+                        <OverlayBadge 
+                            v-if="collapsed && notificationStore.unreadCount > 0" 
+                            :value="notificationStore.unreadCount" 
+                            severity="danger" 
+                            class="notification-badge-collapsed"
+                        />
                         <Badge 
-                            v-if="notificationStore.unreadCount > 0"
+                            v-if="!collapsed && notificationStore.unreadCount > 0"
                             :value="notificationStore.unreadCount"
                             class="p-badge ms-3"
                         />
+                        <i class="pi pi-bell"></i>
+                        <div v-if="!collapsed" class="menucrumb">
+                            <span>Уведомления</span>
+                        </div>
+                    </div>
+                </router-link>
+            </div>
+
+            <div class="menu" :class="{ 'mb-4': collapsed }">
+                <div v-if="!collapsed && menuItems" class="general mt-2">Сервисы</div>
+                <div v-for="item in menuItems" :key="item.path">
+                    <router-link 
+                        :to="item.path" 
+                        class="menu-item" 
+                        active-class="active-link"
+                        v-if="checkPermission(item.path) && showRequestsMenu"
+                        v-tooltip.right="collapsed ? item.name : ''"
+                    >
+                        <div class="menu-item-content">
+                            <i :class="item.icon"></i>
+                            <div v-if="!collapsed" class="menucrumb">
+                                <span>{{ item.name }}</span>
+                                <Badge 
+                                    v-if="item.path === '/notif' && notificationStore.unreadCount > 0"
+                                    :value="notificationStore.unreadCount"
+                                    class="p-badge ms-3"
+                                />
+                            </div>
+                        </div>
+                    </router-link>
+                </div>
+                <router-link 
+                    to="/schedule" 
+                    class="menu-item" 
+                    active-class="active-link"
+                    v-tooltip.right="collapsed ? 'Расписание' : ''"
+                >
+                    <div class="menu-item-content">
+                        <i class="pi pi-calendar"></i>
+                        <div v-if="!collapsed" class="menucrumb">Расписание</div>
                     </div>
                 </router-link>
             </div>
 
             <div class="menu">
-                <div class="general mt-2" v-if="menuItems">Сервисы</div>
-                <div v-for="item in menuItems">
+                <div v-if="!collapsed && hasPermission('User', 'Read')" class="general mt-2">Администрирование</div>
+                <div v-for="item in filteredMenuItems" :key="item.path">
                     <router-link 
-                        :key="item.path" 
-                        :to="item.path" 
-                        class="menu-item" 
-                        active-class="active-link"
-                        v-if="checkPermission(item.path) && showRequestsMenu"
-                    >
-                        <i :class="item.icon"></i>
-                        <div class="menucrumb">
-                            <span>{{ item.name }}</span>
-                            <Badge 
-                                v-if="item.path === '/notif' && notificationStore.unreadCount > 0"
-                                :value="notificationStore.unreadCount"
-                                class="p-badge ms-3"
-                            />
-                        </div>
-                    </router-link>
-                </div>
-                <router-link to="/schedule" class="menu-item" active-class="active-link">
-                    <i class="pi pi-calendar"></i>
-                    <div class="menucrumb">Расписание</div>
-                </router-link>
-            </div>
-
-            <div class="menu">
-                <div class="general mt-2" v-if="hasPermission('User', 'Read')">Администрирование</div>
-                <div v-for="item in filteredMenuItems">
-                    <router-link 
-                        :key="item.path" 
                         :to="item.path" 
                         class="menu-item"
                         active-class="active-link"
                         v-if="checkPermission(item.path)"
+                        v-tooltip.right="collapsed ? item.name : ''"
                     >
-                        
-                        <i :class="item.icon"></i>
-                        <div class="menucrumb">
-                            <span>{{ item.name }}</span>
+                        <div class="menu-item-content">
+                            <i :class="item.icon"></i>
+                            <div v-if="!collapsed" class="menucrumb">
+                                <span>{{ item.name }}</span>
+                            </div>
                         </div>
                     </router-link>
                 </div>
@@ -96,8 +133,7 @@
 
             <Divider style="margin-top: auto;" />
             
-            <!-- Переключатель сезона в настройках темы -->
-            <div class="season-selector" v-if="allowSeasonSelection">
+            <div v-if="!collapsed && allowSeasonSelection" class="season-selector">
                 <div class="season-label">
                     <i :class="seasonIcon" class="me-2"></i>
                     <span>Сезон: {{ seasonName }}</span>
@@ -113,11 +149,15 @@
                 />
             </div>
 
-            <ThemeSwitcher :isSideBarCollapse="false"/>
+            <ThemeSwitcher :isSideBarCollapse="collapsed"/>
             
-            <router-link class="profile" :to="userId ? `/profile?id=${userId}&r=${roleId}` : '/profile'" >
-                <div class="row align-items-center">
-                    <div class="col-auto">
+            <router-link 
+                class="profile" 
+                :to="userId ? `/profile?id=${userId}${!collapsed ? '&r=' + roleId : ''}` : '/profile'"
+                v-tooltip.right="collapsed ? 'Профиль' : ''"
+            >
+                <div class="profile-content">
+                    <div class="avatar-wrapper">
                         <Avatar 
                             :label="initials" 
                             size="xlarge" 
@@ -125,26 +165,22 @@
                             class="initials-circle"
                         />
                     </div>
-                    <div class="col ps-0">
+                    <div v-if="!collapsed" class="profile-info">
                         <div class="middle">
-                            <div class="row">
-                                <div class="col">{{ fullName }}</div>
-                            </div>
-                            <div class="row">
-                                <div class="col email">
-                                    {{ email }}
-                                </div>
+                            <div class="name">{{ fullName }}</div>
+                            <div class="email">
+                                {{ email }}
                             </div>
                         </div>
                     </div>
                 </div>
             </router-link>
-            <div class="row mt-3">
+            <div class="row mt-2">
                 <div class="col">
-                    <button @click="confirmLogout()" class="logout-button">
-                        <div class="d-flex align-items-center justify-content-start">
-                            <LogoutSvg class="me-3"/>
-                            <p class="m-0">Выйти из аккаунта</p>
+                    <button @click="confirmLogout()" class="logout-button" v-tooltip.right="collapsed ? 'Выйти' : ''">
+                        <div class="logout-content" :class="{ 'collapsed': collapsed }">
+                            <LogoutSvg class="logout-icon"/>
+                            <p v-if="!collapsed" class="logout-text">Выйти из аккаунта</p>
                         </div>
                     </button>
                 </div>
@@ -180,6 +216,13 @@ import {
     getSeasonAccentColor 
 } from '@/utils/seasons.js';
 
+const props = defineProps({
+    collapsed: {
+        type: Boolean,
+        default: false
+    }
+});
+
 const confirm = useConfirm();
 const toast = useToast();
 const router = useRouter();
@@ -188,10 +231,10 @@ const notificationStore = useNotificationStore();
 const permissionStore = usePermissionStore();
 
 // Сезоны
-const debugMode = ref(false); // Режим отладки для переключения сезонов
-const allowSeasonSelection = ref(false); // Разрешить пользователю выбирать сезон
+const debugMode = ref(false);
+const allowSeasonSelection = ref(false);
 const currentSeason = ref(getCurrentSeason());
-const selectedSeason = ref(null); // Для ручного выбора
+const selectedSeason = ref(null);
 
 // Опции для выбора сезона
 const seasonOptions = [
@@ -281,7 +324,6 @@ const onSeasonChange = (value) => {
     if (value) {
         currentSeason.value = value;
     } else {
-        // Если выбран "Авто", возвращаемся к определению по месяцу
         currentSeason.value = getCurrentSeason();
     }
     saveSeasonPreference();
@@ -313,12 +355,10 @@ const checkMonthChange = () => {
     const currentMonth = new Date().getMonth();
     const savedSeason = localStorage.getItem('seasonOverride');
     
-    // Если пользователь не выбрал сезон вручную
     if (!savedSeason && currentMonth !== lastCheckedMonth) {
         currentSeason.value = getCurrentSeason();
         lastCheckedMonth = currentMonth;
         
-        // Можно показать уведомление о смене сезона
         if (lastCheckedMonth !== null) {
             toast.add({
                 severity: 'info',
@@ -330,7 +370,6 @@ const checkMonthChange = () => {
     }
 };
 
-// Таймер для проверки смены месяца
 let monthCheckInterval = null;
 
 const confirmLogout = () => {
@@ -370,10 +409,7 @@ const logout = async () => {
 };
 
 onMounted(async () => {
-    // Загружаем предпочтения сезона
     loadSeasonPreference();
-    
-    // Инициализируем проверку месяца
     lastCheckedMonth = new Date().getMonth();
 
     try {
@@ -387,7 +423,7 @@ onMounted(async () => {
         initials.value = getInitials(firstName.value, lastName.value);
 
         userId.value = response.data.id;
-        roleId.value = response.data.roles[0].id;
+        roleId.value = response.data.roles[0]?.id;
 
         localStorage.setItem('firstName', response.data.firstName);
 
@@ -421,134 +457,37 @@ onBeforeUnmount(() => {
 
 const isMobile = ref(false);
 const checkIsMobile = () => {
-    isMobile.value = window.innerWidth > 768; // Ширина для мобильных устройств
+    isMobile.value = window.innerWidth > 768;
 };
-
-
 </script>
 
 <style scoped>
-.profile {
-    border: 2px solid transparent;
-    transition: all 0.5s;
-    border-radius: 12px;
-    padding: 5px;
-    color: var(--p-text-color);
-    text-decoration: none;
-}
-.profile:hover {
-    cursor: pointer;
-    background-color: var(--p-blue-500-low-op);
-}
-.logoLCS {
-    transition: all 0.5s;
-    scale: 0.9;
-}
-.logoLCS:hover {
-    filter: drop-shadow(0 0 0.75rem rgba(0, 0, 0, 0.3));
-}
-.middle {
-    font-family: 'SF Pro Rounded';
-    font-size: 1rem;
-    line-height: normal;
-    transition: all 0.5s;
-}
-.logout-button {
-    width: 100%;
-    border: 2px solid transparent;
-    background-color: transparent;
-    padding: 8px;
-    border-radius: 12px;
-    transition: all 0.5s;
-    margin-bottom: 20px;
-    color: var(--p-text-color);
-}
-.logout-button:hover {
-    background-color: var(--p-blue-500-low-op);
-    color: var(--p-blue-400);
-}
-.email {
-    color: var(--p-grey-1);
-}
-.initials-circle {
-    background-color: var(--p-blue-500);
-    color: white;
-    font-weight: 700;
-    font-family: 'SF Pro Rounded';
-    transition: all 0.5s;
-}
-.menu {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    .pi {
-        font-size: 1rem;
-        position: absolute;
-        left: 16px;
-        top: 50%;
-        transform: translateY(-50%);
-        pointer-events: none;   
-    }
-}
-.general {
-    font-family: 'SF Pro Rounded';
-    font-weight: bold;
-    font-size: 16px;
-    color: var(--p-text-color);
-    transition: all 0.5s;
-}
-.menucrumb {
-    font-family: 'SF Pro Rounded';
-    padding-left: 48px;
-    display: flex;
-    align-items: center;
-}
-.p-badge {
-    background-color: var(--p-red-500);
-    font-size: 12px;
-    padding: 6px;
-    border-radius: 12px;
-}
-.menu-item {
-    position: relative;
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding-block: 10px;
-    border-radius: 12px;
-    transition: all 0.5s;
-    text-decoration: none;
-    color: var(--p-text-color);
-    border: 2px solid transparent;
-}
-.menu-item:hover {
-    background-color: var(--p-blue-500-low-op);
-    color: rgb(var(--p-color-icon-menu));
-}
-.active-link {
-    color: rgb(var(--p-color-icon-menu));
-    background-color: var(--p-blue-500-low-op);
-}
-.search {
-    border-radius: 12px;
-    transition: all 0.5s;
-    font-size: 14px;
-    width: 100%; 
-}
-.searchBar {
-    margin-top: 22px;
-    display: inline-block;
-}
-/* Базовые стили остаются теми же, добавляем сезонные */
+/* ============ ОСНОВНЫЕ СТИЛИ САЙДБАРА ============ */
 .sidebar-container {
     height: 100vh;
     display: flex;
     box-sizing: border-box;
     position: relative;
     overflow: hidden;
+    transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: width;
+    contain: strict;
+    isolation: isolate;
+    min-width: 90px;
+    max-width: 280px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
-/* Сезонные классы для фона */
+.sidebar-container.sidebar-collapsed {
+    width: 90px !important;
+}
+
+.sidebar-container.sidebar-expanded {
+    width: 280px !important;
+}
+
+/* ============ ФОНОВОЕ ИЗОБРАЖЕНИЕ ============ */
 .sidebar-container::before {
     content: "";
     position: absolute;
@@ -560,9 +499,12 @@ const checkIsMobile = () => {
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center;
-    filter: blur(1px);
+    filter: blur(2px);
     z-index: -1;
-    transition: background-image 1.5s ease-in-out, opacity 1.5s ease-in-out;
+    transition: 
+        background-image 1.2s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: background-image, opacity;
 }
 
 .sidebar-container.season-winter::before {
@@ -572,7 +514,7 @@ const checkIsMobile = () => {
 
 .sidebar-container.season-spring::before {
     background-image: url('/src/assets/backgrounds/spring.webp');
-    opacity: 0.4;
+    opacity: 0.2;
 }
 
 .sidebar-container.season-summer::before {
@@ -582,127 +524,606 @@ const checkIsMobile = () => {
 
 .sidebar-container.season-autumn::before {
     background-image: url('/src/assets/backgrounds/autism.webp');
-    opacity: 0.4;
+    opacity: 0.3;
 }
 
-/* Сезонный overlay для контента */
+.sidebar-container.bg-image::before {
+    background-image: url('/src/assets/backgrounds/winter.webp');
+    opacity: 0.8;
+}
+
+/* ============ ОСНОВНОЙ КОНТЕЙНЕР ============ */
+.rectangle {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 1.5rem 1rem;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    will-change: transform, padding;
+    flex-shrink: 0;
+    background: linear-gradient(
+        180deg,
+        rgba(var(--p-bg-color-rgb), 0.95) 0%,
+        rgba(var(--p-bg-color-2-rgb), 0.85) 100%
+    );
+}
+
 .rectangle.season-overlay {
-    background: var(--season-gradient);
-    transition: all 1s ease;
+    background: linear-gradient(
+        180deg,
+        var(--season-gradient-start) 0%,
+        var(--season-gradient-end) 100%
+    );
     position: relative;
     z-index: 1;
 }
 
-/* Сезонные акценты */
-.season-winter .active-link,
-.season-winter .menu-item:hover {
-    background-color: rgba(var(--p-blue-500-rgb, 59, 130, 246), 0.1);
-    color: var(--p-blue-400);
+.rectangle.collapsed {
+    padding: 1.5rem 0.5rem;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
 }
 
-.season-spring .active-link,
-.season-spring .menu-item:hover {
-    background-color: rgba(var(--p-green-500-rgb, 40, 167, 69), 0.1);
-    color: var(--p-green-400);
+/* ============ ЛОГОТИП ============ */
+.logo-wrapper {
+    margin-bottom: 2rem;
+    transition: margin 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.season-summer .active-link,
-.season-summer .menu-item:hover {
-    background-color: rgba(var(--p-yellow-500-rgb, 255, 193, 7), 0.1);
-    color: var(--p-yellow-400);
+.rectangle.collapsed .logo-wrapper {
+    margin-bottom: 1.5rem;
 }
 
-.season-autumn .active-link,
-.season-autumn .menu-item:hover {
-    background-color: rgba(var(--p-orange-500-rgb, 253, 126, 20), 0.1);
-    color: var(--p-orange-400);
+.logoLCS {
+    display: block;
+    transform: scale(1);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    will-change: transform;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.15));
 }
 
-/* Акцентный цвет для текущего сезона */
-.season-winter .initials-circle {
-    background-color: var(--p-blue-400);
+.rectangle:not(.collapsed) .logoLCS {
+    transform: scale(0.85);
 }
 
-.season-spring .initials-circle {
-    background-color: var(--p-green-400);
+.rectangle.collapsed .logoLCS {
+    transform: scale(0.7);
 }
 
-.season-summer .initials-circle {
-    background-color: var(--p-yellow-500);
+.logoLCS:hover {
+    transform: scale(0.95);
+    filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.25));
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.season-autumn .initials-circle {
-    background-color: var(--p-orange-400);
+/* ============ ПОИСК ============ */
+.searchBar {
+    opacity: 1;
+    max-height: 44px;
+    transform: translateY(0);
+    transition: 
+        opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+        max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        margin 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, max-height, margin, transform;
 }
 
-/* Элементы управления сезоном */
-.season-debug {
-    position: absolute;
-    top: 10px;
-    right: 10px;
+.rectangle.collapsed .searchBar {
+    opacity: 0;
+    max-height: 0;
+    margin: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+}
+
+.search {
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    font-size: 14px;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.search:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(var(--p-blue-500-rgb), 0.5);
+    box-shadow: 0 0 0 3px rgba(var(--p-blue-500-rgb), 0.1);
+}
+
+/* ============ МЕНЮ ============ */
+.menu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: .125rem;
+    transition: gap 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    contain: layout style;
+}
+
+.rectangle.collapsed .menu {
+    gap: 0.5rem;
+}
+
+.menu-item {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 8px;
-    z-index: 10;
+    width: 100%;
+    height: 48px;
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    text-decoration: none;
+    color: var(--p-text-color);
+    border: 2px solid transparent;
+    overflow: hidden;
+    contain: layout;
+    background: transparent;
 }
 
-.season-selector {
-    margin-bottom: 1rem;
+.menu-item-content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    padding: 0 1rem;
+    transition: padding 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.rectangle.collapsed .menu-item-content {
+    padding: 0;
+    justify-content: center;
+}
+
+.menu-item:hover {
+    background: var(--p-blue-500-low-op) !important;
+    color: rgb(var(--p-color-icon-menu));
+    transform: translateX(4px);
+}
+
+.menu-item.active-link {
+    background: var(--p-blue-500-low-op);
+    color: rgb(var(--p-color-icon-menu));
+    box-shadow: 
+        0 4px 12px rgba(var(--p-blue-500-rgb), 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* ============ ИКОНКИ МЕНЮ ============ */
+.menu-item .pi {
+    font-size: 1.25rem;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+    min-width: 24px;
+    text-align: center;
+}
+
+.rectangle:not(.collapsed) .menu-item .pi {
+    margin-right: 1rem;
+}
+
+.rectangle.collapsed .menu-item .pi {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+/* ============ ТЕКСТ МЕНЮ ============ */
+.menucrumb {
+    font-family: 'SF Pro Rounded';
+    font-weight: 500;
+    font-size: 0.9375rem;
+    opacity: 1;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: 
+        opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+        max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, max-width, transform;
+    transform: translateX(0);
+    text-overflow: ellipsis;
+}
+
+.rectangle.collapsed .menucrumb {
+    opacity: 0;
+    max-width: 0;
+    transform: translateX(-10px);
+    position: absolute;
+}
+
+.rectangle:not(.collapsed) .menucrumb {
+    opacity: 1;
+    max-width: 200px;
+    transform: translateX(0);
+    transition-delay: 0.15s;
+}
+
+/* ============ ЗАГОЛОВКИ РАЗДЕЛОВ ============ */
+.general {
+    font-family: 'SF Pro Rounded';
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: var(--p-text-color);
+    opacity: 1;
+    max-height: 40px;
+    overflow: hidden;
+    padding: 0.5rem 1rem 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: 
+        opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+        max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        padding 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        margin 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, max-height, padding, margin;
+}
+
+.rectangle.collapsed .general {
+    opacity: 0;
+    max-height: 0;
+    padding: 0;
+    margin: 0;
+}
+
+.rectangle:not(.collapsed) .general {
+    opacity: 1;
+    max-height: 40px;
+    transition-delay: 0.2s;
+}
+
+/* ============ ПРОФИЛЬ ============ */
+.profile {
+    display: flex;
+    align-items: center;
     padding: 0.75rem;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    text-decoration: none;
+    color: var(--p-text-color);
+    margin-top: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid transparent;
+    contain: layout;
+}
+
+.profile:hover {
+    background: var(--p-blue-500-low-op);
+    border-color: var(--p-blue-500-low-op);
+}
+
+.profile-content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    transition: gap 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    gap: 1rem;
+}
+
+.rectangle.collapsed .profile-content {
+    justify-content: center;
+    gap: 0;
+}
+
+.avatar-wrapper {
+    flex-shrink: 0;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.initials-circle {
+    background: linear-gradient(135deg, var(--p-blue-500), var(--p-blue-700));
+    color: white;
+    font-weight: 700;
+    font-family: 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, sans-serif;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+    box-shadow: 0 4px 12px rgba(var(--p-blue-500-rgb), 0.3);
+}
+
+.rectangle.collapsed .initials-circle {
+    transform: scale(0.9);
+}
+
+.profile-info {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.rectangle.collapsed .profile-info {
+    opacity: 0;
+    max-width: 0;
+}
+
+.rectangle:not(.collapsed) .profile-info {
+    opacity: 1;
+    max-width: 200px;
+    transition-delay: 0.15s;
+}
+
+.middle {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.name {
+    font-family: 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.email {
+    font-family: 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 0.875rem;
+    color: var(--p-text-color-secondary);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ============ КНОПКА ВЫХОДА ============ */
+.logout-button {
+    width: 100%;
+    border: 2px solid transparent;
+    background: transparent;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    color: var(--p-text-color);
+    cursor: pointer;
+    margin-top: 0.5rem;
+    contain: layout;
+}
+
+.logout-button:hover {
+    border-color: var(--p-red-500);
+    transform: translateX(4px);
+    color: var(--p-red-500);
+}
+
+.logout-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.logout-content.collapsed {
+    gap: 0;
+}
+
+.logout-icon {
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    flex-shrink: 0;
+}
+
+.logout-text {
+    font-family: 'SF Pro Rounded';
+    font-weight: 500;
+    font-size: 0.9375rem;
+    margin: 0;
+    transition: 
+        opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+        max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, max-width, transform;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rectangle.collapsed .logout-text {
+    opacity: 0;
+    max-width: 0;
+    transform: translateX(-10px);
+}
+
+.rectangle:not(.collapsed) .logout-text {
+    opacity: 1;
+    max-width: 200px;
+    transform: translateX(0);
+    transition-delay: 0.15s;
+}
+
+/* ============ БЕЙДЖИ ============ */
+.p-badge {
+    background: linear-gradient(135deg, var(--p-red-500), var(--p-red-700));
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 10px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 8px rgba(var(--p-red-500-rgb), 0.3);
+    margin-left: auto;
+}
+
+.notification-badge-collapsed {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 10;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-origin: center;
+    box-shadow: 0 2px 8px rgba(var(--p-red-500-rgb), 0.3);
+}
+
+.menu-item:hover .notification-badge-collapsed {
+    transform: scale(1.1);
+}
+
+/* ============ SEASON SELECTOR ============ */
+.season-selector {
+    margin: 1rem 0;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .season-label {
     display: flex;
     align-items: center;
     margin-bottom: 0.5rem;
-    color: var(--p-text-color);
-    font-size: 0.9rem;
+    font-family: 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, sans-serif;
     font-weight: 500;
+    color: var(--p-text-color);
 }
 
 .season-select {
     width: 100%;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Анимация смены сезона */
-@keyframes seasonTransition {
-    0% { opacity: 0.5; }
-    50% { opacity: 0.3; }
-    100% { opacity: 0.7; }
+/* ============ АНИМАЦИЯ ПРИ ПЕРЕКЛЮЧЕНИИ ============ */
+.sidebar-container {
+    animation: sidebarEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.sidebar-container.season-changing::before {
-    animation: seasonTransition 1.5s ease-in-out;
+@keyframes sidebarEntrance {
+    0% {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
-.rectangle {
+/* ============ ОПТИМИЗАЦИЯ ДЛЯ MOBILE ============ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ============ SCROLLBAR ============ */
+.rectangle::-webkit-scrollbar {
+    width: 4px;
+}
+
+.rectangle::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
+}
+
+.rectangle::-webkit-scrollbar-thumb {
+    background: var(--p-blue-500);
+    border-radius: 2px;
+    transition: background 0.3s ease;
+}
+
+.rectangle::-webkit-scrollbar-thumb:hover {
+    background: var(--p-blue-500);
+}
+
+/* ============ TOOLTIP ADJUSTMENTS ============ */
+[v-tooltip] {
+    position: relative;
+}
+
+/* ============ DARK THEME ADJUSTMENTS ============ */
+.p-dark .rectangle {
+    background: linear-gradient(
+        180deg,
+        rgba(30, 30, 40, 0.15) 0%,
+        rgba(20, 20, 30, 0.65) 100%
+    );
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.p-dark .search {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--p-text-color);
+}
+
+.p-dark .menu-item.active-link {
+    background: var(--p-blue-500-low-op) !important;
+}
+
+/* ============ PERFORMANCE OPTIMIZATIONS ============ */
+.sidebar-container,
+.rectangle,
+.menu-item,
+.profile,
+.logout-button {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============ RTL SUPPORT ============ */
+[dir="rtl"] .sidebar-container {
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: none;
+}
+
+[dir="rtl"] .menu-item:hover {
+    transform: translateX(-4px);
+}
+
+[dir="rtl"] .rectangle.collapsed .menucrumb {
+    transform: translateX(10px);
+}
+
+[dir="rtl"] .logout-button:hover {
+    transform: translateX(-4px);
+}
+
+/* ============ DEBUG MODE ============ */
+.season-debug {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1000;
     display: flex;
-    flex-direction: column;
-    background: linear-gradient(to bottom, var(--p-blue-100), var(--p-bg-color-2) 95%);
-    width: 250px;
-    padding: 1rem;
-    transition: all 0.5s;
-    border-right: 1px solid var(--p-grey-5);
+    gap: 0.5rem;
+    align-items: center;
 }
 
-
-/* Темная тема для сезонов */
-.p-dark .season-winter .rectangle {
-    background: linear-gradient(to bottom, rgba(25, 25, 112, 0.2), rgba(0, 0, 0, 0.8) 95%);
+/* ============ RESPONSIVE ADJUSTMENTS ============ */
+@media (max-width: 768px) {
+    .sidebar-container {
+        width: 90px !important;
+        max-width: 90px;
+        border-radius: 0;
+    }
+    
+    .sidebar-container.sidebar-expanded {
+        width: 280px !important;
+        max-width: 280px;
+    }
+    
+    .rectangle {
+        padding: 1rem 0.5rem;
+    }
+    
+    .rectangle:not(.collapsed) {
+        padding: 1.5rem 1rem;
+    }
 }
 
-.p-dark .season-spring .rectangle {
-    background: linear-gradient(to bottom, rgba(0, 100, 0, 0.2), rgba(0, 0, 0, 0.8) 95%);
-}
-
-.p-dark .season-summer .rectangle {
-    background: linear-gradient(to bottom, rgba(139, 69, 19, 0.2), rgba(0, 0, 0, 0.8) 95%);
-}
-
-.p-dark .season-autumn .rectangle {
-    background: linear-gradient(to bottom, rgba(160, 82, 45, 0.2), rgba(0, 0, 0, 0.8) 95%);
+/* ============ PRINT STYLES ============ */
+@media print {
+    .sidebar-container {
+        display: none;
+    }
 }
 </style>

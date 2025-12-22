@@ -113,7 +113,7 @@ function themeToggle() {
 .bt1 {
     position: absolute;
     bottom: 214px;
-    left: 32px;
+    left: 23px;
     width: 30px;
     height: 30px;
     padding: 22px;

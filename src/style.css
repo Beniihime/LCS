@@ -90,7 +90,7 @@ thead.p-datatable-thead {
 
 .logout-button:hover {
   svg.logout path {
-    stroke: var(--p-blue-400);
+    stroke: var(--p-red-500);
   }
 }
 .removed-row {
