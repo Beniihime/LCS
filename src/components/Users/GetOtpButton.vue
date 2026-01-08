@@ -88,7 +88,7 @@ const props = defineProps({
     },
     autoCopy: {
         type: Boolean,
-        default: true
+        default: false
     },
     autoShowDialog: {
         type: Boolean,

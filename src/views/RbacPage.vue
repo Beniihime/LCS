@@ -35,13 +35,13 @@
                         </IconField>
                     </div>
                     <div class="col-auto">
-                         <CreateRole :refreshRoles="fetchRoles" v-if="hasPermission('Rbac', 'Create')"/>
+                        <CreateRole :refreshRoles="fetchRoles" v-if="hasPermission('Rbac', 'Create')"/>
                     </div>
                 </div>
             </div>
             <Divider class="my-4"/>
             <div class="roles-cards">
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
                     <div class="col" v-for="role in filteredRoles" :key="role.id">
                         <div class="card">
                             <div class="card-body d-flex flex-column">

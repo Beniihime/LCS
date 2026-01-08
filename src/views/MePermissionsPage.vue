@@ -24,7 +24,7 @@
                     <p class="resource-description">{{ resource.description }}</p>
                 </div>
                 <div class="w-100">
-                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-2">
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-2">
                         <div v-for="permission in resource.permissions" :key="permission.id" class="col">
                             <div class="permission-item h-100">
                                 <div class="permission-header">
@@ -160,9 +160,27 @@ const filteredResources = computed(() => {
     })).filter(resource => resource.permissions.length > 0); // Возвращаем только те ресурсы, которые содержат полномочия после фильтрации
 });
 
+const fetchData = async () => {
+    try {
+        loading.value = true;
+        
+        await fetchAllPermissions();
+        
+        if (roleId) {
+            await fetchRolePermissions();
+            updatePermissionsWithRoleStatus();
+        }
+        
+        initializeDialogVisibility();
+    } catch (error) {
+        console.debug('Ошибка при загрузке данных:', error);
+    } finally {
+        loading.value = false;
+    }
+};
+
 onMounted(() => {
-    fetchAllPermissions();
-    fetchRolePermissions();
+    fetchData();
 });
 </script>
 

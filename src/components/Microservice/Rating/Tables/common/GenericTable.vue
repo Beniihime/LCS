@@ -676,7 +676,7 @@ defineExpose({
 .section-title {
     font-size: 2rem;
     font-weight: 800;
-    margin: 0 0 0.5rem 0;
+    margin: 0;
     background: linear-gradient(135deg, var(--p-primary-600), var(--p-primary-400));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;

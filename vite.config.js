@@ -4,7 +4,7 @@ import svgLoader from 'vite-svg-loader';
 import mkcert from 'vite-plugin-mkcert';
 import { visualizer } from "rollup-plugin-visualizer";
 import { viteStaticCopy } from 'vite-plugin-static-copy';
-import vueDevTools from 'vite-plugin-vue-devtools';
+// import vueDevTools from 'vite-plugin-vue-devtools';
 import { PrimeVueResolver } from '@primevue/auto-import-resolver';
 import Components from 'unplugin-vue-components/vite';
 
@@ -14,7 +14,7 @@ export default defineConfig({
     vue(),
     svgLoader(),
     mkcert(),
-    vueDevTools(),
+    // vueDevTools(),
     visualizer(),
     viteStaticCopy({
       targets: [

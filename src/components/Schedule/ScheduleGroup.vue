@@ -354,7 +354,7 @@ h4 {
     margin: 0;
 }
 .schedule-details-container {
-    padding: 20px 26rem;
+    padding: 20px 6rem;
     margin: auto;
     color: var(--p-text-color);
     transition: all 0.5s;
