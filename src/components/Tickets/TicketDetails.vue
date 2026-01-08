@@ -775,7 +775,7 @@ const updateAssignee = async () => {
     updatingAssignee.value = true;
 
     try {
-        await axiosInstance.patch(`/api/tickets/${selectedTicket.value.id}/asignee/${selectedAssignee.value.id}`);
+        await axiosInstance.patch(`/api/tickets/${selectedTicket.value.id}/assignee/${selectedAssignee.value.id}`);
         selectedTicket.value.assigneeId = selectedAssignee.value.id;
 
         toast.add({
