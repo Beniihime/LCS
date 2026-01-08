@@ -189,6 +189,19 @@ const routes = [
                     title: 'Уведомления'
                 }
             },
+            // Tickets
+            {
+                path: "/tickets",
+                component: () => import('@/views/TicketsPage.vue'),
+                meta: {
+                    permission: {
+                        type: 'Tickets',
+                        action: 'Read'
+                    },
+                    requiresAuth: true,
+                    title: 'Справки'
+                }
+            },
             // SSO
             {
                 path: "/sso/config",

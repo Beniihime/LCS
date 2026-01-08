@@ -1,5 +1,5 @@
 <template>
-    <SelectButton v-model="selectedTheme" optionValue="value" optionLabel="value" :options="themeOptions" class="mb-4" v-if="!isAuthPage && isSideBarCollapse === false">
+    <SelectButton v-model="selectedTheme" optionValue="value" optionLabel="value" :options="themeOptions" class="mb-2 w-100" v-if="!isAuthPage && isSideBarCollapse === false">
         <template #option="slotProps">
             <i :class="slotProps.option.icon"></i>
         </template>
@@ -111,9 +111,9 @@ function themeToggle() {
 }
 
 .bt1 {
-    position: absolute;
-    bottom: 214px;
-    left: 23px;
+    /* position: absolute; */
+    /* bottom: 214px; */
+    /* left: 23px; */
     width: 30px;
     height: 30px;
     padding: 22px;

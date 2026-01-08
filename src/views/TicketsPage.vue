@@ -1,0 +1,618 @@
+<template>
+    <div class="content">
+        <div class="content-wrapper">
+            <WelcomeScreen :visible="loading"/>
+            <!-- Основная таблица -->
+            <DataTable 
+                lazy
+                v-if="isFirstLoadDone"
+                :value="tickets"
+                paginator
+                scrollable
+                stripedRows
+                :rows="rowsPerPage"
+                :rowClass="rowClass"
+                @row-click="(event) => openTicketModal(event.data.id)"
+                :totalRecords="totalRecords"
+                @page="onPage"
+                :rowsPerPageOptions="[5, 10, 15]"
+                filterDisplay="row"
+                class="tickets-table"
+            >
+                <template #header>
+                    <div class="page-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="page-title">
+                                <h3 class="m-0">
+                                    Справки
+                                </h3>
+                                <p class="text-color-secondary m-0 mt-1">Управление и отслеживание справок</p>
+                            </div>
+                            <div class="page-controls">
+                                <div class="d-flex gap-2 align-items-center">
+                                    <MultiSelect 
+                                        :modelValue="selectedColumns"
+                                        :options="columns"
+                                        optionLabel="header"
+                                        @update:modelValue="onToggle"
+                                        display="chip"
+                                        placeholder="Выберите поля"
+                                        class="column-selector"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </template>
+
+                <template #paginatorstart>
+                    <div class="table-stats">
+                        <div class="stats-item">
+                            <span>Всего заявок: <strong>{{ totalRecords }}</strong></span>
+                        </div>
+                        <div class="stats-item" v-if="filteredCount > 0">
+                            <i class="pi pi-filter text-warning me-2"></i>
+                            <span>Найдено: <strong>{{ filteredCount }}</strong></span>
+                        </div>
+                    </div>
+                </template>
+
+                <template #empty>
+                    <div class="empty-table-state">
+                        <div class="empty-state-icon">
+                            <i class="pi pi-ticket fs-3 text-gray-400"></i>
+                        </div>
+                        <h4 class="mt-3 mb-2">Справки не найдены</h4>
+                        <p class="text-color-secondary mb-4">
+                            {{ hasActiveFilters ? 
+                                'Попробуйте изменить параметры фильтрации' : 
+                                'У вас пока нет справок или они не назначены на вас' 
+                            }}
+                        </p>
+                        <div class="empty-state-actions">
+                            <Button 
+                                label="Обновить" 
+                                icon="pi pi-refresh" 
+                                @click="fetchTickets"
+                                outlined
+                            />
+                        </div>
+                    </div>
+                </template>
+
+                <template #loading>
+                    <div class="loading-state">
+                        <ProgressSpinner style="width: 50px; height: 50px" />
+                        <p class="mt-3 text-color-secondary">Загрузка заявок...</p>
+                    </div>
+                </template>
+
+                <Column
+                    v-for="col in ordinaryColumns"
+                    :field="col.field"
+                    :key="col.field"
+                    :header="col.header"
+                    :showFilterMenu="false"
+                    :sortable="false"
+                >
+                    <template #body="{ data }">
+                        <div class="cell-content" :class="col.field">
+                            <span v-if="col.field === 'createdAt' || col.field === 'updatedAt' || col.field === 'resolvedAt' || col.field === 'closedAt'">
+                                {{ formatDate(data[col.field]) }}
+                            </span>
+                            <span v-else-if="col.field === 'requestType'">
+                                <div class="request-type-cell">
+                                    {{ data.requestType?.name || 'Не указан' }}
+                                </div>
+                            </span>
+                            <span v-else>
+                                {{ data[col.field] }}
+                            </span>
+                        </div>
+                    </template>
+
+                    <template #filter>
+                        <InputText 
+                            v-if="['string', 'number'].includes(col.filterType)"
+                            :value="filters[col.field]" 
+                            :placeholder="col.placeholder" 
+                            @input="event => onFilter(col.field, event.target.value)"
+                            autocomplete="off"
+                            class="filter-input"
+                        />
+                        <Select 
+                            v-else-if="col.filterType === 'select'"
+                            v-model="filters[col.field]" 
+                            :options="getFilterOptions(col.field)"
+                            optionLabel="label"
+                            optionValue="value"
+                            :placeholder="col.placeholder"
+                            @change="onFilter" 
+                            class="filter-select"
+                        />
+                    </template>
+                </Column>
+
+                <Column field="status" header="Статус" :showFilterMenu="false" v-if="selectedColumnFields.includes('status')">
+                    <template #body="{ data }">
+                        <Tag 
+                            :severity="getStatusSeverity(data.status)" 
+                            :value="getStatusLabel(data.status)" 
+                            :icon="getStatusIcon(data.status)"
+                            class="status-tag"
+                        />
+                    </template>
+                    <template #filter>
+                        <Select 
+                            v-model="filters.status" 
+                            :options="statusOptions"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Выберите статус" 
+                            @change="onFilter" 
+                        />
+                    </template>
+                </Column>
+
+                <Column field="priority" header="Приоритет" :showFilterMenu="false" v-if="selectedColumnFields.includes('priority')">
+                    <template #body="{ data }">
+                        <Tag 
+                            :severity="getPrioritySeverity(data.priority)" 
+                            :value="getPriorityLabel(data.priority)" 
+                            class="priority-tag"
+                        />
+                    </template>
+                    <template #filter>
+                        <Select 
+                            v-model="filters.priority" 
+                            :options="priorityOptions"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Выберите приоритет" 
+                            @change="onFilter" 
+                        />
+                    </template>
+                </Column>
+
+                <!-- <Column :exportable="false" header="Действия" style="width: 100px">
+                    <template #body="{ data }">
+                        <Button 
+                            icon="pi pi-eye" 
+                            class="p-button-rounded p-button-text p-button-sm"
+                            @click.stop="openTicketModal(data.id)"
+                            title="Просмотреть детали"
+                        />
+                    </template>
+                </Column> -->
+            </DataTable>
+
+            <!-- Состояние загрузки при первом открытии -->
+            <div v-else-if="loading" class="skeleton-container">
+                <div class="skeleton-header mb-4">
+                    <Skeleton width="200px" height="40px" class="mb-2" />
+                    <Skeleton width="300px" height="20px" />
+                </div>
+                <div class="skeleton-filters mb-4">
+                    <Skeleton width="100%" height="50px" />
+                </div>
+                <Skeleton width="100%" height="100%" class="skeleton-table" />
+            </div>
+        </div>
+
+        <!-- Модальное окно деталей тикета -->
+        <TicketDetailsModal 
+            v-model:visible="ticketModalVisible" 
+            :ticketId="selectedTicketId"
+            @close="handleModalClose"
+        />
+    </div>
+</template>
+
+<script setup>
+import { ref, onMounted, computed } from 'vue';
+import axiosInstance from '@/utils/axios.js';
+import { debounce } from 'lodash';
+import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
+import TicketDetailsModal from '@/components/Tickets/TicketDetails.vue';
+
+const tickets = ref([]);
+const totalRecords = ref(0);
+const loading = ref(true);
+const isFirstLoadDone = ref(false);
+
+// Модальное окно
+const ticketModalVisible = ref(false);
+const selectedTicketId = ref(null);
+
+// Получаем userId из localStorage
+const getUserId = () => {
+    return localStorage.getItem('userId');
+};
+
+const filters = ref({
+    status: null,
+    priority: null,
+    requesterId: null,
+});
+
+const columns = ref([
+    { field: 'requestType', header: 'Тип заявки', placeholder: 'Поиск по типу' },
+    { field: 'status', header: 'Статус', placeholder: 'Выберите статус', filterType: 'select' },
+    { field: 'priority', header: 'Приоритет', placeholder: 'Выберите приоритет', filterType: 'select' },
+    { field: 'requesterSystem', header: 'Система-источник', placeholder: 'Поиск по системе' },
+    { field: 'requesterId', header: 'ID инициатора', placeholder: 'Поиск по ID', filterType: 'string' },
+    { field: 'createdAt', header: 'Дата создания', placeholder: 'Поиск по дате' },
+    { field: 'updatedAt', header: 'Дата обновления', placeholder: 'Поиск по дате' },
+    { field: 'resolvedAt', header: 'Дата решения', placeholder: 'Поиск по дате' },
+    { field: 'closedAt', header: 'Дата закрытия', placeholder: 'Поиск по дате' },
+]);
+
+const defaultColumns = ['requestType', 'status', 'priority', 'createdAt'];
+
+const selectedColumnFields = ref(defaultColumns);
+const selectedColumns = computed(() => 
+    columns.value.filter(c => selectedColumnFields.value.includes(c.field))
+);
+
+const onToggle = (val) => {
+    selectedColumnFields.value = val.map(col => col.field);
+};
+
+const ordinaryColumns = computed(() => 
+    columns.value.filter(c => 
+        selectedColumnFields.value.includes(c.field) && 
+        !['status', 'priority'].includes(c.field)
+    )
+);
+
+const currentPage = ref(1);
+const rowsPerPage = ref(10);
+
+// Маппинг статусов (английский → русский)
+const statusMap = {
+    'New': 'Новая',
+    'Open': 'Открыта',
+    'Assigned': 'Назначена',
+    'Pending': 'В ожидании',
+    'Resolved': 'Решена',
+    'Closed': 'Закрыта',
+    'Cancelled': 'Отменена'
+};
+
+// Маппинг приоритетов (английский → русский)
+const priorityMap = {
+    'Low': 'Низкий',
+    'Medium': 'Средний',
+    'High': 'Высокий'
+};
+
+// Опции для фильтров статусов (с полным списком enum)
+const statusOptions = [
+    { label: "Все", value: null },
+    { label: 'Новая', value: 'New' },
+    { label: 'Открыта', value: 'Open' },
+    { label: 'Назначена', value: 'Assigned' },
+    { label: 'В ожидании', value: 'Pending' },
+    { label: 'Решена', value: 'Resolved' },
+    { label: 'Закрыта', value: 'Closed' },
+    { label: 'Отменена', value: 'Cancelled' },
+];
+
+// Опции для фильтров приоритетов (с полным списком enum)
+const priorityOptions = [
+    { label: "Все", value: null },
+    { label: 'Низкий', value: 'Low' },
+    { label: 'Средний', value: 'Medium' },
+    { label: 'Высокий', value: 'High' },
+];
+
+const getFilterOptions = (field) => {
+    if (field === 'status') return statusOptions;
+    if (field === 'priority') return priorityOptions;
+    return [];
+};
+
+// Компьютированные свойства
+const hasActiveFilters = computed(() => {
+    return Object.values(filters.value).some(value => 
+        value !== null && value !== '' && (!Array.isArray(value) || value.length > 0)
+    );
+});
+
+const filteredCount = computed(() => {
+    if (!hasActiveFilters.value) return totalRecords.value;
+    // В реальном приложении здесь был бы запрос с фильтрами для получения точного числа
+    return tickets.value.length;
+});
+
+const onFilter = (field, value) => {
+    filters.value[field] = value;
+    currentPage.value = 1;
+    debouncedFetchTickets();
+};
+
+const debouncedFetchTickets = debounce(async () => {
+    await fetchTickets();
+}, 500);
+
+const rowClass = () => {
+    return [{ 'pointer': true }];
+};
+
+// Функции для форматирования
+const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleString('ru-RU');
+};
+
+// Функции для стилизации статусов и приоритетов
+const getStatusSeverity = (status) => {
+    const map = {
+        'New': 'info',           // Новая - голубой
+        'Open': 'warning',       // Открыта - оранжевый/желтый
+        'Assigned': 'success',   // Назначена - зеленый
+        'Pending': 'secondary',  // В ожидании - серый
+        'Resolved': 'success',   // Решена - зеленый
+        'Closed': 'secondary',   // Закрыта - серый
+        'Cancelled': 'danger'    // Отменена - красный
+    };
+    return map[status] || 'info';
+};
+
+const getStatusLabel = (status) => {
+    return statusMap[status] || status;
+};
+
+const getStatusIcon = (status) => {
+    const map = {
+        'New': 'pi pi-plus-circle',          // Новая
+        'Open': 'pi pi-folder-open',         // Открыта
+        'Assigned': 'pi pi-verified',      // Назначена
+        'Pending': 'pi pi-hourglass',        // В ожидании
+        'Resolved': 'pi pi-check-circle',    // Решена
+        'Closed': 'pi pi-lock',              // Закрыта
+        'Cancelled': 'pi pi-times-circle'    // Отменена
+    };
+    return map[status] || 'pi pi-info-circle';
+};
+
+const getPrioritySeverity = (priority) => {
+    const map = {
+        'Low': 'success',     // Низкий - зеленый
+        'Medium': 'warning',  // Средний - желтый/оранжевый
+        'High': 'danger'      // Высокий - красный
+    };
+    return map[priority] || 'info';
+};
+
+const getPriorityLabel = (priority) => {
+    return priorityMap[priority] || priority;
+};
+
+// Работа с модальным окном
+const openTicketModal = async (ticketId) => {
+    selectedTicketId.value = ticketId;
+    ticketModalVisible.value = true;
+};
+
+const handleModalClose = () => {
+    fetchTickets();
+};
+
+const onPage = async (event) => {
+    currentPage.value = event.page + 1;
+    rowsPerPage.value = event.rows;
+    await fetchTickets();
+};
+
+const fetchTickets = async () => {
+    try {
+        loading.value = true;
+        const userId = getUserId();
+        
+        const payload = {
+            page: currentPage.value,
+            pageSize: rowsPerPage.value,
+            // assigneeId: userId,
+            ...filters.value,
+        };
+
+        const { data } = await axiosInstance.post('/api/tickets', payload);
+        tickets.value = data.tickets || [];
+        totalRecords.value = data.totalCount || 0;      
+    } catch (error) {
+        console.error('Ошибка при получении заявок:', error);
+    } finally {
+        loading.value = false;
+        isFirstLoadDone.value = true;
+    }
+};
+
+onMounted(async () => {
+    await fetchTickets();
+});
+</script>
+
+<style scoped>
+.content {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    box-sizing: border-box;
+}
+
+.content-wrapper {
+    position: relative;
+    flex-grow: 1;
+    padding: 1rem;
+    height: 100%;
+    color: var(--p-text-color);
+    transition: all 0.5s;
+}
+
+/* Заголовок страницы */
+.page-header {
+    padding: 1rem;
+}
+
+.page-title h3 {
+    display: flex;
+    align-items: center;
+    color: var(--p-text-color);
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.page-title p {
+    font-size: 0.95rem;
+}
+
+.column-selector {
+    min-width: 200px;
+}
+
+/* Статистика таблицы */
+.table-stats {
+    display: flex;
+    gap: 1.5rem;
+    padding: 1rem 0;
+}
+
+.stats-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem;
+    color: var(--p-text-color-secondary);
+}
+
+.stats-item i {
+    font-size: 1.1rem;
+}
+
+.stats-item strong {
+    color: var(--p-text-color);
+    margin-left: 0.25rem;
+}
+
+/* Таблица */
+.tickets-table {
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.tickets-table :deep(.p-datatable-tbody tr) {
+    transition: all 0.2s ease;
+}
+
+/* Ячейки */
+.cell-content {
+    padding: 0.5rem 0;
+}
+
+.request-type-cell {
+    display: flex;
+    align-items: center;
+}
+
+/* Поля фильтрации */
+.filter-input, .filter-select {
+    width: 100% !important;
+}
+
+/* Состояние пустой таблицы */
+.empty-table-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    background-color: var(--p-grey-5);
+    border-radius: 12px;
+}
+
+.empty-state-icon {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: var(--p-grey-3);
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.empty-table-state h4 {
+    color: var(--p-text-color);
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.empty-table-state p {
+    max-width: 400px;
+    line-height: 1.5;
+}
+
+.empty-state-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1rem;
+}
+
+/* Состояние загрузки */
+.loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+}
+
+/* Скелетоны */
+.skeleton-container {
+    padding: 1.5rem;
+}
+
+.skeleton-header {
+    display: flex;
+    flex-direction: column;
+}
+
+.skeleton-filters {
+    margin-bottom: 1.5rem;
+}
+
+.skeleton-table {
+    border-radius: 12px;
+    background-color: var(--p-grey-3);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .content-wrapper {
+        padding: 1rem;
+    }
+    
+    .page-title h3 {
+        font-size: 1.5rem;
+    }
+    
+    .table-stats {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .empty-state-actions {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .empty-table-state {
+        padding: 2rem 1rem;
+    }
+}
+</style>
