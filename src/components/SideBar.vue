@@ -9,180 +9,187 @@
         v-if="isMobile"
     >
         <div class="rectangle" :class="{ 'season-overlay': !collapsed, 'collapsed': collapsed }">
-            <div v-if="debugMode && !collapsed" class="season-debug">
-                <Button 
-                    icon="pi pi-refresh"
-                    @click="cycleSeason"
-                    text
-                    size="small"
-                    v-tooltip="'Сменить сезон'"
-                />
-                <Tag :value="seasonName" :severity="getSeasonSeverity(currentSeason)"/>
+            <div class="sidebar-top">
+                <div v-if="debugMode && !collapsed" class="season-debug">
+                    <Button 
+                        icon="pi pi-refresh"
+                        @click="cycleSeason"
+                        text
+                        size="small"
+                        v-tooltip="'Сменить сезон'"
+                    />
+                    <Tag :value="seasonName" :severity="getSeasonSeverity(currentSeason)"/>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-center logo-wrapper">
+                    <router-link to="/overview" class="logoLCS">
+                        <Lcs />
+                    </router-link>
+                </div>
+
+                <IconField v-if="!collapsed" class="searchBar">
+                    <InputIcon class="pi pi-search" />
+                    <InputText 
+                        id="searchQuery" 
+                        name="searchQuery" 
+                        class="search" 
+                        v-model="searchQuery" 
+                        placeholder="Поиск..." 
+                    />
+                </IconField>
             </div>
 
-            <div class="d-flex align-items-center justify-content-center logo-wrapper">
-                <router-link to="/overview" class="logoLCS">
-                    <Lcs />
-                </router-link>
-            </div>
-            
-            <IconField v-if="!collapsed" class="searchBar">
-                <InputIcon class="pi pi-search" />
-                <InputText 
-                    id="searchQuery" 
-                    name="searchQuery" 
-                    class="search" 
-                    v-model="searchQuery" 
-                    placeholder="Поиск..." 
-                />
-            </IconField>
-
-            <div class="menu" :class="{ 'mt-3': !collapsed, 'my-4': collapsed }">
-                <router-link 
-                    to="/overview" 
-                    class="menu-item" 
-                    active-class="active-link"
-                    v-tooltip.right="collapsed ? 'Главная' : ''"
-                >
-                    <div class="menu-item-content">
-                        <i class="pi pi-home"></i>
-                        <div v-if="!collapsed" class="menucrumb">Главная</div>
-                    </div>
-                </router-link>
-                <router-link 
-                    to="/notif" 
-                    class="menu-item" 
-                    active-class="active-link"
-                    v-tooltip.right="collapsed ? 'Уведомления' : ''"
-                >
-                    <div class="menu-item-content">
-                        <OverlayBadge 
-                            v-if="collapsed && notificationStore.unreadCount > 0" 
-                            :value="notificationStore.unreadCount" 
-                            severity="danger" 
-                            class="notification-badge-collapsed"
-                        />
-                        <Badge 
-                            v-if="!collapsed && notificationStore.unreadCount > 0"
-                            :value="notificationStore.unreadCount"
-                            class="p-badge ms-3"
-                        />
-                        <i class="pi pi-bell"></i>
-                        <div v-if="!collapsed" class="menucrumb">
-                            <span>Уведомления</span>
-                        </div>
-                    </div>
-                </router-link>
-            </div>
-
-            <div class="menu" :class="{ 'mb-4': collapsed }">
-                <div v-if="!collapsed && menuItems" class="general mt-2">Сервисы</div>
-                <div v-for="item in menuItems" :key="item.path">
+            <div class="sidebar-middle">
+                <div class="menu" :class="{ 'mt-3': !collapsed, 'my-4': collapsed }">
                     <router-link 
-                        :to="item.path" 
+                        to="/overview" 
                         class="menu-item" 
                         active-class="active-link"
-                        v-if="checkPermission(item.path) && showRequestsMenu"
-                        v-tooltip.right="collapsed ? item.name : ''"
+                        v-tooltip.right="collapsed ? 'Главная' : ''"
                     >
                         <div class="menu-item-content">
-                            <i :class="item.icon"></i>
+                            <i class="pi pi-home"></i>
+                            <div v-if="!collapsed" class="menucrumb">Главная</div>
+                        </div>
+                    </router-link>
+                    <router-link 
+                        to="/notif" 
+                        class="menu-item" 
+                        active-class="active-link"
+                        v-tooltip.right="collapsed ? 'Уведомления' : ''"
+                    >
+                        <div class="menu-item-content">
+                            <OverlayBadge 
+                                v-if="collapsed && notificationStore.unreadCount > 0" 
+                                :value="notificationStore.unreadCount" 
+                                severity="danger" 
+                                class="notification-badge-collapsed"
+                            />
+                            <i class="pi pi-bell"></i>
                             <div v-if="!collapsed" class="menucrumb">
-                                <span>{{ item.name }}</span>
-                                <Badge 
-                                    v-if="item.path === '/notif' && notificationStore.unreadCount > 0"
-                                    :value="notificationStore.unreadCount"
-                                    class="p-badge ms-3"
-                                />
+                                <span>Уведомления</span>
                             </div>
+                            <Badge 
+                                v-if="!collapsed && notificationStore.unreadCount > 0"
+                                :value="notificationStore.unreadCount"
+                                class="p-badge ms-3"
+                            />
                         </div>
                     </router-link>
                 </div>
+    
+                <div class="menu" :class="{ 'mb-4': collapsed }">
+                    <div v-if="!collapsed && menuItems" class="general mt-2">Сервисы</div>
+                    <div v-for="item in menuItems" :key="item.path">
+                        <router-link 
+                            :to="item.path" 
+                            class="menu-item" 
+                            active-class="active-link"
+                            v-if="checkPermission(item.path) && showRequestsMenu"
+                            v-tooltip.right="collapsed ? item.name : ''"
+                        >
+                            <div class="menu-item-content">
+                                <i :class="item.icon"></i>
+                                <div v-if="!collapsed" class="menucrumb">
+                                    <span>{{ item.name }}</span>
+                                    <Badge 
+                                        v-if="item.path === '/notif' && notificationStore.unreadCount > 0"
+                                        :value="notificationStore.unreadCount"
+                                        class="p-badge ms-3"
+                                    />
+                                </div>
+                            </div>
+                        </router-link>
+                    </div>
+                    <router-link 
+                        to="/schedule" 
+                        class="menu-item" 
+                        active-class="active-link"
+                        v-tooltip.right="collapsed ? 'Расписание' : ''"
+                    >
+                        <div class="menu-item-content">
+                            <i class="pi pi-calendar"></i>
+                            <div v-if="!collapsed" class="menucrumb">Расписание</div>
+                        </div>
+                    </router-link>
+                </div>
+    
+                <div class="menu">
+                    <div v-if="!collapsed && hasPermission('User', 'Read')" class="general mt-2">Администрирование</div>
+                    <div v-for="item in filteredMenuItems" :key="item.path">
+                        <router-link 
+                            :to="item.path" 
+                            class="menu-item"
+                            active-class="active-link"
+                            v-if="checkPermission(item.path)"
+                            v-tooltip.right="collapsed ? item.name : ''"
+                        >
+                            <div class="menu-item-content">
+                                <i :class="item.icon"></i>
+                                <div v-if="!collapsed" class="menucrumb">
+                                    <span>{{ item.name }}</span>
+                                </div>
+                            </div>
+                        </router-link>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="sidebar-bottom">
+
+                <div v-if="!collapsed && allowSeasonSelection" class="season-selector">
+                    <div class="season-label">
+                        <i :class="seasonIcon" class="me-2"></i>
+                        <span>Сезон: {{ seasonName }}</span>
+                    </div>
+                    <Select 
+                        v-model="selectedSeason"
+                        :options="seasonOptions"
+                        optionLabel="name"
+                        optionValue="value"
+                        @change="onSeasonChange"
+                        class="season-select"
+                        :placeholder="'Авто (' + seasonName + ')'"
+                    />
+                </div>
+
+                <ThemeSwitcher :isSideBarCollapse="collapsed" />
+
                 <router-link 
-                    to="/schedule" 
-                    class="menu-item" 
-                    active-class="active-link"
-                    v-tooltip.right="collapsed ? 'Расписание' : ''"
+                    class="profile" 
+                    :to="userId ? `/profile?id=${userId}${!collapsed ? '&r=' + roleId : ''}` : '/profile'"
+                    v-tooltip.right="collapsed ? 'Профиль' : ''"
                 >
-                    <div class="menu-item-content">
-                        <i class="pi pi-calendar"></i>
-                        <div v-if="!collapsed" class="menucrumb">Расписание</div>
+                    <div class="profile-content">
+                        <div class="avatar-wrapper">
+                            <Avatar 
+                                :label="initials" 
+                                size="xlarge" 
+                                shape="circle" 
+                                class="initials-circle"
+                            />
+                        </div>
+                        <div v-if="!collapsed" class="profile-info">
+                            <div class="middle">
+                                <div class="name">{{ fullName }}</div>
+                                <div class="email">
+                                    {{ email }}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </router-link>
-            </div>
 
-            <div class="menu">
-                <div v-if="!collapsed && hasPermission('User', 'Read')" class="general mt-2">Администрирование</div>
-                <div v-for="item in filteredMenuItems" :key="item.path">
-                    <router-link 
-                        :to="item.path" 
-                        class="menu-item"
-                        active-class="active-link"
-                        v-if="checkPermission(item.path)"
-                        v-tooltip.right="collapsed ? item.name : ''"
-                    >
-                        <div class="menu-item-content">
-                            <i :class="item.icon"></i>
-                            <div v-if="!collapsed" class="menucrumb">
-                                <span>{{ item.name }}</span>
+                <div class="row mt-2">
+                    <div class="col">
+                        <button @click="confirmLogout()" class="logout-button" v-tooltip.right="collapsed ? 'Выйти' : ''">
+                            <div class="logout-content" :class="{ 'collapsed': collapsed }">
+                                <LogoutSvg class="logout-icon"/>
+                                <p v-if="!collapsed" class="logout-text">Выйти из аккаунта</p>
                             </div>
-                        </div>
-                    </router-link>
-                </div>
-            </div>
-
-            <Divider style="margin-top: auto;" />
-            
-            <div v-if="!collapsed && allowSeasonSelection" class="season-selector">
-                <div class="season-label">
-                    <i :class="seasonIcon" class="me-2"></i>
-                    <span>Сезон: {{ seasonName }}</span>
-                </div>
-                <Select 
-                    v-model="selectedSeason"
-                    :options="seasonOptions"
-                    optionLabel="name"
-                    optionValue="value"
-                    @change="onSeasonChange"
-                    class="season-select"
-                    :placeholder="'Авто (' + seasonName + ')'"
-                />
-            </div>
-
-            <ThemeSwitcher :isSideBarCollapse="collapsed"/>
-            
-            <router-link 
-                class="profile" 
-                :to="userId ? `/profile?id=${userId}${!collapsed ? '&r=' + roleId : ''}` : '/profile'"
-                v-tooltip.right="collapsed ? 'Профиль' : ''"
-            >
-                <div class="profile-content">
-                    <div class="avatar-wrapper">
-                        <Avatar 
-                            :label="initials" 
-                            size="xlarge" 
-                            shape="circle" 
-                            class="initials-circle"
-                        />
+                        </button>
                     </div>
-                    <div v-if="!collapsed" class="profile-info">
-                        <div class="middle">
-                            <div class="name">{{ fullName }}</div>
-                            <div class="email">
-                                {{ email }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </router-link>
-            <div class="row mt-2">
-                <div class="col">
-                    <button @click="confirmLogout()" class="logout-button" v-tooltip.right="collapsed ? 'Выйти' : ''">
-                        <div class="logout-content" :class="{ 'collapsed': collapsed }">
-                            <LogoutSvg class="logout-icon"/>
-                            <p v-if="!collapsed" class="logout-text">Выйти из аккаунта</p>
-                        </div>
-                    </button>
                 </div>
             </div>
         </div>
@@ -274,6 +281,7 @@ const menuItemsAdmin = [
 
 const menuItems = [
     { name: 'Заявки', path: '/requests', icon: 'pi pi-pen-to-square' },
+    { name: 'Справки', path: '/tickets', icon: 'pi pi-ticket' }
 ];
 
 const filteredMenuItems = computed(() => {
@@ -296,7 +304,8 @@ const checkPermission = (path) => {
         '/users': hasPermission('User', 'Read'),
         '/services': hasPermission('InfraManager', 'Read'),
         '/sso/config': hasPermission('SsoResource', 'Read'),
-        '/autorole': hasPermission('RoleAutoAssigner', 'Read')
+        '/autorole': hasPermission('RoleAutoAssigner', 'Read'),
+        '/tickets': hasPermission('Tickets', 'Read')
     };
     return permissionMap[path] !== undefined ? permissionMap[path] : true;
 };
@@ -514,7 +523,7 @@ const checkIsMobile = () => {
 
 .sidebar-container.season-spring::before {
     background-image: url('/src/assets/backgrounds/spring.webp');
-    opacity: 0.2;
+    opacity: 0.4;
 }
 
 .sidebar-container.season-summer::before {
@@ -537,17 +546,18 @@ const checkIsMobile = () => {
     display: flex;
     flex-direction: column;
     width: 100%;
+    height: 100%;
     padding: 1.5rem 1rem;
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     border-right: 1px solid rgba(255, 255, 255, 0.1);
     overflow: hidden;
     will-change: transform, padding;
-    flex-shrink: 0;
     background: linear-gradient(
         180deg,
         rgba(var(--p-bg-color-rgb), 0.95) 0%,
         rgba(var(--p-bg-color-2-rgb), 0.85) 100%
     );
+    position: relative;
 }
 
 .rectangle.season-overlay {
@@ -556,13 +566,123 @@ const checkIsMobile = () => {
         var(--season-gradient-start) 0%,
         var(--season-gradient-end) 100%
     );
-    position: relative;
     z-index: 1;
 }
 
 .rectangle.collapsed {
     padding: 1.5rem 0.5rem;
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
+}
+
+/* ============ СТРУКТУРНЫЕ БЛОКИ ============ */
+.sidebar-top {
+    flex-shrink: 0;
+    z-index: 2;
+}
+
+.sidebar-middle {
+    position: relative;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin: 1rem 0;
+    padding-bottom: 25px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(var(--p-blue-500-rgb), 0.5) transparent;
+
+    mask-image: linear-gradient(
+        to bottom,
+        transparent 0%,
+        black 4%,
+        black 96%,
+        transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0%,
+        black 4%,
+        black 96%,
+        transparent 100%
+    );
+}
+
+/* Фоновый градиент */
+.sidebar-middle::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    opacity: 0.3;
+    
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.8) 100%
+    );
+    
+    .p-dark & {
+        background: linear-gradient(
+            180deg,
+            rgba(0, 0, 0, 0) 0%,
+            rgba(0, 0, 0, 0.6) 100%
+        );
+    }
+}
+
+.sidebar-middle::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-middle::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 2px;
+}
+
+.sidebar-middle::-webkit-scrollbar-thumb {
+    background: rgba(var(--p-blue-500), 0.3);
+    border-radius: 2px;
+    transition: background 0.3s ease;
+}
+
+.sidebar-middle::-webkit-scrollbar-thumb:hover {
+    background: rgba(var(--p-blue-500), 0.5);
+}
+
+.sidebar-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-top: 0.5rem;
+    z-index: 2;
+    width: 100%;
+    box-sizing: border-box;
+}
+.rectangle.collapsed .sidebar-bottom {
+    padding: 0.125rem 0;
+}
+.rectangle:not(.collapsed) .sidebar-bottom {
+    align-items: stretch;
+}
+.rectangle.collapsed .sidebar-bottom {
+    align-items: center;
+}
+.rectangle.collapsed .profile {
+    padding: 0.5rem;
+    justify-content: center;
+}
+
+.rectangle.collapsed .initials-circle {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 14px;
+}
+
+.rectangle.collapsed .logout-button {
+    padding: 0.5rem;
+    justify-content: center;
 }
 
 /* ============ ЛОГОТИП ============ */
@@ -658,7 +778,6 @@ const checkIsMobile = () => {
     text-decoration: none;
     color: var(--p-text-color);
     border: 2px solid transparent;
-    overflow: hidden;
     contain: layout;
     background: transparent;
 }
@@ -681,7 +800,6 @@ const checkIsMobile = () => {
 .menu-item:hover {
     background: var(--p-blue-500-low-op) !important;
     color: rgb(var(--p-color-icon-menu));
-    transform: translateX(4px);
 }
 
 .menu-item.active-link {
@@ -785,10 +903,10 @@ const checkIsMobile = () => {
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     text-decoration: none;
     color: var(--p-text-color);
-    margin-top: 1rem;
     background: rgba(255, 255, 255, 0.05);
     border: 2px solid transparent;
     contain: layout;
+    width: 100%;
 }
 
 .profile:hover {
@@ -882,13 +1000,11 @@ const checkIsMobile = () => {
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     color: var(--p-text-color);
     cursor: pointer;
-    margin-top: 0.5rem;
     contain: layout;
 }
 
 .logout-button:hover {
     border-color: var(--p-red-500);
-    transform: translateX(4px);
     color: var(--p-red-500);
 }
 
@@ -950,16 +1066,11 @@ const checkIsMobile = () => {
 
 .notification-badge-collapsed {
     position: absolute;
-    top: 6px;
-    right: 6px;
+    top: 10px;
+    right: 20px;
     z-index: 10;
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     transform-origin: center;
-    box-shadow: 0 2px 8px rgba(var(--p-red-500-rgb), 0.3);
-}
-
-.menu-item:hover .notification-badge-collapsed {
-    transform: scale(1.1);
 }
 
 /* ============ SEASON SELECTOR ============ */
@@ -1120,10 +1231,41 @@ const checkIsMobile = () => {
     }
 }
 
+@media (max-height: 700px) {
+    .sidebar-middle {
+        margin: 0.5rem 0;
+    }
+    
+    .menu {
+        margin-bottom: 0.75rem;
+    }
+    
+    .menu-item {
+        height: 42px;
+    }
+    
+    .scroll-fade {
+        height: 40px;
+        bottom: calc(100% - 40px);
+    }
+}
+
+/* ============ ЭФФЕКТ ПРИ СКРОЛЛЕ ============ */
+.sidebar-middle.scrolling::after {
+    opacity: 1;
+}
+
 /* ============ PRINT STYLES ============ */
 @media print {
     .sidebar-container {
         display: none;
+    }
+}
+
+/* ============ ОПТИМИЗАЦИЯ ДЛЯ IOS ============ */
+@supports (-webkit-touch-callout: none) {
+    .sidebar-middle {
+        -webkit-overflow-scrolling: touch;
     }
 }
 </style>
