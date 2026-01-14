@@ -189,6 +189,19 @@ const routes = [
                     title: 'Уведомления'
                 }
             },
+            // ResponsibleTicketStudentGroup
+            {
+                path: "/tickets/responsibles",
+                component: () => import('@/views/ResponsibleTicketsStudentGroup.vue'),
+                meta: {
+                    permission: {
+                        type: 'ResponsibleTicketStudentGroup',
+                        action: 'Read'
+                    },
+                    requiresAuth: true,
+                    title: 'Ответственные(справки)'
+                }
+            },
             // Tickets
             {
                 path: "/tickets",

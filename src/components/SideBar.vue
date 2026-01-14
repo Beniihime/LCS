@@ -276,7 +276,8 @@ const menuItemsAdmin = [
     { name: 'Роли', path: '/rbac', icon: 'pi pi-sitemap' },
     { name: 'Микросервисы', path: '/services', icon: 'pi pi-desktop' },
     { name: 'Настройка SSO', path: '/sso/config', icon: 'pi pi-cog' },
-    { name: 'Авто-Роли', path: '/autorole', icon: 'pi pi-objects-column' }
+    { name: 'Авто-Роли', path: '/autorole', icon: 'pi pi-objects-column' },
+    { name: 'Ответственные (справки)', path: '/tickets/responsibles', icon: 'pi pi-user-plus' }
 ];
 
 const menuItems = [

@@ -24,7 +24,7 @@
                     <p class="resource-description">{{ resource.description }}</p>
                 </div>
                 <div class="w-100">
-                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-2">
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xxl-4 g-2">
                         <div v-for="permission in resource.permissions" :key="permission.id" class="col">
                             <div class="permission-item h-100">
                                 <div class="permission-header">
@@ -254,7 +254,7 @@ onMounted(() => {
     font-size: 1.1rem;
     font-weight: bold;
     margin: 0;
-    max-width: calc(100% - 120px);
+    max-width: calc(100% - 70px);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

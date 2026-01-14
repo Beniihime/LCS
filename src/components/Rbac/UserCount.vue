@@ -1,11 +1,11 @@
 <template>
     <p class="card-text my-0" @click="showUsersWithRole">
-        <div style="cursor: pointer;" class="d-flex align-items-center counter">
+        <span style="cursor: pointer;" class="d-flex align-items-center counter">
             <span class="count me-2">
                 {{ userCount || 0 }}
             </span>
             <i class="pi pi-user"></i>
-        </div>
+        </span>
     </p>
     <div class="d-flex justify-content-center">
         <Dialog header="Пользователи с ролью" v-model:visible="visible" @hide="visible = false" modal style="width: 50vw">

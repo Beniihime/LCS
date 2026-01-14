@@ -1,53 +1,187 @@
 export const useFormDataProcessor = () => {
-    // Маппинг полей формы
-    const formFieldLabels = {
-        'fio': 'ФИО',
-        'eduCode': 'Код направления',
-        'eduGroup': 'Группа',
-        'eduFaculty': 'Институт',
-        'certificateType': 'Тип справки',
-        'certificateCount': 'Количество',
-        'name': 'Имя',
-        'email': 'Email',
-        'phone': 'Телефон',
-        'description': 'Описание',
-        'message': 'Сообщение',
-        'subject': 'Тема',
-        'category': 'Категория',
-        'department': 'Отдел',
-        'status': 'Статус',
-        'comments': 'Комментарии'
+    // Динамическая обработка данных формы на основе formSchema
+    const processFormData = (formData, formSchema = []) => {
+        const parsed = parseFormData(formData);
+        if (!parsed) return { 
+            fields: [], 
+            groupedFields: {},
+            fioField: null, 
+            studentInfo: null,
+            certificateInfo: null
+        };
+
+        const fields = [];
+        const groupedFields = {};
+        
+        // Сначала обрабатываем поля, которые есть в formSchema
+        formSchema.forEach(schemaField => {
+            const key = schemaField.name;
+            const value = parsed[key];
+            
+            if (value === null || value === undefined || value === '') return;
+            
+            const label = schemaField.label || key;
+            let formattedValue = value;
+            
+            // Обработка в зависимости от типа поля
+            if (schemaField.type === 'Select' && schemaField.options && schemaField.options.length > 0) {
+                const option = schemaField.options.find(opt => opt.value === value || opt.value === String(value));
+                if (option) {
+                    formattedValue = option.label;
+                }
+            }
+            
+            // Специальное форматирование для некоторых полей
+            switch (key) {
+                case 'fio':
+                    formattedValue = String(value).split(' ')
+                        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                        .join(' ');
+                    break;
+                case 'certificateCount':
+                    formattedValue = `${value}`;
+                    break;
+                case 'eduGroup':
+                case 'eduCode':
+                case 'companyName':
+                case 'companyPhone':
+                    formattedValue = String(value).trim();
+                    break;
+                default:
+                    if (typeof value === 'object') {
+                        formattedValue = JSON.stringify(value, null, 2);
+                    } else if (Array.isArray(value)) {
+                        formattedValue = value.join(', ');
+                    } else {
+                        formattedValue = String(value);
+                    }
+            }
+            
+            const fieldData = {
+                key,
+                label,
+                value: formattedValue,
+                rawValue: value,
+                type: schemaField.type || 'Text',
+                required: schemaField.required || false,
+                schemaField // сохраняем всю схему для дальнейшего использования
+            };
+            
+            fields.push(fieldData);
+            
+            // Группируем поля по категориям для удобства
+            const category = getFieldCategory(key, schemaField);
+            if (!groupedFields[category]) {
+                groupedFields[category] = [];
+            }
+            groupedFields[category].push(fieldData);
+        });
+        
+        // Также обрабатываем поля, которые есть в formData, но не описаны в schema
+        Object.entries(parsed).forEach(([key, value]) => {
+            if (formSchema.find(f => f.name === key) || value === null || value === undefined || value === '') {
+                return;
+            }
+            
+            const label = key;
+            let formattedValue = value;
+            
+            if (typeof value === 'object') {
+                formattedValue = JSON.stringify(value, null, 2);
+            } else if (Array.isArray(value)) {
+                formattedValue = value.join(', ');
+            } else {
+                formattedValue = String(value);
+            }
+            
+            const fieldData = {
+                key,
+                label,
+                value: formattedValue,
+                rawValue: value,
+                type: 'Text',
+                required: false,
+                schemaField: null
+            };
+            
+            fields.push(fieldData);
+            
+            const category = getFieldCategory(key, null);
+            if (!groupedFields[category]) {
+                groupedFields[category] = [];
+            }
+            groupedFields[category].push(fieldData);
+        });
+
+        // Извлекаем специальные поля
+        const fioField = fields.find(f => f.key === 'fio');
+        
+        // Собираем студенческую информацию
+        const studentFields = ['eduFaculty', 'eduGroup', 'eduCode'];
+        const hasStudentInfo = studentFields.some(field => parsed[field]);
+        const studentInfo = hasStudentInfo ? {
+            faculty: fields.find(f => f.key === 'eduFaculty')?.value || 'Институт не указан',
+            group: fields.find(f => f.key === 'eduGroup')?.value || 'Группа не указана',
+            code: fields.find(f => f.key === 'eduCode')?.value || null
+        } : null;
+
+        // Собираем информацию о справках
+        const certificateFields = fields.filter(f => 
+            f.key.includes('certificate') || 
+            f.key.includes('company') ||
+            f.label.toLowerCase().includes('справк') ||
+            f.label.toLowerCase().includes('организац')
+        );
+        
+        const certificateInfo = certificateFields.length > 0 ? {
+            type: fields.find(f => f.key === 'certificateType')?.rawValue,
+            count: fields.find(f => f.key === 'certificateCount')?.rawValue || 0,
+            companyName: fields.find(f => f.key === 'companyName')?.value,
+            companyPhone: fields.find(f => f.key === 'companyPhone')?.value,
+            fields: certificateFields
+        } : null;
+
+        return {
+            fields,
+            groupedFields,
+            fioField,
+            studentInfo,
+            certificateInfo,
+            hasCertificateInfo: certificateInfo !== null,
+            hasStudentInfo: studentInfo !== null
+        };
     };
 
-    // Маппинг иконок для полей
-    const fieldIcons = {
-        'fio': 'pi pi-user',
-        'eduCode': 'pi pi-code',
-        'eduGroup': 'pi pi-users',
-        'eduFaculty': 'pi pi-building',
-        'certificateType': 'pi pi-file',
-        'certificateCount': 'pi pi-copy',
-        'email': 'pi pi-envelope',
-        'phone': 'pi pi-phone',
-        'description': 'pi pi-align-left',
-        'default': 'pi pi-info-circle'
+    // Определяем категорию поля для группировки
+    const getFieldCategory = (key, schemaField) => {
+        // Если есть категория в схеме, используем её
+        if (schemaField?.category) {
+            return schemaField.category;
+        }
+        
+        // Автоматическое определение по ключу
+        const keyLower = key.toLowerCase();
+        if (keyLower.includes('fio') || keyLower.includes('фио') || keyLower.includes('name')) {
+            return 'personal';
+        } else if (keyLower.includes('edu') || keyLower.includes('group') || keyLower.includes('faculty')) {
+            return 'education';
+        } else if (keyLower.includes('certificate') || keyLower.includes('company') || 
+                  keyLower.includes('справк') || keyLower.includes('организац')) {
+            return 'certificate';
+        } else if (keyLower.includes('email') || keyLower.includes('phone') || keyLower.includes('contact')) {
+            return 'contacts';
+        } else if (keyLower.includes('description') || keyLower.includes('message') || 
+                  keyLower.includes('comment') || keyLower.includes('details')) {
+            return 'details';
+        }
+        
+        return 'other';
     };
 
-    // Маппинг типов справок
-    const certificateTypeMap = {
-        'ПФ': 'Для Пенсионного фонда',
-        'Общая': 'Общая справка',
-        'PF': 'Для Пенсионного фонда',
-        'General': 'Общая справка'
-    };
-
-    // Форматирование типа справки
-    const formatCertificateType = (type) => {
-        return certificateTypeMap[type] || type;
-    };
-
-    // Получение класса для типа справки
+    // Получение класса для типа справки (для обратной совместимости)
     const getCertificateTypeClass = (type) => {
+        if (!type) return 'type-default';
+        
         const map = {
             'ПФ': 'type-pfr',
             'PF': 'type-pfr',
@@ -55,6 +189,19 @@ export const useFormDataProcessor = () => {
             'General': 'type-general'
         };
         return map[type] || 'type-default';
+    };
+
+    // Форматирование типа справки (для обратной совместимости)
+    const formatCertificateType = (type) => {
+        if (!type) return type;
+        
+        const map = {
+            'ПФ': 'Для Пенсионного фонда',
+            'Общая': 'Общая справка / По месту требования',
+            'PF': 'Для Пенсионного фонда',
+            'General': 'Общая справка / По месту требования'
+        };
+        return map[type] || type;
     };
 
     // Парсинг данных формы
@@ -71,96 +218,41 @@ export const useFormDataProcessor = () => {
         }
     };
 
-    // Структурирование полей формы
-    const processFormData = (formData) => {
-        const parsed = parseFormData(formData);
-        if (!parsed) return { fields: [], fioField: null, certificateFields: [], otherFields: [] };
-
-        const fields = [];
+    // Генерация отображаемого имени для поля
+    const getFieldDisplayName = (key, schemaField) => {
+        if (schemaField?.label) {
+            return schemaField.label;
+        }
         
-        Object.entries(parsed).forEach(([key, value]) => {
-            if (value === null || value === undefined || value === '') return;
-            
-            const label = formFieldLabels[key] || key;
-            let formattedValue = value;
-            
-            switch (key) {
-                case 'certificateType':
-                    formattedValue = formatCertificateType(value);
-                    break;
-                case 'certificateCount':
-                    formattedValue = `${value}`;
-                    break;
-                case 'fio':
-                    formattedValue = value.toString().split(' ')
-                        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                        .join(' ');
-                    break;
-                case 'eduGroup':
-                    formattedValue = value.toString().trim();
-                    break;
-                case 'eduCode':
-                    formattedValue = value.toString().trim();
-                    break;
-                default:
-                    if (typeof value === 'object') {
-                        formattedValue = JSON.stringify(value, null, 2);
-                    } else if (Array.isArray(value)) {
-                        formattedValue = value.join(', ');
-                    }
-            }
-            
-            fields.push({
-                key,
-                label,
-                value: formattedValue,
-                rawValue: value
-            });
-        });
-
-        const priorityOrder = ['fio', 'eduFaculty', 'eduCode', 'eduGroup', 'certificateType', 'certificateCount'];
-        const sortedFields = fields.sort((a, b) => {
-            const aIndex = priorityOrder.indexOf(a.key);
-            const bIndex = priorityOrder.indexOf(b.key);
-            
-            if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
-            if (aIndex !== -1) return -1;
-            if (bIndex !== -1) return 1;
-            
-            return a.label.localeCompare(b.label);
-        });
-
-        const fioField = sortedFields.find(f => f.key === 'fio');
-        const certificateFields = sortedFields.filter(f => ['certificateType', 'certificateCount'].includes(f.key));
-        const otherFields = sortedFields.filter(f => !['fio', 'certificateType', 'certificateCount'].includes(f.key));
-        const certificateTypeValue = certificateFields.find(f => f.key === 'certificateType')?.rawValue;
-        const certificateCountValue = certificateFields.find(f => f.key === 'certificateCount')?.rawValue || 0;
-
-        const faculty = sortedFields.find(f => f.key === 'eduFaculty')?.value;
-        const group = sortedFields.find(f => f.key === 'eduGroup')?.value;
-        const code = sortedFields.find(f => f.key === 'eduCode')?.value;
-        
-        const studentInfo = (faculty || group || code) ? {
-            faculty: faculty || 'Институт не указан',
-            group: group || 'Группа не указана',
-            code: code || null
-        } : null;
-
-        return {
-            fields: sortedFields,
-            fioField,
-            certificateFields,
-            otherFields,
-            certificateTypeValue,
-            certificateCountValue,
-            studentInfo
+        const nameMap = {
+            'fio': 'ФИО',
+            'eduCode': 'Код направления',
+            'eduGroup': 'Группа',
+            'eduFaculty': 'Институт',
+            'certificateType': 'Тип справки',
+            'certificateCount': 'Количество',
+            'companyName': 'Наименование организации',
+            'companyPhone': 'Телефон организации',
+            'name': 'Имя',
+            'email': 'Email',
+            'phone': 'Телефон',
+            'description': 'Описание',
+            'message': 'Сообщение',
+            'subject': 'Тема',
+            'category': 'Категория',
+            'department': 'Отдел',
+            'status': 'Статус',
+            'comments': 'Комментарии'
         };
+        
+        return nameMap[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
     };
 
     return {
         processFormData,
         getCertificateTypeClass,
         formatCertificateType,
-        parseFormData
+        parseFormData,
+        getFieldDisplayName
     };
 };

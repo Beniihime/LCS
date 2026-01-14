@@ -51,10 +51,21 @@
                         <div class="stats-item">
                             <span>Всего заявок: <strong>{{ totalRecords }}</strong></span>
                         </div>
-                        <div class="stats-item" v-if="filteredCount > 0">
-                            <i class="pi pi-filter text-warning me-2"></i>
-                            <span>Найдено: <strong>{{ filteredCount }}</strong></span>
-                        </div>
+                    </div>
+                </template>
+
+                <template #paginatorend>
+                    <div class="d-flex align-items-center gap-2">
+                        <Checkbox 
+                            v-model="onlyMyTickets"
+                            binary
+                            inputId="onlyMyTickets"
+                            :disabled="!canReadTickets"
+                            @change="onAssigneeToggle"
+                        />
+                        <label for="onlyMyTickets" class="cursor-pointer">
+                            Только мои заявки
+                        </label>
                     </div>
                 </template>
 
@@ -215,6 +226,9 @@ import axiosInstance from '@/utils/axios.js';
 import { debounce } from 'lodash';
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import TicketDetailsModal from '@/components/Tickets/TicketDetails.vue';
+import { usePermissionStore } from '@/stores/permissions';
+
+const permissionStore = usePermissionStore();
 
 const tickets = ref([]);
 const totalRecords = ref(0);
@@ -228,6 +242,17 @@ const selectedTicketId = ref(null);
 // Получаем userId из localStorage
 const getUserId = () => {
     return localStorage.getItem('userId');
+};
+
+const onlyMyTickets = ref(true);
+
+const canReadTickets = computed(() => {
+    return permissionStore.hasPermission('Tickets', 'Read');
+});
+
+const onAssigneeToggle = () => {
+    currentPage.value = 1;
+    fetchTickets();
 };
 
 const filters = ref({
@@ -414,9 +439,12 @@ const fetchTickets = async () => {
         const payload = {
             page: currentPage.value,
             pageSize: rowsPerPage.value,
-            // assigneeId: userId,
             ...filters.value,
         };
+
+        if (onlyMyTickets.value && canReadTickets.value) {
+            payload.assigneeId = userId;
+        }
 
         const { data } = await axiosInstance.post('/api/tickets', payload);
         tickets.value = data.tickets || [];

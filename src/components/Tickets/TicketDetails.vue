@@ -128,11 +128,11 @@
                                     <div class="user-info">
                                         <div class="user-name">{{ formDataInfo.fioField.value }}</div>
                                         <div v-if="formDataInfo.studentInfo" class="user-details">
-                                            <span class="info-badge edu-badge">
+                                            <span v-if="formDataInfo.studentInfo.faculty !== 'Институт не указан'" class="info-badge edu-badge">
                                                 <i class="pi pi-graduation-cap"></i>
                                                 {{ formDataInfo.studentInfo.faculty }}
                                             </span>
-                                            <span class="info-badge group-badge">
+                                            <span v-if="formDataInfo.studentInfo.group !== 'Группа не указана'" class="info-badge group-badge">
                                                 <i class="pi pi-users"></i>
                                                 {{ formDataInfo.studentInfo.group }}
                                             </span>
@@ -145,23 +145,56 @@
                                 </div>
 
                                 <!-- Карточка заказа справок -->
-                                <div v-if="formDataInfo.certificateFields.length > 0" class="certificate-card">
+                                <div v-if="formDataInfo.certificateInfo" class="certificate-card">
                                     <div class="certificate-header">
                                         <i class="pi pi-file"></i>
-                                        <span>Заказ справок</span>
+                                        <span>Информация о справке</span>
                                     </div>
                                     <div class="certificate-details">
-                                        <div class="certificate-type">
-                                            <span class="type-badge" :class="getCertificateTypeClass(formDataInfo.certificateTypeValue)">
-                                                {{ formatCertificateType(formDataInfo.certificateTypeValue) }}
-                                            </span>
-                                        </div>
-                                        <div class="certificate-count">
-                                            <div class="count-display">
-                                                <span class="count-number">{{ formDataInfo.certificateCountValue }}</span>
-                                                <span class="count-label">шт.</span>
+                                        <!-- Динамически рендерим поля справки -->
+                                        <div v-for="field in formDataInfo.certificateInfo.fields" 
+                                            :key="field.key" 
+                                            class="certificate-field">
+                                            
+                                            <!-- Для типа справки показываем badge -->
+                                            <div v-if="field.key === 'certificateType'" class="certificate-type">
+                                                <span class="type-badge" :class="getCertificateTypeClass(field.rawValue)">
+                                                    {{ formatCertificateType(field.rawValue) }}
+                                                </span>
                                             </div>
-                                            <div class="count-description">Количество</div>
+                                            
+                                            <!-- Для количества справок показываем счётчик -->
+                                            <div v-else-if="field.key === 'certificateCount'" class="certificate-count">
+                                                <div class="count-display">
+                                                    <span class="count-number">{{ field.value }}</span>
+                                                    <span class="count-label">шт.</span>
+                                                </div>
+                                                <div class="count-description">{{ field.label }}</div>
+                                            </div>
+                                            
+                                            <!-- Для остальных полей справки -->
+                                            <div v-else class="certificate-field-item">
+                                                <strong>{{ field.label }}:</strong>
+                                                <span>{{ field.value }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Динамическое отображение остальных полей -->
+                                <div v-if="hasOtherFields" class="other-fields-section">
+                                    <div v-for="category in Object.keys(formDataInfo.groupedFields)" 
+                                        :key="category"
+                                        v-if="shouldShowCategory(category)"
+                                        class="field-category">
+                                        <h5>{{ getCategoryLabel(category) }}</h5>
+                                        <div class="field-grid">
+                                            <div v-for="field in formDataInfo.groupedFields[category]" 
+                                                :key="field.key"
+                                                class="field-item">
+                                                <div class="field-label">{{ field.label }}:</div>
+                                                <div class="field-value">{{ field.value }}</div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -182,7 +215,7 @@
                                         <i class="pi pi-user-plus"></i>
                                         <div>
                                             <div class="participant-label">Инициатор</div>
-                                            <div class="participant-value">{{ selectedTicket.requesterId || 'Не указан' }}</div>
+                                            <div class="participant-value">{{ getRequesterName }}</div>
                                         </div>
                                     </div>
                                     <div class="participant-item">
@@ -226,7 +259,11 @@
                                     <div class="comment-header">
                                         <div class="comment-author">
                                             <i class="pi pi-user me-2"></i>
-                                            <span class="font-semibold">ID автора: {{ comment.authorId }}</span>
+                                            <span class="font-semibold">{{ comment.authorName }}</span>
+                                            <small v-if="comment.authorId && !comment.authorName" 
+                                                class="text-muted ms-2">
+                                                (ID: {{ comment.authorId }})
+                                            </small>
                                         </div>
                                         <div class="comment-date">
                                             {{ formatDate(comment.createdAt) }}
@@ -426,7 +463,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, onMounted } from 'vue';
 import axiosInstance from '@/utils/axios.js';
 import { useToast } from 'primevue/usetoast';
 import { useTicket } from './composables/useTicket.js';
@@ -510,6 +547,10 @@ const fileUploadRef = ref(null);
 const statusPanel = ref(null);
 const confirm = useConfirm();
 
+const users = ref([]);
+const usersMap = ref({});
+const loadingUsers = ref(false);
+
 // Исполнитель
 const selectedAssignee = ref(null); // выбранный исполнитель
 const filteredAssignees = ref([]); // список для AutoComplete
@@ -538,9 +579,39 @@ const allowedFileTypes = [
 // Компьютед свойства
 const formDataInfo = computed(() => 
     selectedTicket.value?.formData 
-        ? processFormData(selectedTicket.value.formData)
+        ? processFormData(selectedTicket.value.formData, formSchema.value)
         : null
 );
+
+const formSchema = computed(() => selectedTicket.value?.requestType?.formSchema || []);
+
+const hasOtherFields = computed(() => {
+    if (!formDataInfo.value?.groupedFields) return false;
+    
+    const excludedCategories = ['personal', 'education', 'certificate'];
+    return Object.keys(formDataInfo.value.groupedFields).some(category => 
+        !excludedCategories.includes(category) && 
+        formDataInfo.value.groupedFields[category].length > 0
+    );
+});
+
+const shouldShowCategory = (category) => {
+    const excludedCategories = ['personal', 'education', 'certificate'];
+    return !excludedCategories.includes(category) && 
+            formDataInfo.value?.groupedFields[category]?.length > 0;
+};
+
+const getCategoryLabel = (category) => {
+    const labels = {
+        'personal': 'Личные данные',
+        'education': 'Образование',
+        'certificate': 'Справка',
+        'contacts': 'Контактная информация',
+        'details': 'Детали заявки',
+        'other': 'Дополнительная информация'
+    };
+    return labels[category] || category;
+};
 
 const timelineEvents = computed(() => 
     createTimelineEvents(selectedTicket.value)
@@ -726,11 +797,73 @@ const confirmStatusChange = (newStatus) => {
     });
 };
 
+const getUserName = (userId) => {
+    if (!userId) return 'Неизвестный пользователь';
+    
+    // Проверяем, что usersMap.value существует и имеет ключ
+    if (!usersMap.value || typeof usersMap.value !== 'object') {
+        return `ID: ${userId}`;
+    }
+    
+    const user = usersMap.value[userId];
+    if (!user) return `ID: ${userId}`;
+    return user.fullName || `ID: ${userId}`;
+};
+
+const loadUsers = async () => {
+    if (loadingUsers.value) return;
+    
+    loadingUsers.value = true;
+    try {
+        const payload = {
+            page: 1,
+            pageSize: 500,
+            isBlocked: false
+        };
+        const response = await axiosInstance.post('/api/users/list', payload);
+        users.value = response.data.entities || [];
+        
+        // Инициализируем usersMap.value как объект
+        usersMap.value = {};
+        
+        users.value.forEach(user => {
+            if (user && user.id) {
+                usersMap.value[user.id] = {
+                    id: user.id,
+                    fullName: `${user.firstName || ''} ${user.middleName || ''} ${user.lastName || ''}`.trim(),
+                    firstName: user.firstName || '',
+                    lastName: user.lastName || '',
+                    middleName: user.middleName || ''
+                };
+            }
+        });
+        
+        // Обновляем список для автодополнения исполнителей
+        filteredAssignees.value = users.value
+            .filter(user => user && user.id)
+            .map(user => ({
+                id: user.id,
+                fullName: `${user.firstName || ''} ${user.middleName || ''} ${user.lastName || ''}`.trim()
+            }));
+        
+    } catch (error) {
+        console.error('Ошибка загрузки пользователей:', error);
+        toast.add({
+            severity: 'error',
+            summary: 'Ошибка',
+            detail: 'Не удалось загрузить список пользователей',
+            life: 3000
+        });
+    } finally {
+        loadingUsers.value = false;
+    }
+};
+
 const commentsWithAttachments = computed(() => {
     if (!selectedTicket.value?.comments) return [];
 
     const attachmentsByCommentId = (selectedTicket.value.attachments || []).reduce((acc, att) => {
-        if (!att.commentId) return acc; // пропускаем вложения без commentId
+        if (!att.commentId) return acc;
         if (!acc[att.commentId]) acc[att.commentId] = [];
         acc[att.commentId].push(att);
         return acc;
@@ -738,35 +871,33 @@ const commentsWithAttachments = computed(() => {
 
     return selectedTicket.value.comments.map(comment => ({
         ...comment,
-        attachments: attachmentsByCommentId[comment.id] || []
+        attachments: attachmentsByCommentId[comment.id] || [],
+        authorName: comment.authorId ? getUserName(comment.authorId) : 'Неизвестный пользователь'
     }));
 });
 
 const searchAssignees = async (event) => {
     const query = event.query || '';
 
-    try {
-        const payload = {
-            page: 1,
-            pageSize: 500,
-            isBlocked: false
-        };
-
-        const response = await axiosInstance.post('/api/users/list', payload);
-
-        filteredAssignees.value = response.data.entities
-            .filter(user =>
-                `${user.firstName} ${user.middleName ?? ''} ${user.lastName}`
-                    .toLowerCase()
-                    .includes(query.toLowerCase())
-            )
-            .map(user => ({
-                id: user.id,
-                fullName: `${user.firstName} ${user.middleName ?? ''} ${user.lastName}`
-            }));
-    } catch (error) {
-        console.debug('Ошибка при загрузке пользователей ЛКС:', error);
+    if (!users.value || users.value.length === 0) {
+        await loadUsers();
     }
+
+    if (!users.value || users.value.length === 0) {
+        filteredAssignees.value = [];
+        return;
+    }
+
+    filteredAssignees.value = users.value
+        .filter(user => {
+            if (!user) return false;
+            const fullName = `${user.firstName || ''} ${user.middleName || ''} ${user.lastName || ''}`.toLowerCase();
+            return fullName.includes(query.toLowerCase());
+        })
+        .map(user => ({
+            id: user.id,
+            fullName: `${user.firstName || ''} ${user.middleName || ''} ${user.lastName || ''}`.trim()
+        }));
 };
 
 const updateAssignee = async () => {
@@ -781,13 +912,15 @@ const updateAssignee = async () => {
         toast.add({
             severity: 'success',
             summary: 'Успех',
-            detail: `Исполнитель назначен: ${selectedAssignee.value.fullName}`
+            detail: `Исполнитель назначен: ${selectedAssignee.value.fullName}`,
+            life: 3000
         });
     } catch (err) {
         toast.add({
             severity: 'error',
             summary: 'Ошибка',
-            detail: 'Не удалось назначить исполнителя'
+            detail: 'Не удалось назначить исполнителя',
+            life: 3000
         });
     } finally {
         updatingAssignee.value = false;
@@ -795,13 +928,6 @@ const updateAssignee = async () => {
 };
 
 // Наблюдатели
-watch(() => props.visible, (newVal) => {
-    if (newVal && props.ticketId) {
-        loadTicket(props.ticketId);
-        activeTab.value = 0;
-    }
-}, { immediate: true });
-
 watch(() => props.ticketId, (newVal) => {
     if (props.visible && newVal) {
         loadTicket(newVal);
@@ -809,38 +935,34 @@ watch(() => props.ticketId, (newVal) => {
     }
 });
 
-watch(() => props.visible, async (val) => {
-    if (val) {
-        await loadTicket(props.ticketId);
-        selectedAssignee.value = filteredAssignees.value.find(u => u.id === selectedTicket.value.assigneeId) || null;
-    }
-});
 
 watch(() => props.visible, async (val) => {
-    if (val) {
+    if (val && props.ticketId) {
         await loadTicket(props.ticketId);
-
-        // Если есть текущий исполнитель, подставляем его в AutoComplete
-        if (selectedTicket.value.assigneeId) {
-            // Подгружаем его данные из ЛКС, чтобы показать в поле
-            try {
-                const response = await axiosInstance.post('/api/users/list', {
-                    page: 1,
-                    pageSize: 500,
-                    isBlocked: false
-                });
-                const user = response.data.entities.find(u => u.id === selectedTicket.value.assigneeId);
-                if (user) {
-                    selectedAssignee.value = {
-                        id: user.id,
-                        fullName: `${user.firstName} ${user.middleName ?? ''} ${user.lastName}`
-                    };
-                }
-            } catch (err) {
-                console.debug('Ошибка при загрузке текущего исполнителя:', err);
-            }
+        
+        if (!users.value || users.value.length === 0) {
+            await loadUsers();
+        }
+        
+        if (selectedTicket.value && 
+            selectedTicket.value.assigneeId && 
+            usersMap.value && 
+            usersMap.value[selectedTicket.value.assigneeId]) {
+            
+            const user = usersMap.value[selectedTicket.value.assigneeId];
+            selectedAssignee.value = {
+                id: user.id,
+                fullName: user.fullName
+            };
+        } else {
+            selectedAssignee.value = null;
         }
     }
+}, { immediate: true });
+
+const getRequesterName = computed(() => {
+    if (!selectedTicket.value?.requesterId) return 'Не указан';
+    return getUserName(selectedTicket.value.requesterId);
 });
 
 </script>
@@ -942,7 +1064,7 @@ watch(() => props.visible, async (val) => {
     display: inline-flex;
     align-items: center;
     padding: 6px 12px;
-    background: var(--p-grey-4);
+    background: var(--p-grey-7);
     border-radius: 20px;
     font-size: 0.85rem;
     backdrop-filter: blur(10px);
@@ -998,6 +1120,27 @@ watch(() => props.visible, async (val) => {
     flex: 1;
 }
 
+.certificate-field {
+    margin-bottom: 15px;
+}
+
+.certificate-field:last-child {
+    margin-bottom: 0;
+}
+
+.certificate-field-item {
+    padding: 10px;
+    background-color: var(--p-grey-7);
+    border-radius: 8px;
+    border: 1px solid var(--p-grey-5);
+    width: calc(100% - 40px);
+}
+
+.certificate-field-item strong {
+    margin-right: 8px;
+    color: var(--p-grey-400);
+}
+
 .type-badge {
     display: inline-block;
     padding: 8px 16px;
@@ -1049,6 +1192,61 @@ watch(() => props.visible, async (val) => {
 .count-description {
     font-size: 0.85rem;
     color: var(--p-grey-400);
+}
+
+/* Стили для динамических полей */
+.other-fields-section {
+    margin-top: 20px;
+}
+
+.field-category {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: var(--p-grey-6);
+    border-radius: 12px;
+    border: 1px solid var(--p-grey-5);
+}
+
+.field-category h5 {
+    margin: 0 0 15px 0;
+    color: var(--p-text-color);
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.field-category h5 .pi {
+    margin-right: 10px;
+    color: var(--primary-color);
+}
+
+.field-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.field-item {
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    background-color: var(--p-grey-7);
+    border-radius: 8px;
+    border: 1px solid var(--p-grey-5);
+}
+
+.field-label {
+    font-size: 0.85rem;
+    color: var(--p-grey-400);
+    margin-bottom: 4px;
+}
+
+.field-value {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--p-text-color);
+    word-break: break-word;
 }
 
 /* Стили для участников */
@@ -1128,6 +1326,29 @@ watch(() => props.visible, async (val) => {
 .comment-attachments {
     border-top: 1px solid var(--p-grey-6);
     padding-top: 10px;
+}
+
+/* Стили для автора комментария */
+.comment-author {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.comment-author .font-semibold {
+    font-weight: 400;
+    color: var(--p-text-color);
+}
+
+.comment-author .text-muted {
+    font-size: 0.8rem;
+    color: var(--p-grey-400);
+}
+
+.comment-date {
+    font-size: 0.85rem;
+    color: var(--p-grey-400);
 }
 
 .attachment-list {
