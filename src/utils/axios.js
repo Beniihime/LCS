@@ -2,8 +2,11 @@ import axios from "axios";
 import router from "../router";
 import { refreshTokenThroughWorker, isAccessTokenExpiringSoon } from "@/utils/TokenService";
 
+const protocol = window.location.protocol;
+const host = 'development.sibadi.org';
+
 const axiosInstance = axios.create({
-    baseURL: 'https://development.sibadi.org',
+    baseURL: `${protocol}//${host}`,
     headers: {
         'Content-Type': 'application/json',
         'accept': 'application/json'
