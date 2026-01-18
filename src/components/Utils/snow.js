@@ -46,7 +46,7 @@
     // Configuration options
     const config = {
         snowflakes: ['❄', '❅', '❆'],      // Snowflake characters
-        density: 50,                        // Maximum number of snowflakes
+        density: 40,                        // Maximum number of snowflakes
         interval: 200,                      // Interval between snowflake creation (ms)
         minSize: 0.8,                      // Minimum snowflake size
         maxSize: 1.5,                      // Maximum snowflake size

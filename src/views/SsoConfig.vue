@@ -21,7 +21,17 @@
                 <template #header>
                     <div class="d-flex justify-content-between align-items-center">
                         <h3 class="m-0">SSO конфигурации</h3>
-                        <AddSsoConfig @added="loadConfigs" />
+                        <div class="page-controls d-flex gap-2">
+                            <AddSsoConfig @added="loadConfigs" />
+                            <Button 
+                                icon="pi pi-sync"
+                                outlined
+                                severity="secondary"
+                                @click="loadConfigs"
+                                :loading="loading"
+                                :disabled="loading"
+                            />
+                        </div>
                     </div>
                 </template>
 

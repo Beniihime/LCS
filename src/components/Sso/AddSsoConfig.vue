@@ -1,6 +1,6 @@
 <template>
     <div>
-        <Button label="Добавить конфигурацию" icon="pi pi-plus" @click="showAddDialog = true" />
+        <Button icon="pi pi-plus" @click="showAddDialog = true" />
 
         <Dialog v-model:visible="showAddDialog" modal header="Новая SSO конфигурация" :style="{ 'width' : '30rem' }">
             <form @submit.prevent="submitConfig" class="d-flex flex-column">

@@ -306,7 +306,8 @@ const checkPermission = (path) => {
         '/services': hasPermission('InfraManager', 'Read'),
         '/sso/config': hasPermission('SsoResource', 'Read'),
         '/autorole': hasPermission('RoleAutoAssigner', 'Read'),
-        '/tickets': hasPermission('Tickets', 'Read')
+        '/tickets': hasPermission('Tickets', 'Read'),
+        '/tickets/responsibles' : hasPermission('ResponsibleTicketStudentGroup', 'Read')
     };
     return permissionMap[path] !== undefined ? permissionMap[path] : true;
 };

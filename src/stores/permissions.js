@@ -1,6 +1,7 @@
 // stores/permissions.js
 import { defineStore } from 'pinia';
 import axiosInstance from '@/utils/axios.js';
+import { isSessionExpiredFlag } from '../utils/TokenService';
 
 export const usePermissionStore = defineStore('permissions', {
   state: () => ({
@@ -11,6 +12,7 @@ export const usePermissionStore = defineStore('permissions', {
   actions: {
     async fetchPermissions() {
       if (this.isLoaded) return;
+      if (isSessionExpiredFlag()) return;
 
       try {
         const { data } = await axiosInstance.get('/api/users/me/permissions');

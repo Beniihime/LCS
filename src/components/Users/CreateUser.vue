@@ -1,6 +1,6 @@
 <template>
     <div class="d-flex justify-content-center">
-        <Button class="search" icon="pi pi-plus" label="Пользователь" @click="visible = true"/>
+        <Button class="search" icon="pi pi-plus" @click="visible = true"/>
         <Dialog v-model:visible="visible" modal header="Новый пользователь" :style="{ 'max-width': '30rem', 'max-height': '60rem' }">
             <div class="row mb-2">
                 <div class="col">

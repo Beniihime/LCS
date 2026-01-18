@@ -1,6 +1,6 @@
 <template>
     <div>
-        <Button label="Добавить связь" icon="pi pi-plus" @click="showAddDialog = true" />
+        <Button icon="pi pi-plus" @click="showAddDialog = true" />
 
         <Dialog 
             v-model:visible="showAddDialog" 

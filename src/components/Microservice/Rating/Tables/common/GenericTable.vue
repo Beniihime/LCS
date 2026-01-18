@@ -139,6 +139,14 @@
                                         class="columns-multiselect"
                                         @update:modelValue="onColumnsToggle"
                                     />
+                                    <Button 
+                                        icon="pi pi-sync"
+                                        outlined
+                                        severity="secondary"
+                                        @click="fetchData"
+                                        :loading="loading"
+                                        :disabled="loading"
+                                    />
                                 </div>
                             </slot>
                         </div>

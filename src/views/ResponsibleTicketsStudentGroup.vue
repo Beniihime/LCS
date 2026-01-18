@@ -21,7 +21,17 @@
                 <template #header>
                     <div class="d-flex justify-content-between align-items-center">
                         <h3 class="m-0">Ответственные за заявки</h3>
-                        <AddResponsibleGroup @added="loadGroups" />
+                        <div class="page-controls d-flex gap-2">
+                            <AddResponsibleGroup @added="loadGroups" />
+                            <Button 
+                                icon="pi pi-sync"
+                                outlined
+                                severity="secondary"
+                                @click="loadGroups"
+                                :loading="loading"
+                                :disabled="loading"
+                            />
+                        </div>
                     </div>
                 </template>
 

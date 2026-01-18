@@ -39,6 +39,14 @@
                                         placeholder="Выберите поля"
                                         class="column-selector"
                                     />
+                                    <Button 
+                                        icon="pi pi-sync"
+                                        outlined
+                                        severity="secondary"
+                                        @click="fetchTickets"
+                                        :loading="loading"
+                                        :disabled="loading"
+                                    />
                                 </div>
                             </div>
                         </div>

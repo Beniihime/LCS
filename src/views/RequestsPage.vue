@@ -37,6 +37,14 @@
                                 @update:modelValue="onToggle"
                             />
                             <CreateRequest @refreshRequests="(id) => fetchCalls(id)"/>
+                            <Button 
+                                icon="pi pi-sync"
+                                outlined
+                                severity="secondary"
+                                @click="fetchCalls"
+                                :loading="loading"
+                                :disabled="loading"
+                            />
                         </div>
                     </div>
                 </template>

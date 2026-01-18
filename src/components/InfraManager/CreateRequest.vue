@@ -1,6 +1,6 @@
 <template>
     <div class="d-flex justify-content-center">
-        <Button rounded icon="pi pi-plus" outlined @click="visible = true"/>
+        <Button icon="pi pi-plus" @click="visible = true"/>
         <Dialog v-model:visible="visible" modal header="Создание заявки" :style="{ 'max-width': '32rem' }">
             <template #container="{ closeCallback }">
                 <WelcomeScreen :visible="loading" class="rounded-4"/>

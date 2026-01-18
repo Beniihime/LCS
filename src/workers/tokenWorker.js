@@ -1,4 +1,3 @@
-// import axiosInstance from '@/utils/axios.js';
 
 let currentRefreshToken = null;
 let currentUserId = null;
@@ -6,166 +5,240 @@ let currentRefreshTokenExpired = null;
 let currentAccessTokenExpired = null;
 let refreshInterval = null;
 let isRefreshing = false;
+let apiBase = null;
 
 self.onmessage = async (event) => {
     switch (event.data.action) {
-        case "start":
-            const { refreshToken, userId, refreshTokenExpired, accessTokenExpired } = event.data;
-            console.debug("[TokenWorker] Starting background token refresh...");
+        case "start": {
+            const {
+                refreshToken,
+                userId,
+                refreshTokenExpired,
+                accessTokenExpired,
+                apiBase: passedApiBase,
+            } = event.data;
+            
+            currentRefreshToken = refreshToken;
+            currentUserId = userId;
+            currentRefreshTokenExpired = refreshTokenExpired;
+            currentAccessTokenExpired = accessTokenExpired;
+
+            apiBase = passedApiBase;
+
+            startTokenRefreshLoop();
+            break;
+        }
+
+        case "updateToken": {
+            const {
+                refreshToken,
+                userId,
+                refreshTokenExpired,
+                accessTokenExpired,
+                apiBase: passedApiBase,
+            } = event.data;
 
             currentRefreshToken = refreshToken;
             currentUserId = userId;
             currentRefreshTokenExpired = refreshTokenExpired;
             currentAccessTokenExpired = accessTokenExpired;
 
-            startTokenRefreshLoop();
-            break;
+            if (passedApiBase) apiBase = passedApiBase;
 
-        case "updateToken":
-            console.debug("[TokenWorker] Updating internal state from main thread message");
-            currentRefreshToken = event.data.refreshToken;
-            currentUserId = event.data.userId;
-            currentRefreshTokenExpired = event.data.refreshTokenExpired;
-            currentAccessTokenExpired = event.data.accessTokenExpired;
-            break;
+            const now = Math.floor(Date.now() / 1000);
+            
+            const accessLeft = currentAccessTokenExpired 
+                ? Math.round((currentAccessTokenExpired - now) / 60) 
+                : "неизвестно";
+                
+            const refreshLeft = currentRefreshTokenExpired 
+                ? Math.round((currentRefreshTokenExpired - now) / 60) 
+                : "неизвестно";
 
-        case "refreshOnce":
-            const { refreshToken: onceRefreshToken, userId: onceUserId } = event.data;
-            await refreshAccessToken(onceRefreshToken, onceUserId, true);
+            console.log(
+                `[Token ${event.data.action === "start" ? "запущен" : "обновлён"}] ` +
+                `Access ~${accessLeft} мин | Refresh ~${refreshLeft} мин`
+            );
+
+            if (event.data.action === "start") {
+                startTokenRefreshLoop();
+            }
             break;
+        }
+
+        case "refreshOnce": {
+            const { refreshToken, userId } = event.data;
+            await refreshAccessToken(refreshToken, userId, true);
+            break;
+        }
 
         case "stop":
             stopTokenRefreshLoop();
             break;
 
         default:
-            console.warn("[TokenWorker] Unknown action:", event.data.action);
+            console.warn("[TokenWorker] Unknown action:", action);
     }
 }
 
 function startTokenRefreshLoop() {
-    if (refreshInterval) {
-        clearInterval(refreshInterval);
-    }
+    stopTokenRefreshLoop();
 
-    refreshInterval = setInterval(async () => {
-        // Пропускаем если уже обновляем
-        if (isRefreshing) {
-            console.debug("[TokenWorker] Refresh already in progress, skipping...");
-            return;
-        }
+    refreshInterval = setInterval(() => {
+        const now = Math.floor(Date.now() / 1000);
 
-        const currentTime = Math.floor(Date.now() / 1000);
-        const timeUntilRefreshExpires = currentRefreshTokenExpired - currentTime;
-        const timeUntilAccessExpires = currentAccessTokenExpired - currentTime;
+        if (!currentRefreshToken || !currentUserId) return;
 
-        console.debug(`[TokenWorker] Time until refreshToken expires: ${timeUntilRefreshExpires} seconds`);
-        console.debug(`[TokenWorker] Time until accessToken expires: ${timeUntilAccessExpires} seconds`);
+        let accessLeftSec = currentAccessTokenExpired 
+            ? currentAccessTokenExpired - now 
+            : -1;
+        
+        let accessLeftMin = Math.round(accessLeftSec / 60);
 
-        if (timeUntilRefreshExpires <= 60) {
-            console.warn("[TokenWorker] Refresh token expiring soon, stopping background refresh");
-            self.postMessage({ action: "refreshFailed" });
+        let refreshLeftSec = currentRefreshTokenExpired 
+            ? currentRefreshTokenExpired - now 
+            : -1;
+        
+        let refreshLeftMin = Math.round(refreshLeftSec / 60);
+
+        console.log(
+            `[Token Status] ` +
+            `Access: ${accessLeftMin >= 0 ? accessLeftMin + ' мин' : 'истёк'} ` +
+            `(до ${formatTimeLeft(accessLeftSec)}), ` +
+            `Refresh: ${refreshLeftMin >= 0 ? refreshLeftMin + ' мин' : 'истёк'} ` +
+            `(до ${formatTimeLeft(refreshLeftSec)})`
+        );
+
+        if (currentRefreshTokenExpired && now >= currentRefreshTokenExpired) {
+            console.warn("[TokenWorker] Refresh token expired");
+            self.postMessage({ action: "refreshFailed", reason: "refresh_expired" });
             stopTokenRefreshLoop();
             return;
         }
 
-        if (timeUntilAccessExpires <= 300) { // 5 минут
-            console.debug("[TokenWorker] Access token expiring soon, refreshing...");
-            await refreshAccessToken(currentRefreshToken, currentUserId);
+        if (
+            currentAccessTokenExpired &&
+            now >= currentAccessTokenExpired - 180 &&
+            !isRefreshing
+        ) {
+            console.log(
+                `[Token] Запускаем обновление — осталось ${accessLeftMin} мин ` +
+                `(${accessLeftSec} сек)`
+            );
+            refreshAccessToken(currentRefreshToken, currentUserId);
         }
-    }, 30000);
+    }, 60_000);
+}
+
+function formatTimeLeft(seconds) {
+    if (seconds < 0) return "уже истёк";
+    if (seconds < 60) return `${seconds} сек`;
+    
+    const min = Math.floor(seconds / 60);
+    const sec = seconds % 60;
+    return `${min} мин ${sec > 0 ? sec + ' сек' : ''}`.trim();
 }
 
 function stopTokenRefreshLoop() {
     if (refreshInterval) {
         clearInterval(refreshInterval);
         refreshInterval = null;
-        console.debug("[TokenWorker] Token refresh loop stopped");
     }
 }
 
-async function refreshAccessToken(refreshToken, userId, isOnceRefresh = false) {
-    if (isRefreshing && !isOnceRefresh) {
-        console.debug("[TokenWorker] Refresh already in progress");
+async function refreshAccessToken(refreshToken, userId, isOnce = false) {
+    if (isRefreshing) {
+        console.log("[DEBUG] Уже идёт обновление, пропускаем");
         return;
     }
-
     isRefreshing = true;
 
     try {
-        if (!userId || !refreshToken) {
-            console.error("[TokenWorker] Missing user credentials, stopping...");
-            self.postMessage({ action: "refreshFailed" });
+        const now = Math.floor(Date.now() / 1000);
+        const leftBeforeRefresh = currentAccessTokenExpired 
+            ? Math.round(currentAccessTokenExpired - now) 
+            : "неизвестно";
+
+        console.log(
+            `[Refresh START] Осталось до истечения access: ` +
+            `${typeof leftBeforeRefresh === 'number' ? leftBeforeRefresh + ' сек' : leftBeforeRefresh}`
+        );
+
+        console.log("[DEBUG] Запуск refreshAccessToken", {
+            hasRefresh: !!refreshToken,
+            refreshLength: refreshToken?.length,
+            userId: userId,
+            isOnce,
+            apiBase
+        });
+
+        if (!refreshToken || !userId) {
+            console.warn("[DEBUG] Отсутствуют refreshToken или userId");
+            self.postMessage({ action: "refreshFailed", reason: "missing_credentials" });
             return;
         }
 
-        console.debug("[TokenWorker] Attempting to refresh token...");
+        const url = `${apiBase}/api/auth/refresh-token`;
+        console.log("[DEBUG] Отправка запроса на:", url);
 
-        const response = await fetch("https://development.sibadi.org/api/auth/refresh-token", {
+        const payload = {
+            value: refreshToken,
+            userId: userId
+        };
+
+        console.log("[DEBUG] Тело запроса:", JSON.stringify(payload, null, 2));
+
+        const response = await fetch(url, {
             method: "POST",
-            headers: { 
+            headers: {
                 "Content-Type": "application/json",
-                "Accept": "application/json"
             },
-            body: JSON.stringify({
-                value: refreshToken,
-                userId: userId
-            })
+            body: JSON.stringify(payload),
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`[TokenWorker] Refresh failed with status ${response.status}:`, errorText);
+        console.log("[DEBUG] Ответ получен, статус:", response.status);
 
-            if (response.status === 401 || response.status === 403) {
-                console.error("[TokenWorker] Refresh token invalid, user needs to login again");
-                self.postMessage({ action: "refreshFailed" });
-                return;
+        if (!response.ok) {
+            let text;
+            try {
+                text = await response.text();
+                console.log("[DEBUG] Текст ошибки от сервера:", text);
+            } catch (e) {
+                text = "Не удалось прочитать тело ответа";
+                console.warn("[DEBUG] Не удалось прочитать текст ошибки");
             }
 
-            throw new Error(`Failed to refresh token: ${response.status} ${errorText}`);
+            self.postMessage({
+                action: "refreshError",
+                status: response.status,
+                body: text,
+            });
+
+            throw new Error(`Refresh error ${response.status}: ${text}`);
         }
 
         const data = await response.json();
-        
-        if (!data.accessToken || !data.refreshTokenValue) {
-            throw new Error("Invalid response: missing tokens");
-        }
+        console.log("[DEBUG] Успешный ответ:", data);
 
-        let newAccessTokenExpired;
-        if (data.accessTokenExpiresIn) {
-            newAccessTokenExpired = Math.floor(Date.now() / 1000) + data.accessTokenExpiresIn;
-        } else if (data.accessTokenExpired) {
-            newAccessTokenExpired = data.accessTokenExpired;
-        } else {
-            newAccessTokenExpired = Math.floor(Date.now() / 1000) + (15 * 60);
-        }
+        const newAccessTokenExpired = now + Math.max(0, data.accessTokenExpiresIn || 900);
 
-        console.debug("[TokenWorker] Token refreshed successfully!");
-
-        if (!isOnceRefresh) {
-            currentRefreshToken = data.refreshTokenValue;
-            currentRefreshTokenExpired = data.refreshTokenExpired;
-            currentAccessTokenExpired = newAccessTokenExpired;
-        }
-
-        self.postMessage({ 
-            action: "updateToken", 
-            accessToken: data.accessToken, 
-            refreshToken: data.refreshTokenValue, 
+        self.postMessage({
+            action: "updateToken",
+            accessToken: data.accessToken,
+            refreshToken: data.refreshTokenValue,
             refreshTokenExpired: data.refreshTokenExpired,
             accessTokenExpired: newAccessTokenExpired,
-            userId: userId
+            userId,
         });
-
-    } catch (error) {
-        console.error("[TokenWorker] Error refreshing token:", error);
-        
-        if (error.message.includes("401") || error.message.includes("403")) {
-            self.postMessage({ action: "refreshFailed" });
-        }
-        
+    } catch (err) {
+        console.error("[TokenWorker] Критическая ошибка при refresh:", err);
+        self.postMessage({
+            action: "refreshError",
+            reason: err?.message || "unknown_error",
+            stack: err?.stack
+        });
     } finally {
         isRefreshing = false;
+        console.log("[DEBUG] Завершение попытки refresh, isRefreshing =", isRefreshing);
     }
 }

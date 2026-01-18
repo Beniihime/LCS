@@ -24,6 +24,14 @@
                             <MultiSelect :modelValue="selectedColumns" :options="columns" optionLabel="header" @update:modelValue="onToggle"
                                 display="chip" placeholder="Выберите поля" />
                             <CreateUser v-if="hasPermission('User', 'Create')"/>
+                            <Button 
+                                icon="pi pi-sync"
+                                outlined
+                                severity="secondary"
+                                @click="fetchCustomers"
+                                :loading="loading"
+                                :disabled="loading"
+                            />
                         </div>
                     </div>
                     

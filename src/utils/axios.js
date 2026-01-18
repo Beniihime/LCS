@@ -1,64 +1,65 @@
 import axios from "axios";
 import router from "../router";
-import { refreshTokenThroughWorker, isAccessTokenExpiringSoon } from "@/utils/TokenService";
-
-const protocol = window.location.protocol;
-const host = 'development.sibadi.org';
+import {
+    refreshTokenThroughWorker,
+    getAccessToken,
+} from "@/utils/TokenService";
+import { getBaseUrl } from './baseUrl';
+import { isSessionExpiredFlag } from "./TokenService";
 
 const axiosInstance = axios.create({
-    baseURL: `${protocol}//${host}`,
+    baseURL: getBaseUrl(),
     headers: {
-        'Content-Type': 'application/json',
-        'accept': 'application/json'
-    }
+        "Content-Type": "application/json",
+        accept: "application/json",
+    },
 });
 
 axiosInstance.interceptors.request.use(
-    async config => {
-        let token = localStorage.getItem('accessToken');
-        
-        if (token && isAccessTokenExpiringSoon(60)) {
-            try {
-                console.debug("[Axios] Access token expiring soon, refreshing proactively...");
-                const tokens = await refreshTokenThroughWorker();
-                token = tokens.accessToken;
-            } catch (error) {
-                console.warn("[Axios] Proactive token refresh failed:", error);
-            }
-        }
-        
+    (config) => {
+        const token = getAccessToken();
+
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
-        
+
         return config;
     },
-    error => Promise.reject(error)
+    (error) => Promise.reject(error)
 );
 
 let isRefreshing = false;
-let refreshSubscribers = [];
+let refreshQueue = [];
 
-function subscribeTokenRefresh(callback) {
-    refreshSubscribers.push(callback);
+function enqueueRequest(cb) {
+    refreshQueue.push(cb);
 }
 
-function onRefreshed(newToken) {
-    refreshSubscribers.forEach(callback => callback(newToken));
-    refreshSubscribers = [];
+function resolveQueue(token) {
+    refreshQueue.forEach((cb) => cb(token));
+    refreshQueue = [];
 }
 
 axiosInstance.interceptors.response.use(
-    response => response,
-    async error => {
+    (response) => response,
+    async (error) => {
         const originalRequest = error.config;
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (
+            error.response?.status === 401 &&
+            !originalRequest._retry &&
+            !isSessionExpiredFlag()
+        ) {
             originalRequest._retry = true;
 
             if (isRefreshing) {
-                return new Promise(resolve => {
-                    subscribeTokenRefresh(token => {
+                return new Promise((resolve, reject) => {
+                    enqueueRequest((token) => {
+                        if (!token) {
+                            reject(error);
+                            return;
+                        }
+
                         originalRequest.headers.Authorization = `Bearer ${token}`;
                         resolve(axiosInstance(originalRequest));
                     });
@@ -68,30 +69,22 @@ axiosInstance.interceptors.response.use(
             isRefreshing = true;
 
             try {
-                console.debug("[Axios] Received 401, attempting token refresh...");
-                const tokens = await refreshTokenThroughWorker();
+                console.debug("[Axios] 401 received → refreshing token");
+                const newAccessToken = await refreshTokenThroughWorker();
 
-                if (tokens?.accessToken) {
-                    onRefreshed(tokens.accessToken);
+                if (!newAccessToken) throw new Error("No token");
 
-                    originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
-                    return axiosInstance(originalRequest);
-                } else {
-                    throw new Error("No access token received");
-                }
+                resolveQueue(newAccessToken);
+
+                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+                return axiosInstance(originalRequest);
             } catch (refreshError) {
-                console.error("[Axios] Token refresh failed:", refreshError);
-                
-                localStorage.removeItem("accessToken");
-                localStorage.removeItem("refreshToken");
-                localStorage.removeItem("refreshTokenExpired");
-                localStorage.removeItem("accessTokenExpired");
-                localStorage.removeItem("userId");
-                
-                refreshSubscribers.forEach(callback => callback(null));
-                refreshSubscribers = [];
-                
+                console.error("[Axios] Token refresh failed", refreshError);
+                markSessionExpired();
+                resolveQueue(null);
+                isRefreshing = false;
                 router.push("/auth");
+
                 return Promise.reject(refreshError);
             } finally {
                 isRefreshing = false;

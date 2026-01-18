@@ -1,21 +1,6 @@
 <template>
     <div class="auto-roles-manager">
         <WelcolmeScreen :visible="loading" />
-        <div class="header">
-            <div class="header-content">
-                <div class="title-section">
-                    <h1>Авто-роли</h1>
-                    <p class="subtitle">Настройка автоматического назначения ролей новым пользователям</p>
-                </div>
-                <Button 
-                    label="Добавить авто-роль" 
-                    icon="pi pi-plus" 
-                    @click="openCreateDialog"
-                    severity="success"
-                    class="add-button"
-                />
-            </div>
-        </div>
 
         <div class="table-container">
             <DataTable
@@ -30,6 +15,29 @@
                 class="auto-roles-table"
                 :class="{ 'empty-table': autoRoles.length === 0 }"
             >
+                <template #header>
+                    <div class="header">
+                        <div class="header-content">
+                            <div class="title-section">
+                                <h1 class="m-0">Авто-роли</h1>
+                            </div>
+                            <div class="page-controls d-flex gap-2">
+                                <Button 
+                                    icon="pi pi-plus" 
+                                    @click="openCreateDialog"
+                                />
+                                <Button 
+                                    icon="pi pi-sync"
+                                    outlined
+                                    severity="secondary"
+                                    @click="loadAutoRoles"
+                                    :loading="loading"
+                                    :disabled="loading"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </template>
                 <Column field="id" header="ID" style="width: 80px">
                     <template #body="{ data }">
                         <span class="id-cell">{{ data.id }}</span>
@@ -481,14 +489,10 @@ onMounted(async () => {
     position: relative;
 }
 
-.header {
-    margin-bottom: 1.5rem;
-}
-
 .header-content {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: 1rem;
 }
 
@@ -519,13 +523,6 @@ onMounted(async () => {
 
 .auto-roles-table.empty-table {
     min-height: 400px;
-}
-
-:deep(.auto-roles-table .p-datatable-thead > tr > th) {
-    background: var(--p-bg-color-3);
-    font-weight: 600;
-    color: var(--p-text-color);
-    padding: 1rem 0.75rem;
 }
 
 .id-cell {
