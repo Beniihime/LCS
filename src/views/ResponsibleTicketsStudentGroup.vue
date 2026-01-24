@@ -8,7 +8,7 @@
         <div class="content-wrapper">
             
             <DataTable 
-                :value="paginatedList" 
+                :value="groupList" 
                 dataKey="id" 
                 class="mb-4" 
                 paginator
@@ -17,6 +17,8 @@
                 :totalRecords="groupList.length"
                 :first="first"
                 @page="onPageChange"
+                v-model:filters="filters"
+                filterDisplay="row"
             >
                 <template #header>
                     <div class="d-flex justify-content-between align-items-center">
@@ -35,8 +37,29 @@
                     </div>
                 </template>
 
-                <Column field="groupName" header="Название группы" />
-                <Column header="Ответственный">
+                <Column 
+                    field="groupName" 
+                    header="Название группы"
+                    filter
+                    filterField="groupName"
+                    :showFilterMenu="false"
+                >
+                    <template #filter="{ filterModel, filterCallback }">
+                        <InputText
+                            v-model="filterModel.value"
+                            placeholder="Поиск по названию"
+                            class=""
+                            @input="filterCallback()"
+                        />
+                    </template>
+                </Column>
+
+                <Column 
+                    header="Ответственный" 
+                    filter
+                    filterField="responsible"
+                    :showFilterMenu="false"
+                >
                     <template #body="{ data }">
                         <div v-if="data.user">
                             {{ data.user.lastName }} {{ data.user.firstName }} {{ data.user.middleName }}
@@ -45,7 +68,16 @@
                         </div>
                         <div v-else>-</div>
                     </template>
+
+                    <template #filter="{ filterModel, filterCallback }">
+                        <InputText
+                            v-model="filterModel.value"
+                            placeholder="ФИО или email"
+                            @input="filterCallback()"
+                        />
+                    </template>
                 </Column>
+
                 <Column header="Статус пользователя">
                     <template #body="{ data }">
                         <Tag 
@@ -97,21 +129,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import axiosInstance from "@/utils/axios";
 import WelcomeScreen from "@/components/Utils/WelcomeScreen.vue";
 import DeleteResponsibleGroup from "@/components/ResponsibleTicketStudentGroup/DeleteResponsibleGroup.vue";
 import AddResponsibleGroup from "@/components/ResponsibleTicketStudentGroup/AddResponsibleGroup.vue";
+import { FilterMatchMode } from '@primevue/core/api';
 
 const loading = ref(true);
 const groupList = ref([]);
 const first = ref(0);
 const rowsPerPage = ref(5);
 
-const paginatedList = computed(() => {
-    const start = first.value;
-    const end = first.value + rowsPerPage.value;
-    return groupList.value.slice(start, end);
+const filters = ref({
+    groupName: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    responsible: { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
 
 const rowsPerPageOptions = [
@@ -132,7 +164,12 @@ const loadGroups = async () => {
     loading.value = true;
     try {
         const response = await axiosInstance.get('/api/responsibleticketstudentgroup');
-        groupList.value = response.data;
+        groupList.value = response.data.map(g => ({
+            ...g,
+            responsible: g.user
+                ? `${g.user.lastName} ${g.user.firstName} ${g.user.middleName} ${g.user.email}`
+                : '',
+        }));
     } catch (error) {
         console.error('Ошибка при загрузке групп с ответственными: ', error);
         window.dispatchEvent(new CustomEvent('toast', {

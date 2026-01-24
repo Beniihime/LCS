@@ -76,10 +76,11 @@ p {
    position: absolute;
    top: 0;
    left: 0;
-   width: 100%;
-   height: 100%;
-   background-size: cover;
+   width: 99%;
+   height: 99%;
+   background-size: contain;
    background-position: center;
+   background-repeat: no-repeat;
    transition: opacity 0.5s ease; /* Плавная смена */
    z-index: 0;
    opacity: 0;

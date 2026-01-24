@@ -29,7 +29,7 @@ const routes = [
         }
     },
     {
-        path: "/auth/sso",
+        path: "/login/sso",
         component: () => import('@/views/SsoCallbackPage.vue'),
         meta: {
             title: 'Ожидание авторизации'

@@ -563,7 +563,10 @@ const openFileDialog = () => {
     fileUploadRef.value?.choose();
 };
 
-const availableStatuses = computed(() => Object.keys(statusMap));
+const availableStatuses = computed(() => {
+    const allStatuses = Object.keys(statusMap);
+    return allStatuses.filter(status => status !== "New");
+});
 
 // Разрешенные типы файлов
 const allowedFileTypes = [

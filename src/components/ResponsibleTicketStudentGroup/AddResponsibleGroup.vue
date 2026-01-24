@@ -97,15 +97,22 @@ const newGroup = ref({
 });
 
 // Годы
-const currentYear = new Date().getFullYear();
-const selectedYear = ref(currentYear);
+const now = new Date();
+const currentCalendarYear = now.getFullYear();
+
+const currentStudyYear = now.getMonth() >= 8 
+    ? currentCalendarYear 
+    : currentCalendarYear - 1;
+
+const selectedYear = ref(`${currentStudyYear}-${currentStudyYear + 1}`);
+
 const yearOptions = computed(() => {
     const years = [];
-    for (let i = -2; i <= 2; i++) {
-        const year = currentYear + i;
+    for (let i = -3; i <= 2; i++) {
+        const start = currentStudyYear + i;
         years.push({
-            label: `${year}-${year + 1}`,
-            value: year
+            label: `${start}-${start + 1}`,
+            value: `${start}-${start + 1}`
         });
     }
     return years;
@@ -126,9 +133,6 @@ const submitting = ref(false);
 
 // Загрузка начальных данных
 const loadInitialData = () => {
-    if (!selectedYear.value) {
-        selectedYear.value = currentYear;
-    }
     loadGroups();
     loadUsers();
 };
@@ -163,6 +167,7 @@ const loadGroups = async () => {
         });
         
         filteredGroups.value = [...allGroups.value];
+        selectedGroup.value = null;
     } catch (error) {
         console.debug("Ошибка при загрузке групп: ", error);
         window.dispatchEvent(new CustomEvent('toast', {
@@ -180,7 +185,6 @@ const loadGroups = async () => {
 // Функция для извлечения кода группы из названия
 const extractGroupCode = (groupName) => {
     if (!groupName) return '';
-    // Ищем паттерны типа "ИВТ-1-20" или "ПИ-21"
     const match = groupName.match(/([А-Яа-яA-Za-z]+)[-\s]*(\d+)[-\s]*(\d+)?/);
     if (match) {
         return match[0];
@@ -264,9 +268,7 @@ const searchUsers = (event) => {
 const resetForm = () => {
     selectedGroup.value = null;
     selectedUser.value = null;
-    selectedYear.value = currentYear;
     filteredGroups.value = [];
-    filteredUsers.value = [];
     submitting.value = false;
 };
 
@@ -278,19 +280,11 @@ const closeDialog = () => {
 
 // Отслеживаем выбранные значения
 watch(selectedGroup, (group) => {
-    if (group) {
-        newGroup.value.groupName = group.label;
-    } else {
-        newGroup.value.groupName = '';
-    }
+    newGroup.value.groupName = group?.label || '';
 });
 
 watch(selectedUser, (user) => {
-    if (user) {
-        newGroup.value.userId = user.id;
-    } else {
-        newGroup.value.userId = '';
-    }
+    newGroup.value.userId = user?.id || '';
 });
 
 const submitGroup = async () => {

@@ -85,7 +85,7 @@
                             :to="item.path" 
                             class="menu-item" 
                             active-class="active-link"
-                            v-if="checkPermission(item.path) && showRequestsMenu"
+                            v-if="shouldShowMenuItem(item.path)"
                             v-tooltip.right="collapsed ? item.name : ''"
                         >
                             <div class="menu-item-content">
@@ -260,7 +260,7 @@ const email = ref('');
 const initials = ref('');
 const fullName = ref('');
 const searchQuery = ref('');
-const showRequestsMenu = ref(false);
+const showRequests = ref(false);
 
 // Вычисляемые свойства для сезона
 const seasonName = computed(() => getSeasonName(currentSeason.value));
@@ -303,13 +303,18 @@ const checkPermission = (path) => {
     const permissionMap = {
         '/rbac': hasPermission('Rbac', 'Read'),
         '/users': hasPermission('User', 'Read'),
-        '/services': hasPermission('InfraManager', 'Read'),
         '/sso/config': hasPermission('SsoResource', 'Read'),
         '/autorole': hasPermission('RoleAutoAssigner', 'Read'),
         '/tickets': hasPermission('Tickets', 'Read'),
-        '/tickets/responsibles' : hasPermission('ResponsibleTicketStudentGroup', 'Read')
+        '/tickets/responsibles' : hasPermission('ResponsibleTicketStudentGroup', 'Read'),
+        '/services': hasPermission('InfraManager', 'Read'),
     };
     return permissionMap[path] !== undefined ? permissionMap[path] : true;
+};
+
+const shouldShowMenuItem = (path) => {
+    if (path === '/requests') return checkPermission(path) && showRequests.value;
+    return checkPermission(path);
 };
 
 // Функции для работы с сезонами
@@ -438,18 +443,23 @@ onMounted(async () => {
 
         localStorage.setItem('firstName', response.data.firstName);
 
-        axiosInstance.get(`/api/infra-manager/db/users/${userId.value}/status`)
-            .then(statusResponse => {
-                const data = statusResponse.data;
-                localStorage.setItem("InfraStatus", true);
-                localStorage.setItem("infraManagerUserId", data.infraManagerUserId);
+        try {
+            const statusResponse = await axiosInstance.get(
+                `/api/infra-manager/db/users/${userId.value}/status`
+            );
 
-                showRequestsMenu.value = !!(data.personalAccountUserId && data.infraManagerUserId);
-            })
-            .catch(() => {
-                localStorage.setItem("InfraStatus", false);
-                showRequestsMenu.value = false;
-            })
+            const data = statusResponse.data;
+
+            localStorage.setItem("InfraStatus", "true");
+            localStorage.setItem("infraManagerUserId", data.infraManagerUserId || '');
+
+            showRequests.value = !!data.infraManagerUserId;
+        } catch (statusError) {
+            console.warn('Не удалось получить статус инфраструктуры:', statusError);
+            localStorage.setItem("InfraStatus", "false");
+
+            showRequests.value = false;
+        }
 
     } catch (error) {
         console.debug('Ошибка при получении информации о пользователе: ', error);
