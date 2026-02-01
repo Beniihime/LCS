@@ -355,7 +355,6 @@ const hasActiveFilters = computed(() => {
 
 const filteredCount = computed(() => {
     if (!hasActiveFilters.value) return totalRecords.value;
-    // В реальном приложении здесь был бы запрос с фильтрами для получения точного числа
     return tickets.value.length;
 });
 

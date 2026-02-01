@@ -183,9 +183,8 @@
 
                                 <!-- Динамическое отображение остальных полей -->
                                 <div v-if="hasOtherFields" class="other-fields-section">
-                                    <div v-for="category in Object.keys(formDataInfo.groupedFields)" 
+                                    <div v-for="category in visibleCategories" 
                                         :key="category"
-                                        v-if="shouldShowCategory(category)"
                                         class="field-category">
                                         <h5>{{ getCategoryLabel(category) }}</h5>
                                         <div class="field-grid">
@@ -193,11 +192,16 @@
                                                 :key="field.key"
                                                 class="field-item">
                                                 <div class="field-label">{{ field.label }}:</div>
-                                                <div class="field-value">{{ field.value }}</div>
+                                                <div class="field-value">{{ field.value || '—' }}</div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- <div style="background: #111; color: #0f0; padding: 12px; font-family: monospace; white-space: pre; max-height: 300px; overflow: auto;">
+                                    <strong>DEBUG: groupedFields</strong>
+                                    {{ JSON.stringify(formDataInfo?.groupedFields, null, 2) }}
+                                </div> -->
                             </div>
 
                             <!-- Участники -->
@@ -588,21 +592,23 @@ const formDataInfo = computed(() =>
 
 const formSchema = computed(() => selectedTicket.value?.requestType?.formSchema || []);
 
+const mainCategories = ['personal', 'education', 'certificate'];
+
 const hasOtherFields = computed(() => {
     if (!formDataInfo.value?.groupedFields) return false;
-    
-    const excludedCategories = ['personal', 'education', 'certificate'];
-    return Object.keys(formDataInfo.value.groupedFields).some(category => 
-        !excludedCategories.includes(category) && 
-        formDataInfo.value.groupedFields[category].length > 0
+    return Object.keys(formDataInfo.value.groupedFields).some(
+        cat => !mainCategories.includes(cat) && 
+                formDataInfo.value.groupedFields[cat]?.length > 0
     );
 });
 
-const shouldShowCategory = (category) => {
-    const excludedCategories = ['personal', 'education', 'certificate'];
-    return !excludedCategories.includes(category) && 
-            formDataInfo.value?.groupedFields[category]?.length > 0;
-};
+const visibleCategories = computed(() => {
+    if (!formDataInfo.value?.groupedFields) return [];
+    return Object.keys(formDataInfo.value.groupedFields).filter(
+        cat => !mainCategories.includes(cat) && 
+                formDataInfo.value.groupedFields[cat]?.length > 0
+    );
+});
 
 const getCategoryLabel = (category) => {
     const labels = {

@@ -1,7 +1,7 @@
 export const getBaseUrl = () => {
     const hostname = window.location.hostname;
     
-    if (hostname === '192.168.0.12' || hostname === 'localhost') {
+    if (hostname === '192.168.0.12' || hostname === 'localhost' || hostname === '192.168.0.30') {
         return 'https://development.sibadi.org';
     }
     

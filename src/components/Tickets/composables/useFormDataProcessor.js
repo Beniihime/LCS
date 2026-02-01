@@ -154,24 +154,43 @@ export const useFormDataProcessor = () => {
 
     // Определяем категорию поля для группировки
     const getFieldCategory = (key, schemaField) => {
-        // Если есть категория в схеме, используем её
         if (schemaField?.category) {
             return schemaField.category;
         }
         
-        // Автоматическое определение по ключу
         const keyLower = key.toLowerCase();
-        if (keyLower.includes('fio') || keyLower.includes('фио') || keyLower.includes('name')) {
-            return 'personal';
-        } else if (keyLower.includes('edu') || keyLower.includes('group') || keyLower.includes('faculty')) {
-            return 'education';
-        } else if (keyLower.includes('certificate') || keyLower.includes('company') || 
-                  keyLower.includes('справк') || keyLower.includes('организац')) {
+        const labelLower = (schemaField?.label || '').toLowerCase();
+
+        // Самый высокий приоритет — справки и организации
+        if (
+            keyLower.includes('certificate') ||
+            keyLower.includes('company') ||
+            labelLower.includes('справк') ||
+            labelLower.includes('организац') ||
+            labelLower.includes('в какую организацию')
+        ) {
             return 'certificate';
-        } else if (keyLower.includes('email') || keyLower.includes('phone') || keyLower.includes('contact')) {
+        }
+
+        // ФИО и имена людей
+        if (
+            keyLower.includes('fio') ||
+            keyLower.includes('фио') ||
+            (keyLower.includes('name') && !keyLower.includes('company'))
+        ) {
+            return 'personal';
+        }
+
+        if (keyLower.includes('edu') || keyLower.includes('group') || keyLower.includes('faculty')) {
+            return 'education';
+        }
+
+        if (keyLower.includes('email') || keyLower.includes('phone') || keyLower.includes('contact') || keyLower === 'userphone') {
             return 'contacts';
-        } else if (keyLower.includes('description') || keyLower.includes('message') || 
-                  keyLower.includes('comment') || keyLower.includes('details')) {
+        }
+
+        if (keyLower.includes('description') || keyLower.includes('message') || 
+            keyLower.includes('comment') || keyLower.includes('details')) {
             return 'details';
         }
         
