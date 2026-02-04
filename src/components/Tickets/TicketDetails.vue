@@ -58,6 +58,7 @@
                             <!-- Основная информация -->
                             <div class="details-section">
                                 <h4><i class="pi pi-info-circle"></i> Основная информация</h4>
+                                <p><strong>Номер заявки:</strong> {{ selectedTicket.number }}</p>
                                 <p><strong>ID заявки:</strong> {{ selectedTicket.id }}</p>
                                 <p><strong>Тип заявки:</strong> {{ selectedTicket.requestType?.name || 'Не указан' }}</p>
                                 <p class="status-row">

@@ -112,6 +112,7 @@
                     :field="col.field"
                     :key="col.field"
                     :header="col.header"
+                    :style="col.style"
                     :showFilterMenu="false"
                     :sortable="false"
                 >
@@ -134,9 +135,9 @@
                     <template #filter>
                         <InputText 
                             v-if="['string', 'number'].includes(col.filterType)"
-                            :value="filters[col.field]" 
+                            :model-value="filters[col.field]"
                             :placeholder="col.placeholder" 
-                            @input="event => onFilter(col.field, event.target.value)"
+                            @update:model-value="newValue => onFilter(col.field, newValue)"
                             autocomplete="off"
                             class="filter-input"
                         />
@@ -264,14 +265,16 @@ const onAssigneeToggle = () => {
 };
 
 const filters = ref({
+    number: null,
     status: null,
     priority: null,
     requesterId: null,
 });
 
 const columns = ref([
+    { field: 'number', header: '№', placeholder: 'Поиск по номеру', filterType: 'number', style: 'width: 180px; max-width: 200px;' },
     { field: 'requestType', header: 'Тип заявки', placeholder: 'Поиск по типу' },
-    { field: 'status', header: 'Статус', placeholder: 'Выберите статус', filterType: 'select' },
+    { field: 'status', header: 'Статус', placeholder: 'Выберите статус', filterType: 'select', style: 'width: 200px; max-width: 200px;' },
     { field: 'priority', header: 'Приоритет', placeholder: 'Выберите приоритет', filterType: 'select' },
     { field: 'requesterSystem', header: 'Система-источник', placeholder: 'Поиск по системе' },
     { field: 'requesterId', header: 'ID инициатора', placeholder: 'Поиск по ID', filterType: 'string' },
@@ -281,7 +284,7 @@ const columns = ref([
     { field: 'closedAt', header: 'Дата закрытия', placeholder: 'Поиск по дате' },
 ]);
 
-const defaultColumns = ['requestType', 'status', 'priority', 'createdAt'];
+const defaultColumns = ['number', 'requestType', 'status', 'priority', 'createdAt'];
 
 const selectedColumnFields = ref(defaultColumns);
 const selectedColumns = computed(() => 
@@ -553,7 +556,7 @@ onMounted(async () => {
 
 /* Поля фильтрации */
 .filter-input, .filter-select {
-    width: 100% !important;
+    width: 100%;
 }
 
 /* Состояние пустой таблицы */
