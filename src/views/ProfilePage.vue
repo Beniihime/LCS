@@ -86,7 +86,7 @@
 
         <div class="content-wrap">
             <div v-if="activeProfile === 'user'">
-                <div class="profile-card">
+                <div class="profile-card profile-card-user">
                     <!-- <div class="profile-header">
                         <img src="../assets/backgrounds/profBack.webp" alt="Profile Header" class="header-image"/>
                     </div> -->
@@ -111,6 +111,17 @@
                                     <div class="col">
                                         <h2>{{ fullName }}</h2>
                                         <p class="profile-email">{{ email }}</p>
+                                        <div class="profile-role" v-if="userRole">
+                                            <Chip class="role-label">
+                                                <span class="roleType" :class="getRoleTypeClass()">
+                                                    {{ userRole?.type?.[0] }}
+                                                </span>
+                                                <span>{{ userRole.title }}</span>
+                                            </Chip>
+                                        </div>
+                                        <div class="profile-role" v-else>
+                                            <Tag severity="warn">Нет ролей</Tag>
+                                        </div>
                                     </div>
                                     <div class="col-auto d-flex align-items-center">
                                         <UpdateUser v-if="!isCurrentUser && hasPermission('User', 'Update')" :userId="userId"/>
@@ -120,43 +131,34 @@
                         </div>
                     </div>
                 </div>
-                <div class="profile-card" style="margin-top: 10px;">
-                    <h2 class="mb-4">Информация о пользователе</h2>
-                    <div class="profile-info-body">
+                <div class="profile-card profile-card-user-secondary" style="margin-top: 10px;">
+                    <div class="profile-info-header">
                         <div>
+                            <h2 class="mb-1">Информация о пользователе</h2>
+                            <p class="profile-info-subtitle">Основные данные профиля</p>
+                        </div>
+                        <i class="pi pi-id-card profile-info-icon"></i>
+                    </div>
+                    <div class="profile-info-body">
+                        <div class="info-card">
                             <div class="field">Имя</div>
                             <div class="value">{{ firstName }}</div>
                         </div>
-                        <div>
+                        <div class="info-card">
                             <div class="field">Фамилия</div>
                             <div class="value">{{ lastName }}</div>
                         </div>
-                        <div>
+                        <div class="info-card">
                             <div class="field">Отчество</div>
                             <div class="value">{{ middleName || '-' }}</div>
                         </div>
-                        <div>
+                        <div class="info-card">
                             <div class="field">Email</div>
                             <div class="value">{{ email }}</div>
                         </div>
-                        <!-- <div>
+                        <!-- <div class="info-card">
                             <span class="field">Телефон</span>
                         </div> -->
-                        <div>
-                            <div class="field">Роль</div>
-                            <div v-if="userRole">
-                                <Chip class="role-label">
-                                    <span class="roleType" :class="getRoleTypeClass()">
-                                        {{ userRole?.type?.[0] }}
-                                    </span>
-                                    <span>{{ userRole.title }}</span>
-                                </Chip>
-                            </div>
-                            <div v-else>
-                                <Tag severity="warn">Нет ролей</Tag>
-                            </div>
-                            
-                        </div>
                     </div>
                 </div>
             </div>
@@ -512,8 +514,12 @@ main {
 .sidebar {
     position: fixed;
     width: 210px;
-    background-color: var(--p-grey-7);
-    border: 2px solid var(--p-grey-4);
+    background: linear-gradient(
+        180deg,
+        rgba(var(--p-blue-500-rgb), 0.04),
+        rgba(255, 255, 255, 0)
+    );
+    border: 2px solid rgba(var(--p-blue-500-rgb), 0.14);
     border-radius: 12px;
     padding: 15px;
     height: calc(100vh - 20px);
@@ -573,13 +579,107 @@ main {
     color: var(--p-text-color);
 }
 .profile-card {
-    background-color: var(--p-grey-7);
+    border-width: 2px;
+    border-style: solid;
+    border-color: rgba(var(--p-blue-500-rgb), 0.14);
+    background: linear-gradient(
+        180deg,
+        rgba(var(--p-blue-500-rgb), 0.04),
+        rgba(255, 255, 255, 0)
+    );
     border-radius: 12px;
-    border: 2px solid var(--p-grey-4);
     transition: all 0.5s;
     width: 100%;
-    padding: 15px;
-    /* position: relative; */
+    padding: 10px;
+}
+.profile-card-user {
+    position: relative;
+    overflow: hidden;
+    padding: 16px;
+    border-color: rgba(var(--p-blue-500-rgb), 0.14);
+    background: linear-gradient(
+        180deg,
+        rgba(var(--p-blue-500-rgb), 0.04),
+        rgba(255, 255, 255, 0)
+    );
+    box-shadow:
+        0 8px 18px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.profile-card-user::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+        circle at 20% 10%,
+        rgba(var(--p-blue-500-rgb), 0.06),
+        transparent 60%
+    );
+    pointer-events: none;
+}
+.profile-card-user-secondary {
+    border-color: rgba(var(--p-blue-500-rgb), 0.14);
+    background: linear-gradient(
+        180deg,
+        rgba(var(--p-blue-500-rgb), 0.04),
+        rgba(255, 255, 255, 0)
+    );
+}
+.profile-card-user .avatar-wrapper {
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+    padding: 3px;
+    background: linear-gradient(
+        135deg,
+        rgba(var(--p-blue-500-rgb), 0.35),
+        rgba(255, 255, 255, 0)
+    );
+}
+.profile-card-user .profile-email {
+    color: var(--p-grey-1);
+    font-size: 15px;
+}
+.profile-card-user-secondary .profile-info-body {
+    gap: 24px;
+}
+.profile-info-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+.profile-info-subtitle {
+    margin: 0;
+    color: var(--p-grey-2);
+    font-size: 0.9rem;
+}
+.profile-info-icon {
+    font-size: 1.5rem;
+    color: rgba(var(--p-blue-500-rgb), 0.6);
+}
+.info-card {
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(var(--p-blue-500-rgb), 0.12);
+    transition: all 0.3s ease;
+}
+.info-card:hover {
+    border-color: rgba(var(--p-blue-500-rgb), 0.3);
+}
+.profile-card-user-secondary .field {
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-size: 0.85rem;
+}
+.profile-card-user-secondary .value {
+    font-size: 1.1rem;
+}
+.role-label {
+    background: rgba(var(--p-blue-500-rgb), 0.1);
+    border: 1px solid rgba(var(--p-blue-500-rgb), 0.25);
+    padding: 4px 8px;
+    border-radius: 999px;
+    gap: 8px;
 }
 .infra-profile-card {
     background-color: var(--p-grey-7);
@@ -613,6 +713,9 @@ p {
     color: var(--p-grey-2);
     font-size: 16px;
     margin: 0;
+}
+.profile-role {
+    margin-top: 8px;
 }
 .pi {
     font-size: 1.5rem;

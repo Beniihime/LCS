@@ -1,16 +1,13 @@
 <template>
     <main>
         <WelcomeScreen :visible="loading" />
-        <div class="header">
-            <h2 class="m-0">Управление ответственными</h2>
-        </div>
 
         <div class="content-wrapper">
             
             <DataTable 
                 :value="groupList" 
                 dataKey="id" 
-                class="mb-4" 
+                class="mb-4 no-row-hover" 
                 paginator
                 stripedRows
                 :rows="rowsPerPage"
@@ -202,6 +199,12 @@ main {
 }
 .content-wrapper {
     height: 100%;
-    padding: 10px 4rem;
+    padding: 10px 2rem;
+}
+
+:deep(.no-row-hover .p-datatable-tbody > tr:hover),
+:deep(.no-row-hover .p-datatable-tbody > tr.p-row-hover),
+:deep(.no-row-hover.p-datatable-hoverable-rows .p-datatable-tbody > tr:hover) {
+    background: transparent !important;
 }
 </style>

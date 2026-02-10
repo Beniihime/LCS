@@ -2,7 +2,9 @@
   <div class="layout">
     <MobileSpeedDial />
     <aside class="sidebar" :class="{ 'sidebar-collapsed': !isExpanded }">
-      <SideBar v-if="isAuthenticated" :collapsed="!isExpanded" class="position-relative"/>
+      <div class="sidebar-shell">
+        <SideBar v-if="isAuthenticated" :collapsed="!isExpanded" class="position-relative"/>
+      </div>
       <Button 
         class="expand" 
         :icon="isExpanded ? 'pi pi-angle-left' : 'pi pi-angle-right'" 
@@ -10,7 +12,9 @@
       />
     </aside>
     <main class="content">
-      <router-view />
+      <!-- <div class="content-shell"> -->
+        <router-view />
+      <!-- </div> -->
     </main>
   </div>
 </template>
@@ -52,6 +56,12 @@ if (query.message) {
 <style scoped>
 .layout {
   display: flex;
+  min-height: 100vh;
+  background: linear-gradient(
+    180deg,
+    rgba(var(--p-blue-500-rgb), 0.02),
+    rgba(255, 255, 255, 0)
+  );
 }
 
 .sidebar {
@@ -65,10 +75,26 @@ if (query.message) {
   width: 280px;
   display: flex;
   flex-direction: column;
+  padding: 10px;
+  background: transparent;
+  box-sizing: border-box;
 }
 
 .sidebar-collapsed {
   width: 90px;
+}
+
+.sidebar-shell {
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(var(--p-blue-500-rgb), 0.12);
+}
+
+.sidebar-shell :deep(.sidebar-container) {
+  height: 100%;
 }
 
 .content {
@@ -81,10 +107,10 @@ if (query.message) {
   position: relative;
   height: 40px;
   width: 100%;
-  border-radius: 0;
+  border-radius: 12px;
   z-index: 1000;
-  border: none;
-  background: var(--p-surface-100);
+  border: 1px solid rgba(var(--p-blue-500-rgb), 0.12);
+  background: rgba(var(--p-blue-500-rgb), 0.05);
   color: var(--p-text-color);
   transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
@@ -92,17 +118,37 @@ if (query.message) {
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
+  margin-top: 10px;
 }
 
 .expand:hover {
-  background: var(--p-surface-200);
+  background: rgba(var(--p-blue-500-rgb), 0.1);
+  border-color: rgba(var(--p-blue-500-rgb), 0.22);
 }
 
 .p-dark .expand {
-  background: var(--p-surface-800);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .p-dark .expand:hover {
-  background: var(--p-surface-700);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.p-dark .content-shell {
+  background: linear-gradient(
+    180deg,
+    rgba(25, 25, 35, 0.85),
+    rgba(18, 18, 28, 0.75)
+  );
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.p-dark .sidebar-shell {
+  background: linear-gradient(
+    180deg,
+    rgba(25, 25, 35, 0.6),
+    rgba(18, 18, 28, 0.4)
+  );
+  border-color: rgba(255, 255, 255, 0.06);
 }
 </style>

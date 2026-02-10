@@ -1,16 +1,13 @@
 <template>
     <main>
         <WelcomeScreen :visible="loading" />
-        <div class="header">
-            <h2 class="m-0">Настройка SSO</h2>
-        </div>
 
         <div class="content-wrapper">
             
             <DataTable 
                 :value="paginatedList" 
                 dataKey="id" 
-                class="mb-4" 
+                class="mb-4 no-row-hover" 
                 paginator
                 stripedRows
                 :rows="rowsPerPage"
@@ -153,7 +150,13 @@ main {
     justify-content: space-between;
 }
 .content-wrapper {
-    height: calc(100% - 40px);
-    padding: 10px 4rem;
+    height: 100%;
+    padding: 10px 2rem;
+}
+
+:deep(.no-row-hover .p-datatable-tbody > tr:hover),
+:deep(.no-row-hover .p-datatable-tbody > tr.p-row-hover),
+:deep(.no-row-hover.p-datatable-hoverable-rows .p-datatable-tbody > tr:hover) {
+    background: transparent !important;
 }
 </style>

@@ -1233,7 +1233,7 @@ const getRequesterName = computed(() => {
 
 .field-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(clamp(240px, 45vw, 320px), 1fr));
     gap: 15px;
 }
 
@@ -1592,6 +1592,12 @@ const getRequesterName = computed(() => {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
+    }
+}
+
+@media (max-width: 640px) {
+    .field-grid {
+        grid-template-columns: 1fr;
     }
 }
 </style>

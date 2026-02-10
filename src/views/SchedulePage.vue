@@ -1,8 +1,5 @@
 <template>
     <div class="schedule-container">
-        <header class="header">
-            <h2 class="title">Расписание занятий</h2>
-        </header>
         <WelcomeScreen :visible="loading" />
         <div class="year-selection row">
             <h3>Учебный год</h3>
@@ -132,7 +129,11 @@ const onPageChange = (event) => {
 };
 
 const goToSchedule = (item) => {
-    if (selectedCategory.value === 1) router.push({ path: `/schedule/group/${item.id}` });
+    if (selectedCategory.value === 1) {
+        localStorage.setItem('scheduleGroupId', item.id);
+        localStorage.setItem('scheduleGroupName', item.name);
+        router.push({ path: `/schedule/group/${item.id}` });
+    }
     else if (selectedCategory.value === 2) router.push({ path: `/schedule/room/${item.id}` });
     else if (selectedCategory.value === 3) router.push({ path: `/schedule/teacher/${item.id}` });
 }
@@ -250,21 +251,11 @@ onMounted(() => {
 
 <style scoped>
 .schedule-container {
-    /* position: relative; */
-    margin: auto;
     height: 100px;
     color: var(--p-text-color);
-    padding: 20px 8rem;
+    padding: 10px 2rem;
     border-radius: 10px;
     transition: all 0.5s;
-}
-
-.header {
-  text-align: left;
-  font-size: 1.5rem;
-  color: var(--p-text-color);
-  padding: 10px;
-  transition: all 0.5s;
 }
 .year-selection {
     padding: 20px;
@@ -281,14 +272,14 @@ onMounted(() => {
     transition: all 0.5s;
 }
 .year-selection button, .category-selection button {
-  background: var(--p-grey-6);
-  color: var(--p-text-color);
-  width: 100%;
-  padding: 10px 20px;
-  border: none;
-  cursor: pointer;
-  border-radius: 12px;
-  transition: all 0.5s;
+    background: var(--p-grey-6);
+    color: var(--p-text-color);
+    width: 100%;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: all 0.5s;
 }
 .year-selection button:hover, .category-selection button:hover {
     background: var(--p-blue-500-low-op);
@@ -296,9 +287,9 @@ onMounted(() => {
 }
 
 .year-selection button.active, .category-selection button.active {
-  background: var(--p-blue-500-low-op);
-  color: rgb(var(--p-color-icon-menu));
-}
+    background: var(--p-blue-500-low-op);
+    color: rgb(var(--p-color-icon-menu));
+    }
 
 .searchBar {
     margin: 30px 0 0;
@@ -312,7 +303,7 @@ onMounted(() => {
 /* Сетка карточек */
 .schedule-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(clamp(240px, 45vw, 300px), 1fr));
     gap: 15px;
     margin-top: 30px;
 }
@@ -353,8 +344,12 @@ onMounted(() => {
 }
 
 .room-title {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
     font-weight: bold;
+}
+.room-info {
+    font-size: 0.9rem;
+    margin: 5px 0;
 }
 
 .card-title {
@@ -378,5 +373,15 @@ onMounted(() => {
 
 .category-selection  .pi {
     font-size: 1.5rem;
+}
+
+:deep(.p-paginator) {
+    margin-top: 30px !important;
+}
+
+@media (max-width: 640px) {
+    .schedule-grid {
+        grid-template-columns: 1fr;
+    }
 }
 </style>

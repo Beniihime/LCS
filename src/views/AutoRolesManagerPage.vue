@@ -12,7 +12,7 @@
                 paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                 currentPageReportTemplate="{first} - {last} из {totalRecords}"
                 stripedRows
-                class="auto-roles-table"
+                class="auto-roles-table no-row-hover"
                 :class="{ 'empty-table': autoRoles.length === 0 }"
             >
                 <template #header>
@@ -482,7 +482,7 @@ onMounted(async () => {
 
 <style scoped>
 .auto-roles-manager {
-    padding: 1.5rem 2rem;
+    padding: 10px 2rem;
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -858,5 +858,11 @@ onMounted(async () => {
     .role-option-meta {
         margin-left: 0;
     }
+}
+
+:deep(.no-row-hover .p-datatable-tbody > tr:hover),
+:deep(.no-row-hover .p-datatable-tbody > tr.p-row-hover),
+:deep(.no-row-hover.p-datatable-hoverable-rows .p-datatable-tbody > tr:hover) {
+    background: transparent !important;
 }
 </style>

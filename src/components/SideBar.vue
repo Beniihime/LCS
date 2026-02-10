@@ -494,18 +494,19 @@ const checkIsMobile = () => {
     will-change: width;
     contain: strict;
     isolation: isolate;
-    min-width: 90px;
-    max-width: 280px;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 }
 
 .sidebar-container.sidebar-collapsed {
-    width: 90px !important;
+    width: 100% !important;
 }
 
 .sidebar-container.sidebar-expanded {
-    width: 280px !important;
+    width: 100% !important;
 }
 
 /* ============ ФОНОВОЕ ИЗОБРАЖЕНИЕ ============ */
@@ -597,24 +598,23 @@ const checkIsMobile = () => {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    margin: 1rem 0;
+    margin: 0.75rem 0;
     padding-bottom: 25px;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(var(--p-blue-500-rgb), 0.5) transparent;
+    scrollbar-width: none;
 
     mask-image: linear-gradient(
         to bottom,
-        transparent 0%,
-        black 4%,
-        black 96%,
-        transparent 100%
+        rgba(0, 0, 0, 0.35) 0%,
+        black 12%,
+        black 88%,
+        rgba(0, 0, 0, 0.35) 100%
     );
     -webkit-mask-image: linear-gradient(
         to bottom,
-        transparent 0%,
-        black 4%,
-        black 96%,
-        transparent 100%
+        rgba(0, 0, 0, 0.35) 0%,
+        black 12%,
+        black 88%,
+        rgba(0, 0, 0, 0.35) 100%
     );
 }
 
@@ -642,25 +642,6 @@ const checkIsMobile = () => {
             rgba(0, 0, 0, 0.6) 100%
         );
     }
-}
-
-.sidebar-middle::-webkit-scrollbar {
-    width: 4px;
-}
-
-.sidebar-middle::-webkit-scrollbar-track {
-    background: transparent;
-    border-radius: 2px;
-}
-
-.sidebar-middle::-webkit-scrollbar-thumb {
-    background: rgba(var(--p-blue-500), 0.3);
-    border-radius: 2px;
-    transition: background 0.3s ease;
-}
-
-.sidebar-middle::-webkit-scrollbar-thumb:hover {
-    background: rgba(var(--p-blue-500), 0.5);
 }
 
 .sidebar-bottom {
@@ -720,7 +701,7 @@ const checkIsMobile = () => {
 }
 
 .rectangle.collapsed .logoLCS {
-    transform: scale(0.7);
+    transform: scale(0.5);
 }
 
 .logoLCS:hover {
@@ -1133,26 +1114,6 @@ const checkIsMobile = () => {
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
-}
-
-/* ============ SCROLLBAR ============ */
-.rectangle::-webkit-scrollbar {
-    width: 4px;
-}
-
-.rectangle::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 2px;
-}
-
-.rectangle::-webkit-scrollbar-thumb {
-    background: var(--p-blue-500);
-    border-radius: 2px;
-    transition: background 0.3s ease;
-}
-
-.rectangle::-webkit-scrollbar-thumb:hover {
-    background: var(--p-blue-500);
 }
 
 /* ============ TOOLTIP ADJUSTMENTS ============ */

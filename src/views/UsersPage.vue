@@ -306,7 +306,7 @@ h3 {
     position: relative;
     flex-grow: 1;
     align-content: center;
-    padding: 10px;
+    padding: 10px 2rem;
     height: 100%;
     color: var(--p-text-color);
     transition: all 0.5s;

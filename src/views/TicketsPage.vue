@@ -483,7 +483,7 @@ onMounted(async () => {
 .content-wrapper {
     position: relative;
     flex-grow: 1;
-    padding: 1rem;
+    margin: 10px 2rem;
     height: 100%;
     color: var(--p-text-color);
     transition: all 0.5s;

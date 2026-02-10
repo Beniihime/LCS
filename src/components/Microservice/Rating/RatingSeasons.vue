@@ -265,7 +265,7 @@ h3 {
 .seasons-grid {
     display: grid;
     gap: 1.5rem;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(clamp(240px, 40vw, 300px), 1fr));
 }
 
 /* ========== Базовые стили карточек ========== */
@@ -472,7 +472,7 @@ h3 {
     }
     
     .seasons-grid {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(clamp(260px, 45vw, 320px), 1fr));
     }
 }
 
@@ -482,7 +482,7 @@ h3 {
     }
     
     .seasons-grid {
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(clamp(260px, 55vw, 320px), 1fr));
         gap: 1.25rem;
     }
     

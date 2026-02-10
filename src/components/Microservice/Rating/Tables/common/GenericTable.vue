@@ -107,7 +107,7 @@
             <DataTable
                 :value="tableData.entities" 
                 :loading="loading"
-                class="p-datatable-sm custom-datatable"
+                class="p-datatable-sm custom-datatable no-row-hover"
                 responsive-layout="scroll"
                 filterDisplay="row"
                 paginator
@@ -715,6 +715,12 @@ defineExpose({
     box-shadow: 0 8px 25px rgba(var(--p-primary-color-rgb, 59, 130, 246), 0.3);
     transition: all 0.3s ease;
     flex-shrink: 0;
+}
+
+:deep(.no-row-hover .p-datatable-tbody > tr:hover),
+:deep(.no-row-hover .p-datatable-tbody > tr.p-row-hover),
+:deep(.no-row-hover.p-datatable-hoverable-rows .p-datatable-tbody > tr:hover) {
+    background: transparent !important;
 }
 
 .p-dark .section-icon {

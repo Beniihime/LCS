@@ -2,10 +2,9 @@
     <main>
         <WelcomeScreen :visible="loading" />
         <div class="content-wrapper">
-            <h2 class="mb-2">Настройки ролей</h2>
             <div class="statistics">
                 <h2 class="statistics-title">Статистика ролей</h2>
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
+                <div class="rows gap-3">
                     <div class="col" v-for="i in 4" :key="i">
                         <div class="stat-card">
                             <div v-if="loading">
@@ -41,7 +40,7 @@
             </div>
             <Divider class="my-4"/>
             <div class="roles-cards">
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-3">
+                <div class="row g-3">
                     <div class="col" v-for="role in filteredRoles" :key="role.id">
                         <div class="card">
                             <div class="card-body d-flex flex-column">
@@ -67,17 +66,15 @@
                                         </div>
                                         <div class="col-auto">
                                             <div class="card-text m-0" v-if="role.id === userRole.id">Это вы</div>
-                                            <div v-else class="d-flex justify-content-between">
+                                            <div v-else class="d-flex justify-content-between gap-3 role-action-buttons">
+                                                <Button label="Полномочия" v-if="hasPermission('Rbac', 'Update')" class="perm-btn role-action-primary" @click.prevent="navigateToPermissions(role)"/>
                                                 <Button 
                                                     v-if="role.type === 'Custom' && hasPermission('Rbac', 'Delete')"
                                                     label="Удалить" 
-                                                    class="delete-btn me-3"
+                                                    class="delete-btn role-action-secondary"
                                                     severity="danger" 
                                                     @click="confirm1(role)" 
                                                 />
-                                                <router-link to="/role-permissions" v-if="hasPermission('Rbac', 'Update')">
-                                                    <Button label="Полномочия" class="perm-btn" @click.prevent="navigateToPermissions(role)"/>
-                                                </router-link>
                                             </div>
                                         </div>
                                     </div>
@@ -261,6 +258,25 @@ p {
 .roles-cards {
     width: 100%;
 }
+.roles-cards .row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(clamp(240px, 45vw, 320px), 1fr));
+    gap: 1rem;
+}
+.role-action-buttons {
+    align-items: stretch;
+}
+.role-action-primary {
+    flex: 1.75;
+}
+.role-action-secondary {
+    flex: 1;
+}
+.statistics .rows {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(clamp(200px, 45vw, 300px), 1fr));
+    gap: 1rem;
+}
 .card {
     border: none;
     border-radius: 12px;
@@ -371,5 +387,15 @@ main {
 .bi {
     font-size: larger;
 } 
+
+@media (max-width: 640px) {
+    .roles-cards .row {
+        grid-template-columns: 1fr;
+    }
+
+    .statistics .row {
+        grid-template-columns: 1fr;
+    }
+}
 
 </style>
