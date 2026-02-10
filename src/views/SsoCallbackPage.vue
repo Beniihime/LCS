@@ -75,11 +75,20 @@ onMounted(async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
     const state = urlParams.get('state');
+    const error = urlParams.get('error');
+    const errorDescription = urlParams.get('error_description');
+
+    if (error) {
+        errorMessage.value = formatSsoError(error, errorDescription);
+        cleanCallbackUrl();
+        return;
+    }
 
     if (code && state) {
         await verifySSO(code, state);
     } else {
         errorMessage.value = 'Отсутствуют необходимые параметры авторизации. Пожалуйста, попробуйте войти снова.';
+        cleanCallbackUrl();
     }
 });
 
@@ -112,8 +121,7 @@ const verifySSO = async (code, state) => {
 
         startTokenWorker();
 
-        const cleanUrl = window.location.origin + window.location.pathname;
-        window.history.replaceState({}, document.title, cleanUrl);
+        cleanCallbackUrl();
 
         // toast.add({ 
         //     severity: 'success', 
@@ -139,6 +147,29 @@ const verifySSO = async (code, state) => {
             life: 5000 
         });
     }
+};
+
+const cleanCallbackUrl = () => {
+    const cleanUrl = window.location.origin + window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+};
+
+const formatSsoError = (error, description) => {
+    const normalizedDescription = description ? description.replace(/\+/g, ' ') : '';
+
+    if (normalizedDescription) {
+        return `Ошибка SSO: ${normalizedDescription}`;
+    }
+
+    const errorMap = {
+        access_denied: 'Доступ отклонён. Вход был отменён пользователем.',
+        invalid_request: 'Некорректный запрос SSO. Попробуйте повторить вход.',
+        unauthorized_client: 'Клиент SSO не имеет прав на этот тип входа.',
+        server_error: 'Ошибка сервера SSO. Попробуйте позже.',
+        temporarily_unavailable: 'SSO временно недоступен. Попробуйте позже.'
+    };
+
+    return errorMap[error] || 'Произошла ошибка при авторизации через систему единого входа. Пожалуйста, попробуйте снова.';
 };
 
 const handleVideoEnded = () => {
