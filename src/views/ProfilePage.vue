@@ -144,18 +144,17 @@
                         </div> -->
                         <div>
                             <div class="field">Роль</div>
-                            <div v-if="userRole">
-                                <Chip class="role-label">
-                                    <span class="roleType" :class="getRoleTypeClass()">
-                                        {{ userRole?.type?.[0] }}
+                            <div v-if="userRoles.length">
+                                <Chip v-for="role in userRoles" :key="role.id || role.title" class="role-label">
+                                    <span class="roleType" :class="getRoleTypeClass(role)">
+                                        {{ role?.type?.[0] }}
                                     </span>
-                                    <span>{{ userRole.title }}</span>
+                                    <span>{{ role.title }}</span>
                                 </Chip>
                             </div>
                             <div v-else>
                                 <Tag severity="warn">Нет ролей</Tag>
                             </div>
-                            
                         </div>
                     </div>
                 </div>
@@ -259,7 +258,7 @@ const lastName = ref('');
 const middleName = ref('');
 const fullName = ref('');
 const email = ref('');
-const userRole = ref([]);
+const userRoles = ref([]);
 
 const newEmail = ref('');
 const oldPass = ref('');
@@ -312,8 +311,8 @@ const toggleUserBlock = async () => {
 }
 
 // Классы для отображения ролей в зависимости от их типа
-const getRoleTypeClass = () => {
-    return userRole.value.type === 'Custom' ? 'custom-role-type' : 'default-role-type';
+const getRoleTypeClass = (role) => {
+    return role?.type === 'Custom' ? 'custom-role-type' : 'default-role-type';
 }
 
 const setActiveProfile = async (profile) => {
@@ -367,7 +366,7 @@ const fetchUserProfile = async (id) => {
         lastName.value = response.data.lastName;
         middleName.value = response.data.middleName;
         email.value = response.data.email;
-        userRole.value = response.data.roles[0];
+        userRoles.value = response.data.roles || [];
         isBlocked.value = response.data.isBlocked;
 
         fullName.value = `${firstName.value} ${lastName.value}`.trim();

@@ -50,7 +50,7 @@
                 <template #empty>Не найдено.</template>
                 <template #loading>Данные загружаются. Подождите.</template>
 
-                <Column header="OTP" :showFilterMenu="false" :exportable="false">
+                <Column header="OTP" :showFilterMenu="false" :exportable="false" style="min-width: 60px;">
                     <template #body="{ data }">
                         <GetOtpButton 
                             :userId="data.id"
@@ -66,6 +66,7 @@
                     :key="col.field"
                     :header="col.header"
                     :showFilterMenu="false"
+                    :style="col.style"
                 >
                     <template #filter>
                         <InputText 
@@ -78,7 +79,7 @@
                     </template>
                 </Column>
                 
-                <Column field="roleIds" header="Роли" :showFilterMenu="false" v-if="selectedColumnFields.includes('roleIds')">
+                <Column field="roleIds" header="Роли" :showFilterMenu="false" v-if="selectedColumnFields.includes('roleIds')" style="min-width: 280px;">
                     <template #body="{ data }">
                         <div class="role-label-container">
                             <Chip v-if="data.roles.length > 0" class="role-label">
@@ -178,12 +179,12 @@ const filters = ref({
 });
 
 const columns = ref([
-    { field: 'lastName', header:'Фамилия', placeholder: 'Поиск по фамилии' },
-    { field: 'firstName', header: 'Имя', placeholder: 'Поиск по имени' },
-    { field: 'middleName', header: 'Отчество', placeholder: 'Поиск по отчеству' },
-    { field: 'email', header: 'E-mail', placeholder: 'Поиск по E-mail' },
-    { field: 'roleIds', header: 'Роли', placeholder: 'Выберите роли' },
-    { field: 'isBlocked', header: 'Статус', placeholder: 'Выберите статус' }
+    { field: 'lastName', header:'Фамилия', placeholder: 'Поиск по фамилии', style: 'min-width: 260px;' },
+    { field: 'firstName', header: 'Имя', placeholder: 'Поиск по имени', style: 'min-width: 260px;' },
+    { field: 'middleName', header: 'Отчество', placeholder: 'Поиск по отчеству', style: 'min-width: 260px;' },
+    { field: 'email', header: 'E-mail', placeholder: 'Поиск по E-mail', style: 'min-width: 260px;' },
+    { field: 'roleIds', header: 'Роли', placeholder: 'Выберите роли', style: 'min-width: 280px;' },
+    { field: 'isBlocked', header: 'Статус', placeholder: 'Выберите статус', style: 'min-width: 120px;' }
 ]);
 const defaultColumns = ['lastName', 'firstName', 'middleName', 'roleIds'];
 
