@@ -1,24 +1,25 @@
 <template>
     <div class="content">
         <div class="content-wrapper">
-            <WelcomeScreen :visible="loading"/>
-            <!-- Основная таблица -->
-            <DataTable 
-                lazy
-                v-if="isFirstLoadDone"
-                :value="tickets"
-                paginator
-                scrollable
-                stripedRows
-                :rows="rowsPerPage"
-                :rowClass="rowClass"
-                @row-click="(event) => openTicketModal(event.data.id)"
-                :totalRecords="totalRecords"
-                @page="onPage"
-                :rowsPerPageOptions="[5, 10, 15]"
-                filterDisplay="row"
-                class="tickets-table"
-            >
+            <Transition name="content-fade" mode="out-in">
+                <!-- Основная таблица -->
+                <DataTable 
+                    key="tickets-content"
+                    lazy
+                    v-if="isFirstLoadDone"
+                    :value="tickets"
+                    paginator
+                    scrollable
+                    stripedRows
+                    :rows="rowsPerPage"
+                    :rowClass="rowClass"
+                    @row-click="(event) => openTicketModal(event.data.id)"
+                    :totalRecords="totalRecords"
+                    @page="onPage"
+                    :rowsPerPageOptions="[5, 10, 15]"
+                    filterDisplay="row"
+                    class="tickets-table"
+                >
                 <template #header>
                     <div class="page-header">
                         <div class="d-flex justify-content-between align-items-center">
@@ -205,19 +206,20 @@
                         />
                     </template>
                 </Column> -->
-            </DataTable>
+                </DataTable>
 
-            <!-- Состояние загрузки при первом открытии -->
-            <div v-else-if="loading" class="skeleton-container">
-                <div class="skeleton-header mb-4">
-                    <Skeleton width="200px" height="40px" class="mb-2" />
-                    <Skeleton width="300px" height="20px" />
+                <!-- Состояние загрузки при первом открытии -->
+                <div key="tickets-skeleton" v-else-if="loading" class="skeleton-container">
+                    <div class="skeleton-header mb-4">
+                        <Skeleton width="200px" height="40px" class="mb-2" />
+                        <Skeleton width="300px" height="20px" />
+                    </div>
+                    <div class="skeleton-filters mb-4">
+                        <Skeleton width="100%" height="50px" />
+                    </div>
+                    <Skeleton width="100%" height="100%" class="skeleton-table" />
                 </div>
-                <div class="skeleton-filters mb-4">
-                    <Skeleton width="100%" height="50px" />
-                </div>
-                <Skeleton width="100%" height="100%" class="skeleton-table" />
-            </div>
+            </Transition>
         </div>
 
         <!-- Модальное окно деталей тикета -->
