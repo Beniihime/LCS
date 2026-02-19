@@ -1,9 +1,10 @@
 <template>
     <div class="auto-roles-manager">
-        <WelcolmeScreen :visible="loading" />
 
         <div class="table-container">
+            <Transition name="content-fade" mode="out-in">
             <DataTable
+                key="autoroles-content"
                 v-if="!loading"
                 :value="autoRoles" 
                 :paginator="true" 
@@ -119,7 +120,8 @@
                     </div>
                 </template>
             </DataTable>
-            <Skeleton v-else width="100%" height="100%"/>
+            <Skeleton key="autoroles-skeleton" v-else width="100%" height="100%"/>
+            </Transition>
         </div>
 
         <!-- Диалог создания новой авто-роли -->
@@ -268,7 +270,6 @@ import { ref, onMounted, computed } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import axiosInstance from '@/utils/axios.js';
 import { usePermissionStore } from '@/stores/permissions.js';
-import WelcolmeScreen from "@/components/Utils/WelcomeScreen.vue";
 
 const toast = useToast();
 const permissionStore = usePermissionStore();

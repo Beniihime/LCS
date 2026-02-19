@@ -1,26 +1,27 @@
 <template>
     <main>
-        <WelcomeScreen :visible="loading" />
         <div class="content-wrapper">
             <div class="statistics">
                 <h2 class="statistics-title">Статистика ролей</h2>
                 <div class="rows gap-3">
                     <div class="col" v-for="i in 4" :key="i">
                         <div class="stat-card">
-                            <div v-if="loading">
-                                <Skeleton width="100%" height="80px" />
-                            </div>
-                            <div v-else>
-                                <div class="row align-items-center">
-                                    <div class="col-auto pe-0">
-                                        <i :class="statisticsIcons[i - 1]"></i>
-                                    </div>
-                                    <div class="col">
-                                        <span class="stat-label">{{ statisticsLabels[i - 1] }}</span>
-                                    </div>
+                            <Transition name="content-fade" mode="out-in">
+                                <div key="rbac-stat-skeleton" v-if="loading">
+                                    <Skeleton width="100%" height="80px" />
                                 </div>
-                                <div class="stat-number">{{ statisticsCounts[i - 1] }}</div>
-                            </div>
+                                <div key="rbac-stat-content" v-else>
+                                    <div class="row align-items-center">
+                                        <div class="col-auto pe-0">
+                                            <i :class="statisticsIcons[i - 1]"></i>
+                                        </div>
+                                        <div class="col">
+                                            <span class="stat-label">{{ statisticsLabels[i - 1] }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="stat-number">{{ statisticsCounts[i - 1] }}</div>
+                                </div>
+                            </Transition>
                         </div>
                     </div>
                 </div>
@@ -44,41 +45,45 @@
                     <div class="col" v-for="role in filteredRoles" :key="role.id">
                         <div class="card">
                             <div class="card-body d-flex flex-column">
-                                <Skeleton v-if="loading" width="100%" height="200px"/>
-                                <div v-else>
-                                    <UpdateRole 
-                                        :id="role.id" 
-                                        :refreshRoles="fetchRoles" 
-                                        :roles="roles" 
-                                        v-if="role.id !== userRole.id && role.id !== 1 && hasPermission('Rbac', 'Update')" 
-                                    />
-                                    <h5 class="card-title">{{ role.title }}</h5>
-                                    <p class="card-text" v-tooltip="{ value: `${role.description}`, showDelay: 1000, hideDelay: 300 }">{{ role.description }}</p>
-                                    <p class="card-text"><span class="muted">Приоритет: {{ role.priority }}</span></p>
-                                    <div class="mt-auto row row-cols-2 justify-content-between align-items-center">
-                                        <div class="col-auto">
-                                            <UserCount 
-                                                :roleId="role.id" 
-                                                :userCount="role.userCount" 
-                                                :roleType="role.type" 
-                                                :roleTitle="role.title"
-                                            />
-                                        </div>
-                                        <div class="col-auto">
-                                            <div class="card-text m-0" v-if="role.id === userRole.id">Это вы</div>
-                                            <div v-else class="d-flex justify-content-between gap-3 role-action-buttons">
-                                                <Button label="Полномочия" v-if="hasPermission('Rbac', 'Update')" class="perm-btn role-action-primary" @click.prevent="navigateToPermissions(role)"/>
-                                                <Button 
-                                                    v-if="role.type === 'Custom' && hasPermission('Rbac', 'Delete')"
-                                                    label="Удалить" 
-                                                    class="delete-btn role-action-secondary"
-                                                    severity="danger" 
-                                                    @click="confirm1(role)" 
+                                <Transition name="content-fade" mode="out-in">
+                                    <Skeleton key="rbac-card-skeleton" v-if="loading" width="100%" height="200px"/>
+                                    <div key="rbac-card-content" v-else>
+                                        <UpdateRole 
+                                            :id="role.id" 
+                                            :refreshRoles="fetchRoles" 
+                                            :roles="roles" 
+                                            v-if="role.id !== userRole.id && role.id !== 1 && hasPermission('Rbac', 'Update')" 
+                                        />
+                                        <h5 class="card-title">{{ role.title }}</h5>
+                                        <p class="card-text" v-tooltip="{ value: `${role.description}`, showDelay: 1000, hideDelay: 300 }">{{ role.description }}</p>
+                                        <p class="card-text"><span class="muted">Приоритет: {{ role.priority }}</span></p>
+                                        <div class="mt-auto row row-cols-2 justify-content-between align-items-center">
+                                            <div class="col-auto">
+                                                <UserCount 
+                                                    :roleId="role.id" 
+                                                    :userCount="role.userCount" 
+                                                    :roleType="role.type" 
+                                                    :roleTitle="role.title"
                                                 />
+                                            </div>
+                                            <div class="col-auto">
+                                                <div class="card-text m-0" v-if="role.id === userRole.id">Это вы</div>
+                                                <div v-else class="d-flex justify-content-between">
+                                                    <Button 
+                                                        v-if="role.type === 'Custom' && hasPermission('Rbac', 'Delete')"
+                                                        label="Удалить" 
+                                                        class="delete-btn me-3"
+                                                        severity="danger" 
+                                                        @click="confirm1(role)" 
+                                                    />
+                                                    <router-link to="/role-permissions" v-if="hasPermission('Rbac', 'Update')">
+                                                        <Button label="Полномочия" class="perm-btn" @click.prevent="navigateToPermissions(role)"/>
+                                                    </router-link>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </Transition>
                             </div>
                         </div>
                     </div>
@@ -95,7 +100,6 @@ import { useToast } from 'primevue/usetoast';
 
 import qs from 'qs';
 import axiosInstance from '@/utils/axios.js';
-import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import UpdateRole from '@/components/Rbac/UpdateRole.vue';
 import CreateRole from '@/components/Rbac/CreateRole.vue';
 import UserCount from '@/components/Rbac/UserCount.vue';

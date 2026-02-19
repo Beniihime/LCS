@@ -1,10 +1,14 @@
 <template>
     <main>
-        <WelcomeScreen :visible="loading" />
+        <div class="header">
+            <h2 class="m-0">Настройка SSO</h2>
+        </div>
 
         <div class="content-wrapper">
-            
+            <Transition name="content-fade" mode="out-in">
             <DataTable 
+                v-if="!loading || ssoList.length"
+                key="sso-content"
                 :value="paginatedList" 
                 dataKey="id" 
                 class="mb-4 no-row-hover" 
@@ -78,6 +82,15 @@
                 </template>
 
             </DataTable>
+            <div v-else key="sso-skeleton" class="table-skeleton">
+                <Skeleton width="16rem" height="2rem" class="mb-4" />
+                <Skeleton width="100%" height="3rem" class="mb-3" />
+                <Skeleton width="100%" height="3rem" class="mb-2" />
+                <Skeleton width="100%" height="3rem" class="mb-2" />
+                <Skeleton width="100%" height="3rem" class="mb-2" />
+                <Skeleton width="100%" height="3rem" class="mb-2" />
+            </div>
+            </Transition>
         </div>
     </main>
 </template>
@@ -87,7 +100,6 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import axiosInstance from "@/utils/axios";
 
-import WelcomeScreen from "@/components/Utils/WelcomeScreen.vue";
 import DeleteSsoConfig from "@/components/Sso/DeleteSsoConfig.vue";
 import AddSsoConfig from "@/components/Sso/AddSsoConfig.vue";
 
@@ -158,5 +170,8 @@ main {
 :deep(.no-row-hover .p-datatable-tbody > tr.p-row-hover),
 :deep(.no-row-hover.p-datatable-hoverable-rows .p-datatable-tbody > tr:hover) {
     background: transparent !important;
+}
+.table-skeleton {
+    width: 100%;
 }
 </style>

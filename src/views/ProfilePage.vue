@@ -1,6 +1,5 @@
 <template>
     <main>
-        <WelcomeScreen :visible="loading" />
 
         <!-- Сайдбар перключения профилей -->
         <aside class="sidebar">
@@ -172,48 +171,48 @@
             
             <!-- Карточка профиля InfraManager -->
             <div v-if="activeProfile === 'infra'">
-                <!-- <WelcomeScreen :visible="infraLoading" /> -->
-                <div class="infra-profile-card" v-if="!infraLoading">
-                    <h2>InfraManager</h2>
-                    <Divider class="my-3"/>
-                    <div class="infra-info">
-                        <div class="row mb-3">
-                            <div class="col-auto">
-                                <i class="pi pi-user"></i>
+                <Transition name="content-fade" mode="out-in">
+                    <div key="profile-infra-content" class="infra-profile-card" v-if="!infraLoading">
+                        <h2>InfraManager</h2>
+                        <Divider class="my-3"/>
+                        <div class="infra-info">
+                            <div class="row mb-3">
+                                <div class="col-auto">
+                                    <i class="pi pi-user"></i>
+                                </div>
+                                <div class="col">
+                                    {{ infraFullName }}
+                                </div>
                             </div>
-                            <div class="col">
-                                {{ infraFullName }}
+                            <div class="row mb-3">
+                                <div class="col-auto">
+                                    <i class="pi pi-envelope"></i>
+                                </div>
+                                <div class="col">
+                                    {{ infraEmail }}
+                                </div>
                             </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-auto">
-                                <i class="pi pi-envelope"></i>
+                            <div class="row mb-3">
+                                <div class="col-auto">
+                                    <i class="pi pi-sitemap"></i>
+                                </div>
+                                <div class="col">
+                                    {{ infraPosition }}
+                                </div>
                             </div>
-                            <div class="col">
-                                {{ infraEmail }}
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-auto">
-                                <i class="pi pi-sitemap"></i>
-                            </div>
-                            <div class="col">
-                                {{ infraPosition }}
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-auto">
-                                <i class="pi pi-map-marker"></i>
-                            </div>
-                            <div class="col">
-                                {{ infraPlace }}
+                            <div class="row">
+                                <div class="col-auto">
+                                    <i class="pi pi-map-marker"></i>
+                                </div>
+                                <div class="col">
+                                    {{ infraPlace }}
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                    <Skeleton key="profile-infra-skeleton" class="w-100" style="height: 250px; border-radius: 12px;" v-else/>
+                </Transition>
             </div>
-
-            <Skeleton class="w-100" style="height: 250px; border-radius: 12px;" v-if="activeProfile === 'infra' && infraLoading"/>
 
             
             <!-- <InfraManagerServices v-if="infraManagerUser"/>
@@ -228,7 +227,6 @@ import { useRoute } from 'vue-router';
 import axiosInstance from '@/utils/axios.js';
 import { usePermissionStore } from '@/stores/permissions.js';
 
-import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import UpdateUser from '@/components/Users/UpdateUser.vue';
 import InfraManagerCallsMe from '@/components/InfraManager/InfraManagerCallsMe.vue';
 import InfraManagerServices from '@/components/InfraManager/InfraManagerServices.vue';

@@ -1,22 +1,23 @@
 <template>
     <div class="content">
         <div class="content-wrapper">                
-            <WelcomeScreen v-if="isFirstLoadDone" :visible="loading" />
-            <DataTable
-                lazy
-                v-if="isFirstLoadDone"
-                :value="customers" 
-                paginator
-                scrollable
-                stripedRows
-                :rows="rowsPerPage"
-                :rowClass="rowClass"
-                @row-click="(event) => navigateToProfile(event.data.id, event.data.roles[0]?.id)"
-                :totalRecords="totalRecords"
-                @page="onPage"
-                :rowsPerPageOptions="[5, 10, 15]"
-                filterDisplay="row"
-            >
+            <Transition name="content-fade" mode="out-in">
+                <DataTable
+                    key="users-table"
+                    lazy
+                    v-if="isFirstLoadDone"
+                    :value="customers" 
+                    paginator
+                    scrollable
+                    stripedRows
+                    :rows="rowsPerPage"
+                    :rowClass="rowClass"
+                    @row-click="(event) => navigateToProfile(event.data.id, event.data.roles[0]?.id)"
+                    :totalRecords="totalRecords"
+                    @page="onPage"
+                    :rowsPerPageOptions="[5, 10, 15]"
+                    filterDisplay="row"
+                >
                 <template #header>
                     <div class="d-flex justify-content-between align-items-center">
                         <h3 class="m-0 ps-4">Пользователи</h3>
@@ -136,10 +137,57 @@
                         />
                     </template>
                 </Column>
-                
-            </DataTable>
-            
-            <Skeleton v-else-if="!isFirstLoadDone && loading" width="100%" height="100%" class="skeleton-table" />
+                </DataTable>
+
+                <div v-else-if="!isFirstLoadDone && loading" key="users-skeleton" class="users-skeleton">
+                <div class="users-skeleton-header">
+                    <Skeleton width="180px" height="34px" />
+                    <div class="users-skeleton-actions">
+                        <Skeleton width="260px" height="40px" borderRadius="10px" />
+                        <Skeleton width="140px" height="40px" borderRadius="10px" />
+                        <Skeleton width="40px" height="40px" borderRadius="10px" />
+                    </div>
+                </div>
+
+                <div class="users-skeleton-table">
+                    <div class="users-skeleton-col otp">
+                        <Skeleton width="36px" height="18px" />
+                        <Skeleton width="100%" height="32px" borderRadius="8px" />
+                    </div>
+                    <div class="users-skeleton-col name">
+                        <Skeleton width="90px" height="18px" />
+                        <Skeleton width="100%" height="32px" borderRadius="8px" />
+                    </div>
+                    <div class="users-skeleton-col name">
+                        <Skeleton width="50px" height="18px" />
+                        <Skeleton width="100%" height="32px" borderRadius="8px" />
+                    </div>
+                    <div class="users-skeleton-col name">
+                        <Skeleton width="85px" height="18px" />
+                        <Skeleton width="100%" height="32px" borderRadius="8px" />
+                    </div>
+                    <div class="users-skeleton-col roles">
+                        <Skeleton width="65px" height="18px" />
+                        <Skeleton width="100%" height="32px" borderRadius="8px" />
+                    </div>
+                </div>
+
+                <div class="users-skeleton-body">
+                    <div class="users-skeleton-row" v-for="idx in rowsPerPage" :key="idx">
+                        <Skeleton width="34px" height="34px" borderRadius="8px" />
+                        <Skeleton width="220px" height="24px" borderRadius="8px" />
+                        <Skeleton width="180px" height="24px" borderRadius="8px" />
+                        <Skeleton width="180px" height="24px" borderRadius="8px" />
+                        <Skeleton width="180px" height="28px" borderRadius="999px" />
+                    </div>
+                </div>
+
+                <div class="users-skeleton-footer">
+                    <Skeleton width="180px" height="22px" />
+                    <Skeleton width="220px" height="36px" borderRadius="10px" />
+                </div>
+                </div>
+            </Transition>
         </div>
     </div>
 </template>
@@ -152,7 +200,6 @@ import { debounce } from 'lodash';
 
 import CreateUser from '@/components/Users/CreateUser.vue';
 import GetOtpButton from '@/components/Users/GetOtpButton.vue';
-import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import { usePermissionStore } from '@/stores/permissions.js';
 
 const router = useRouter();
@@ -345,9 +392,97 @@ h3 {
 .custom-role-type {
     background-color: var(--p-purple-500);
 }
-.skeleton-table {
+
+.content-fade-enter-active,
+.content-fade-leave-active {
+    transition: opacity 0.22s ease;
+}
+
+.content-fade-enter-from,
+.content-fade-leave-to {
+    opacity: .25;
+}
+
+.users-skeleton {
     border-radius: 12px;
-    background-color: var(--p-grey-3);
+    border: 2px solid var(--p-grey-4);
+    background-color: var(--p-bg-color-2);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+    min-height: 100%;
+}
+
+.users-skeleton-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.users-skeleton-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.users-skeleton-table {
+    display: grid;
+    grid-template-columns: 70px 1fr 1fr 1fr 1.1fr;
+    gap: 10px;
+}
+
+.users-skeleton-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.users-skeleton-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-height: 0;
+}
+
+.users-skeleton-row {
+    display: grid;
+    grid-template-columns: 70px 1fr 1fr 1fr 1.1fr;
+    gap: 10px;
+    align-items: center;
+}
+
+.users-skeleton-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+@media (max-width: 980px) {
+    .users-skeleton-header,
+    .users-skeleton-footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .users-skeleton-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .users-skeleton-table,
+    .users-skeleton-row {
+        grid-template-columns: 56px 1fr 1fr;
+    }
+
+    .users-skeleton-table .users-skeleton-col:nth-child(n + 4),
+    .users-skeleton-row :nth-child(n + 4) {
+        display: none;
+    }
 }
 
 </style>

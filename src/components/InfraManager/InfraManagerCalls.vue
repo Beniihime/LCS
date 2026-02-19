@@ -16,15 +16,14 @@
 
             <!-- Модальное окно для подробной информации -->
             <Dialog v-model:visible="isDialogVisible" modal :style="{ 'min-width': '60rem', 'max-width': '100rem' }" @hide="closeDialog">
-              <template v-if="errorOccurred">
-                <div class="error-message">
+              <Transition name="content-fade" mode="out-in">
+                <div key="infra-calls-error" v-if="errorOccurred" class="error-message">
                   <p>Произошла ошибка при загрузке данных</p>
                 </div>
-              </template>
 
-              <template v-else-if="selectedCall">
-                <h3 class="dialog-title">Заявка №{{ selectedCall.number }}</h3>
-                <Tabs value="0">
+                <div key="infra-calls-content" v-else-if="selectedCall">
+                  <h3 class="dialog-title">Заявка №{{ selectedCall.number }}</h3>
+                  <Tabs value="0">
                   <TabList>
                     <Tab value="0" as="div">
                       <i class="pi pi-cog"></i>
@@ -147,12 +146,9 @@
                       <p v-else>Согласования отсутствуют</p>
                     </TabPanel>
                   </TabPanels>
-                </Tabs>
-                  
-                
-              </template>
-              <template v-else>
-                <div class="call-details">
+                  </Tabs>
+                </div>
+                <div key="infra-calls-skeleton" v-else class="call-details">
                   <Skeleton width="530px" height="200px" class="mb-2"/>
                   <Skeleton width="530px" height="200px" class="mb-2"/>
                   <Skeleton width="530px" height="200px" class="mb-2"/>
@@ -160,7 +156,7 @@
                   <Skeleton width="530px" height="200px" class="mb-2"/>
                   <Skeleton width="530px" height="200px" class="mb-2"/>
                 </div>
-              </template>
+              </Transition>
             </Dialog>
         </div>
     </div>

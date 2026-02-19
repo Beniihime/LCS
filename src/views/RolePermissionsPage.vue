@@ -1,7 +1,6 @@
 <template>
     <main>
         <div class="permissions-wrapper">
-            <WelcomeScreen :visible="loading" />
             <div class="d-flex justify-content-between align-items-center">
                 <h2 class="m-0">Полномочия роли</h2>
                 <Button class="back-btn m-0" icon="pi pi-arrow-left" label="Назад" @click="goBack" text />
@@ -29,79 +28,99 @@
                 </div>
             </div>
             <Divider />
-            <div v-for="resource in filteredResources" :key="resource.id" class="mt-4">
-                <div class="row align-items-center">
-                    <div class="col-auto pe-0">
-                        <h4>{{ resource.title }}</h4>
-                    </div>
-                    <div class="col-auto pe-0"><Tag :value="resource.type" severity="info" class="mx-2"/></div>
-                    <div class="col-auto ps-0">
-                        <Tag 
-                            v-if="!resource.permissions.some(permission => permission.isCustomizable)" 
-                            value="Нет регулируемых полномочий" 
-                            severity="warn" 
-                            icon="pi pi-exclamation-triangle"
-                        />
-                    </div>
-                </div>
-                <div class="resource-info">
-                    <p class="resource-description">{{ resource.description }}</p>
-                </div>
-                <div class="w-100">
-                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-3">
-                        <div v-for="permission in resource.permissions" :key="permission.id" class="col">
-                            <div class="permission-item h-100">
-                                <div class="permission-header">
-                                    <h3 class="permission-title">{{ permission.title }}</h3>
-                                    <div class="d-flex">
-                                        <Button class="me-2" text style="padding: 1px;" @click="openDialog(permission.id)">
-                                            <i class="pi pi-info-circle" style="font-size: 20px;"/>
-                                        </Button>
-                                        <Dialog 
-                                            v-model:visible="infoDialogVisible[permission.id]"
-                                            modal
-                                            :header="permission.title" 
-                                            :style="{ 'min-width': '20rem', 'max-width': '40rem' }"
-                                        >
-                                            <p>{{ permission.description }}</p>
-                                            <Tag 
-                                                v-if="permission.isCustomizable" 
-                                                value="Регулируемое" 
-                                                severity="success" 
-                                                icon="pi pi-cog"
-                                            />
-                                            <Tag 
-                                                v-else 
-                                                value="Не регулируемое" 
-                                                severity="warn" 
-                                                icon="pi pi-exclamation-triangle"
-                                            />
-                                        </Dialog>
-
-                                        <div v-if="permission.isCustomizable" class="d-flex">
-                                            <ToggleSwitch v-model="permission.enabled" @update:model-value="togglePermission(roleStore.roleId, permission.id, $event)">
-                                                <template #handle>
-                                                    <i :class="['pi', { 'pi-check': permission.enabled, 'pi-times': !permission.enabled }]" style="font-size: 8px; font-weight: 900;"></i>
-                                                </template>
-                                            </ToggleSwitch>
-                                        </div>
-                                        <div v-else-if="permission.enabled" class="d-flex">
-                                            <Tag severity="success" icon="pi pi-lock-open"/>
-                                        </div>
-                                        <div v-else class="d-flex">
-                                            <Tag severity="danger" icon="pi pi-lock" style="padding: 7px;"/>
-                                        </div>
-                                    </div>
+            <Transition name="content-fade" mode="out-in">
+                <div v-if="loading" key="role-permissions-skeleton" class="permissions-skeleton">
+                    <div v-for="idx in 3" :key="idx" class="mt-4">
+                        <Skeleton width="20rem" height="1.5rem" class="mb-2" />
+                        <Skeleton width="36rem" height="1rem" class="mb-3" />
+                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-3">
+                            <div class="col" v-for="permIdx in 8" :key="permIdx">
+                                <div class="permission-item h-100">
+                                    <Skeleton width="65%" height="1.2rem" class="mb-2" />
+                                    <Skeleton width="100%" height="0.95rem" class="mb-2" />
+                                    <Skeleton width="84%" height="0.95rem" />
                                 </div>
-                                <p class="permission-description">{{ permission.description }}</p>
                             </div>
-                            
                         </div>
+                        <Divider />
                     </div>
                 </div>
-               
-                <Divider />
-            </div>
+                <div v-else key="role-permissions-content">
+                    <div v-for="resource in filteredResources" :key="resource.id" class="mt-4">
+                        <div class="row align-items-center">
+                            <div class="col-auto pe-0">
+                                <h4>{{ resource.title }}</h4>
+                            </div>
+                            <div class="col-auto pe-0"><Tag :value="resource.type" severity="info" class="mx-2"/></div>
+                            <div class="col-auto ps-0">
+                                <Tag 
+                                    v-if="!resource.permissions.some(permission => permission.isCustomizable)" 
+                                    value="Нет регулируемых полномочий" 
+                                    severity="warn" 
+                                    icon="pi pi-exclamation-triangle"
+                                />
+                            </div>
+                        </div>
+                        <div class="resource-info">
+                            <p class="resource-description">{{ resource.description }}</p>
+                        </div>
+                        <div class="w-100">
+                            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-3">
+                                <div v-for="permission in resource.permissions" :key="permission.id" class="col">
+                                    <div class="permission-item h-100">
+                                        <div class="permission-header">
+                                            <h3 class="permission-title">{{ permission.title }}</h3>
+                                            <div class="d-flex">
+                                                <Button class="me-2" text style="padding: 1px;" @click="openDialog(permission.id)">
+                                                    <i class="pi pi-info-circle" style="font-size: 20px;"/>
+                                                </Button>
+                                                <Dialog 
+                                                    v-model:visible="infoDialogVisible[permission.id]"
+                                                    modal
+                                                    :header="permission.title" 
+                                                    :style="{ 'min-width': '20rem', 'max-width': '40rem' }"
+                                                >
+                                                    <p>{{ permission.description }}</p>
+                                                    <Tag 
+                                                        v-if="permission.isCustomizable" 
+                                                        value="Регулируемое" 
+                                                        severity="success" 
+                                                        icon="pi pi-cog"
+                                                    />
+                                                    <Tag 
+                                                        v-else 
+                                                        value="Не регулируемое" 
+                                                        severity="warn" 
+                                                        icon="pi pi-exclamation-triangle"
+                                                    />
+                                                </Dialog>
+
+                                                <div v-if="permission.isCustomizable" class="d-flex">
+                                                    <ToggleSwitch v-model="permission.enabled" @update:model-value="togglePermission(roleStore.roleId, permission.id, $event)">
+                                                        <template #handle>
+                                                            <i :class="['pi', { 'pi-check': permission.enabled, 'pi-times': !permission.enabled }]" style="font-size: 8px; font-weight: 900;"></i>
+                                                        </template>
+                                                    </ToggleSwitch>
+                                                </div>
+                                                <div v-else-if="permission.enabled" class="d-flex">
+                                                    <Tag severity="success" icon="pi pi-lock-open"/>
+                                                </div>
+                                                <div v-else class="d-flex">
+                                                    <Tag severity="danger" icon="pi pi-lock" style="padding: 7px;"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p class="permission-description">{{ permission.description }}</p>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <Divider />
+                    </div>
+                </div>
+            </Transition>
         </div>
     </main>
 </template>
@@ -111,7 +130,6 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useRoleStore } from '@/stores/roleStore';
 import axiosInstance from '@/utils/axios.js';
-import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 
 const searchQuery1 = ref('');
 const loading = ref(false);
@@ -241,9 +259,11 @@ const getRoleTypeClass = () => {
 }
 
 onMounted(async () => {
+    loading.value = true;
     await fetchAllPermissions();
     await fetchRolePermissions();
     initializeDialogVisibility();
+    loading.value = false;
 });
 </script>
 

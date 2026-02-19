@@ -1,6 +1,5 @@
 <template>
     <div class="content">
-        <WelcomeScreen :visible="loading" />
         <div class="content-wrap">
 
             <!-- Подсказка для прокрутки таблицы -->
@@ -8,20 +7,22 @@
                 Прокрутите таблицу вправо, чтобы увидеть больше данных.
             </div>
 
-            <DataTable
-                v-if="!loading"
-                :value="calls"
-                filterDisplay="row"
-                paginator
-                :rows="rowsPerPage"
-                :totalRecords="totalRecords"
-                scrollable
-                removableSort
-                stripedRows
-                @page="onPage"
-                :rowClass="rowClass"
-                @row-click="(event) => openCallDetails(event.data.id)"
-            >
+            <Transition name="content-fade" mode="out-in">
+                <DataTable
+                    key="requests-content"
+                    v-if="!loading"
+                    :value="calls"
+                    filterDisplay="row"
+                    paginator
+                    :rows="rowsPerPage"
+                    :totalRecords="totalRecords"
+                    scrollable
+                    removableSort
+                    stripedRows
+                    @page="onPage"
+                    :rowClass="rowClass"
+                    @row-click="(event) => openCallDetails(event.data.id)"
+                >
                 <template #header>
                     <div class="row justify-content-between align-items-center">
                         <div class="col d-flex justify-content-start">
@@ -293,9 +294,10 @@
                         <span>строк</span>
                     </div>
                 </template>
-            </DataTable>
+                </DataTable>
 
-            <Skeleton v-else width="100%" height="100%" class="skeleton-table" />
+                <Skeleton key="requests-skeleton" v-else width="100%" height="100%" class="skeleton-table" />
+            </Transition>
         </div>
         <InfraManagerCallsMe ref="callDetailsRef" class="position-absolute opacity-0" style="z-index: -999;"/>
     </div>
@@ -309,7 +311,6 @@ import qs from 'qs';
 import axiosInstance from '@/utils/axios.js';
 
 import InfraManagerCallsMe from '@/components/InfraManager/InfraManagerCallsMe.vue';
-import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import CreateRequest from '@/components/InfraManager/CreateRequest.vue';
 
 const loading = ref(true);

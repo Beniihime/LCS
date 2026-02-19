@@ -1,6 +1,5 @@
 <template>
     <main>
-        <WelcomeScreen :visible="loading" />
         
         <div class="content-wrapper">
             
@@ -45,40 +44,62 @@
             </header>
 
             <!-- Основной контент -->
-            <div class="main-content">
-                <div class="content-card">
-                    <!-- Панель инструментов -->
-                    <div class="toolbar">
-                        <div class="toolbar-left">
-                            <Button 
-                                :icon="allExpanded ? 'pi pi-minus' : 'pi pi-plus'" 
-                                :label="allExpanded ? 'Свернуть все' : 'Развернуть все'"
-                                class="p-button-outlined toggle-button"
-                                @click="toggleAllExpanded"
-                            />
+            <Transition name="content-fade" mode="out-in">
+                <div v-if="loading && !rawIndicators.length" key="season-indicators-skeleton" class="main-content">
+                    <div class="content-card">
+                        <div class="toolbar">
+                            <div class="toolbar-left">
+                                <Skeleton width="10rem" height="2.25rem" />
+                            </div>
+                            <div class="toolbar-right">
+                                <Skeleton width="12rem" height="2.25rem" class="me-3" />
+                                <Skeleton width="11rem" height="2.25rem" />
+                            </div>
                         </div>
-                        
-                        <div class="toolbar-right">
-                            <AddIndToSeason 
-                            :seasonId="seasonId" 
-                            @added="onIndicatorAdded" 
-                            :rawIndicators="rawIndicators" 
-                            />
-                            <Button 
-                                icon="pi pi-download"
-                                label="Скачать отчет"
-                                outlined
-                                severity="success"
-                                class="ms-3 toggle-button"
-                                @click="downloadReport"
-                                :loading="downloading"
-                            />
+                        <div class="table-container">
+                            <Skeleton width="100%" height="3rem" class="mb-2" />
+                            <Skeleton width="100%" height="3rem" class="mb-2" />
+                            <Skeleton width="100%" height="3rem" class="mb-2" />
+                            <Skeleton width="100%" height="3rem" class="mb-2" />
+                            <Skeleton width="100%" height="3rem" class="mb-2" />
+                            <Skeleton width="100%" height="3rem" class="mb-2" />
                         </div>
                     </div>
+                </div>
+                <div v-else key="season-indicators-content" class="main-content">
+                    <div class="content-card">
+                        <!-- Панель инструментов -->
+                        <div class="toolbar">
+                            <div class="toolbar-left">
+                                <Button 
+                                    :icon="allExpanded ? 'pi pi-minus' : 'pi pi-plus'" 
+                                    :label="allExpanded ? 'Свернуть все' : 'Развернуть все'"
+                                    class="p-button-outlined toggle-button"
+                                    @click="toggleAllExpanded"
+                                />
+                            </div>
+                            
+                            <div class="toolbar-right">
+                                <AddIndToSeason 
+                                :seasonId="seasonId" 
+                                @added="onIndicatorAdded" 
+                                :rawIndicators="rawIndicators" 
+                                />
+                                <Button 
+                                    icon="pi pi-download"
+                                    label="Скачать отчет"
+                                    outlined
+                                    severity="success"
+                                    class="ms-3 toggle-button"
+                                    @click="downloadReport"
+                                    :loading="downloading"
+                                />
+                            </div>
+                        </div>
 
-                    <!-- Таблица с показателями -->
-                    <div class="table-container">
-                        <div class="table-section" :class="{ 'empty-state': totalIndicators === 0 }">
+                        <!-- Таблица с показателями -->
+                        <div class="table-container">
+                            <div class="table-section" :class="{ 'empty-state': totalIndicators === 0 }">
                             <TreeTable
                                 v-if="totalIndicators > 0"
                                 :value="treeNodes"
@@ -172,23 +193,24 @@
                             </TreeTable>
 
                             <!-- Состояние пустого списка -->
-                            <div v-if="totalIndicators === 0" class="empty-indicators">
-                                <div class="empty-content">
-                                    <i class="pi pi-chart-line empty-icon"></i>
-                                    <h3>Показатели не добавлены</h3>
-                                    <p>Начните работу, добавив первый показатель эффективности</p>
-                                    <AddIndToSeason 
-                                        :seasonId="seasonId" 
-                                        @added="onIndicatorAdded" 
-                                        :rawIndicators="rawIndicators"
-                                        class="empty-action"
-                                    />
+                                <div v-if="totalIndicators === 0" class="empty-indicators">
+                                    <div class="empty-content">
+                                        <i class="pi pi-chart-line empty-icon"></i>
+                                        <h3>Показатели не добавлены</h3>
+                                        <p>Начните работу, добавив первый показатель эффективности</p>
+                                        <AddIndToSeason 
+                                            :seasonId="seasonId" 
+                                            @added="onIndicatorAdded" 
+                                            :rawIndicators="rawIndicators"
+                                            class="empty-action"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </Transition>
         </div>
     </main>
 </template>
@@ -199,7 +221,6 @@ import { useRouter, useRoute } from "vue-router";
 import axiosInstance from "@/utils/axios.js";
 import { getQuarterPeriod } from '@/utils/formatSeason.js';
 
-import WelcomeScreen from "@/components/Utils/WelcomeScreen.vue";
 import DeleteIndicator from "@/components/Microservice/Rating/Methods/DeleteIndicator.vue";
 import AddIndToSeason from "@/components/Microservice/Rating/Methods/AddIndToSeason.vue";
 import IndicatorScoresManager from "@/components/Microservice/Rating/IndicatorScoresManager.vue";

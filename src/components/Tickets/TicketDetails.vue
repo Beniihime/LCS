@@ -8,28 +8,29 @@
         :draggable="false"
         @hide="closeModal"
     >
-        <!-- Состояние загрузки -->
-        <div v-if="loading" class="call-details">
-            <Skeleton width="100%" height="200px" class="mb-2"/>
-            <Skeleton width="100%" height="200px" class="mb-2"/>
-            <Skeleton width="100%" height="200px" class="mb-2"/>
-            <Skeleton width="100%" height="200px" class="mb-2"/>
-        </div>
+        <Transition name="content-fade" mode="out-in">
+            <!-- Состояние загрузки -->
+            <div key="ticket-details-skeleton" v-if="loading" class="call-details">
+                <Skeleton width="100%" height="200px" class="mb-2"/>
+                <Skeleton width="100%" height="200px" class="mb-2"/>
+                <Skeleton width="100%" height="200px" class="mb-2"/>
+                <Skeleton width="100%" height="200px" class="mb-2"/>
+            </div>
 
-        <!-- Состояние ошибки -->
-        <div v-else-if="error" class="error-message">
-            <p>Произошла ошибка при загрузке данных</p>
-            <Button 
-                label="Повторить" 
-                icon="pi pi-refresh" 
-                @click="loadTicket(props.ticketId)" 
-                class="mt-3"
-            />
-        </div>
+            <!-- Состояние ошибки -->
+            <div key="ticket-details-error" v-else-if="error" class="error-message">
+                <p>Произошла ошибка при загрузке данных</p>
+                <Button 
+                    label="Повторить" 
+                    icon="pi pi-refresh" 
+                    @click="loadTicket(props.ticketId)" 
+                    class="mt-3"
+                />
+            </div>
 
-        <!-- Основное содержимое -->
-        <div v-else-if="selectedTicket" class="ticket-details">
-            <Tabs value="0">
+            <!-- Основное содержимое -->
+            <div key="ticket-details-content" v-else-if="selectedTicket" class="ticket-details">
+                <Tabs value="0">
                 <TabList>
                     <Tab value="0" as="div">
                         <i class="pi pi-cog"></i>
@@ -462,8 +463,9 @@
                         </div>
                     </TabPanel>
                 </TabPanels>
-            </Tabs>
-        </div>
+                </Tabs>
+            </div>
+        </Transition>
     </Dialog>
 </template>
 

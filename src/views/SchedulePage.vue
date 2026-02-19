@@ -1,6 +1,8 @@
 <template>
     <div class="schedule-container">
-        <WelcomeScreen :visible="loading" />
+        <header class="header">
+            <h2 class="title">Расписание занятий</h2>
+        </header>
         <div class="year-selection row">
             <h3>Учебный год</h3>
             <div class="col" v-for="year in years" :key="year">
@@ -29,42 +31,44 @@
         </IconField>
         
         <div class="schedule position-relative">
-            <div class="schedule-visible" v-if="loading === false">
-                <div class="schedule-grid">
-                    <div v-for="item in paginatedSchedule" :key="item.id" class="schedule-card" @click="goToSchedule(item)">
-                        <div class="card-content">
-                            <template v-if="selectedCategory === 1">
-                                <h4 class="card-title">{{ item.name }}</h4>
-                                <Tag class="card-subtitle" :severity="severityFacul(item.facul)">{{ item.facul }}</Tag>
-                                <p class="card-info">{{ item.kurs }} курс</p>
-                            </template>
+            <Transition name="content-fade" mode="out-in">
+                <div key="schedule-content" class="schedule-visible" v-if="loading === false">
+                    <div class="schedule-grid">
+                        <div v-for="item in paginatedSchedule" :key="item.id" class="schedule-card" @click="goToSchedule(item)">
+                            <div class="card-content">
+                                <template v-if="selectedCategory === 1">
+                                    <h4 class="card-title">{{ item.name }}</h4>
+                                    <Tag class="card-subtitle" :severity="severityFacul(item.facul)">{{ item.facul }}</Tag>
+                                    <p class="card-info">{{ item.kurs }} курс</p>
+                                </template>
 
-                            <template v-else-if="selectedCategory === 2">
-                                <i class="pi pi-building room-icon"></i>
-                                <h4 class="room-title">{{ item.name }}</h4>
-                                <p class="room-info">Аудитория</p>
-                            </template>
+                                <template v-else-if="selectedCategory === 2">
+                                    <i class="pi pi-building room-icon"></i>
+                                    <h4 class="room-title">{{ item.name }}</h4>
+                                    <p class="room-info">Аудитория</p>
+                                </template>
 
-                            <template v-else-if="selectedCategory === 3">
-                                <i class="pi pi-user teacher-icon"></i>
-                                <h4 class="teacher-name">{{ item.name }}</h4>
-                                <p v-if="item.kaf" class="teacher-kaf">{{ item.kaf || 'Кафедра не указана' }}</p>
-                            </template>
+                                <template v-else-if="selectedCategory === 3">
+                                    <i class="pi pi-user teacher-icon"></i>
+                                    <h4 class="teacher-name">{{ item.name }}</h4>
+                                    <p v-if="item.kaf" class="teacher-kaf">{{ item.kaf || 'Кафедра не указана' }}</p>
+                                </template>
+                            </div>
                         </div>
                     </div>
+
+                    <Paginator 
+                        :rows="rowsPerPage" 
+                        :totalRecords="computedFilteredSchedule.length"
+                        :rowsPerPageOptions="[5, 10, 15]"
+                        @page="onPageChange"
+                        @update:rows="onRowsPerPageOptions"
+                        class="paginatorSchedule"
+                    />
                 </div>
 
-                <Paginator 
-                    :rows="rowsPerPage" 
-                    :totalRecords="computedFilteredSchedule.length"
-                    :rowsPerPageOptions="[5, 10, 15]"
-                    @page="onPageChange"
-                    @update:rows="onRowsPerPageOptions"
-                    class="paginatorSchedule"
-                />
-            </div>
-
-            <Skeleton v-if="loading === true" class="position-absolute" style="top: 20px;" width="100%" height="40vh" borderRadius="12px"></Skeleton>
+                <Skeleton key="schedule-skeleton" v-else class="position-absolute" style="top: 20px;" width="100%" height="40vh" borderRadius="12px"></Skeleton>
+            </Transition>
         </div>
 
     </div>
@@ -76,7 +80,6 @@ import axios from "axios";
 import { useRouter } from 'vue-router';
 import { useGroupsStore } from '@/stores/groups';
 
-import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 
 const filteredSchedule = ref([]);
 const years = ref([]);

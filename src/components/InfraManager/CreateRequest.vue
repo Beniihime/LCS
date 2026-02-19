@@ -3,7 +3,6 @@
         <Button icon="pi pi-plus" @click="visible = true"/>
         <Dialog v-model:visible="visible" modal header="Создание заявки" :style="{ 'max-width': '32rem' }">
             <template #container="{ closeCallback }">
-                <WelcomeScreen :visible="loading" class="rounded-4"/>
                 <div class="p-4">
                     <div class="row mb-4">
                         <h2>Создание заявки</h2>
@@ -88,7 +87,6 @@
 import { ref, watch } from "vue";
 import axiosInstance from "@/utils/axios.js";
 import PrioritySelect from '@/components/InfraManager/PrioritySelect.vue';
-import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 
 import { usePriorityStore } from '@/stores/priorityStore.js';
 

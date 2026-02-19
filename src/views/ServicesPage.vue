@@ -1,23 +1,23 @@
 <template>
     <main>
-        <WelcomeScreen :visible="loading" />
         <div class="content-wrapper">
             <h2 class="mb-4">Микросервисы</h2>
-            <div v-if="!loading" class="services-cards">
-                <InfraManagerMicroService />
-                <RatingService />
-            </div>
-            <div v-else class="services-cards">
-                <Skeleton width="100%" height="110px" />
-                <Skeleton width="100%" height="110px" />
-            </div>
+            <Transition name="content-fade" mode="out-in">
+                <div v-if="!loading" key="services-content" class="services-cards">
+                    <InfraManagerMicroService />
+                    <RatingService />
+                </div>
+                <div v-else key="services-skeleton" class="services-cards">
+                    <Skeleton width="100%" height="110px" />
+                    <Skeleton width="100%" height="110px" />
+                </div>
+            </Transition>
         </div>
     </main>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import InfraManagerMicroService from "@/components/Microservice/InfraManager/InfraManagerMicroService.vue";
 import RatingService from "@/components/Microservice/Rating/RatingMicroService.vue";
 

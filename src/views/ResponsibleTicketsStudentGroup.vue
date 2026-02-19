@@ -1,10 +1,14 @@
 <template>
     <main>
-        <WelcomeScreen :visible="loading" />
+        <div class="header">
+            <h2 class="m-0">Управление ответственными</h2>
+        </div>
 
         <div class="content-wrapper">
-            
+            <Transition name="content-fade" mode="out-in">
             <DataTable 
+                v-if="!loading || groupList.length"
+                key="responsible-content"
                 :value="groupList" 
                 dataKey="id" 
                 class="mb-4 no-row-hover" 
@@ -121,6 +125,15 @@
                 </template>
 
             </DataTable>
+            <div v-else key="responsible-skeleton" class="table-skeleton">
+                <Skeleton width="15rem" height="2rem" class="mb-4" />
+                <Skeleton width="100%" height="3rem" class="mb-3" />
+                <Skeleton width="100%" height="3rem" class="mb-2" />
+                <Skeleton width="100%" height="3rem" class="mb-2" />
+                <Skeleton width="100%" height="3rem" class="mb-2" />
+                <Skeleton width="100%" height="3rem" class="mb-2" />
+            </div>
+            </Transition>
         </div>
     </main>
 </template>
@@ -128,7 +141,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import axiosInstance from "@/utils/axios";
-import WelcomeScreen from "@/components/Utils/WelcomeScreen.vue";
 import DeleteResponsibleGroup from "@/components/ResponsibleTicketStudentGroup/DeleteResponsibleGroup.vue";
 import AddResponsibleGroup from "@/components/ResponsibleTicketStudentGroup/AddResponsibleGroup.vue";
 import { FilterMatchMode } from '@primevue/core/api';
@@ -206,5 +218,8 @@ main {
 :deep(.no-row-hover .p-datatable-tbody > tr.p-row-hover),
 :deep(.no-row-hover.p-datatable-hoverable-rows .p-datatable-tbody > tr:hover) {
     background: transparent !important;
+}
+.table-skeleton {
+    width: 100%;
 }
 </style>

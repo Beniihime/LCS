@@ -1,5 +1,4 @@
 <template>
-    <WelcomeScreen :visible="isLoading"/>
     <div class="schedule-details-container">
 
         <div v-if="showHint" class="hint-message">
@@ -13,11 +12,13 @@
                     <span class="fs-3 ms-4">Расписание</span>
                 </div>
                 
-                <div class="refresh-time" v-if="!isLoading">
-                    <span>Дата обновления: </span>
-                    <span>{{ formatDate(scheduleData?.dateUploadingRasp) }}</span>
-                </div>
-                <Skeleton v-else width="300px" height="2.5rem"></Skeleton>
+                <Transition name="content-fade" mode="out-in">
+                    <div key="schedule-aud-refresh-content" class="refresh-time" v-if="!isLoading">
+                        <span>Дата обновления: </span>
+                        <span>{{ formatDate(scheduleData?.dateUploadingRasp) }}</span>
+                    </div>
+                    <Skeleton key="schedule-aud-refresh-skeleton" v-else width="300px" height="2.5rem"></Skeleton>
+                </Transition>
             </div>
             <div class="header-row justify-content-between">
                 <div class="search-header-card">
@@ -30,11 +31,13 @@
 
             <div class="header-row">
                 <div class="header-card" v-for="(_, index) in 4" :key="index">
-                    <Skeleton v-if="isLoading" width="100%" height="3rem" />
-                    <template v-else>
-                        <span class="card-title">{{ headerTitles[index] }}</span>
-                        <span class="card-value">{{ headerValues[index] }}</span>
-                    </template>
+                    <Transition name="content-fade" mode="out-in">
+                        <Skeleton key="schedule-aud-card-skeleton" v-if="isLoading" width="100%" height="3rem" />
+                        <div key="schedule-aud-card-content" v-else>
+                            <span class="card-title">{{ headerTitles[index] }}</span>
+                            <span class="card-value">{{ headerValues[index] }}</span>
+                        </div>
+                    </Transition>
                 </div>
             </div>
 
@@ -115,7 +118,6 @@ import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 
 import formatDate from "@/utils/formatDateWithoutTime.js";
-import WelcomeScreen from "@/components/Utils/WelcomeScreen.vue";
 
 const route = useRoute();
 const router = useRouter();
