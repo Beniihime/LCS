@@ -1,6 +1,6 @@
 <template>
     <main>
-        <WelcolmeScreen :visible="loading"/>
+        <WelcomeScreen :visible="loading"/>
 
         <!-- Секция сезонов -->
         <section class="content-wrapper">

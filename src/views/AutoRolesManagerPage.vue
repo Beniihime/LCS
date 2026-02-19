@@ -1,6 +1,6 @@
 <template>
     <div class="auto-roles-manager">
-        <WelcolmeScreen :visible="loading" />
+        <WelcomeScreen :visible="loading" />
 
         <div class="table-container">
             <DataTable
