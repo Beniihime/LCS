@@ -233,12 +233,10 @@
 import { ref, onMounted, computed } from 'vue';
 import axiosInstance from '@/utils/axios.js';
 import { debounce } from 'lodash';
-import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import TicketDetailsModal from '@/components/Tickets/TicketDetails.vue';
 import { usePermissionStore } from '@/stores/permissions';
 import { mockTickets } from '@/mocks/tickets.js';
 import { USE_MOCK_DATA } from '@/mocks/config.js';
-import { mockTicketDetails } from '@/mocks/tickets.js';
 
 const permissionStore = usePermissionStore();
 
@@ -397,42 +395,11 @@ const parseFioFromFormData = (formData) => {
     }
 };
 
-const loadFioForTickets = async (ticketList) => {
-    const idsToFetch = ticketList
-        .filter(ticket => ticket?.id && !ticket.requesterName)
-        .map(ticket => ticket.id);
-
-    if (idsToFetch.length === 0) return;
-
-    if (useMockData.value) {
-        ticketList.forEach(ticket => {
-            if (ticket?.id === mockTicketDetails.id) {
-                ticket.requesterName = parseFioFromFormData(mockTicketDetails.formData) || '—';
-            }
-        });
-        return;
-    }
-
-    try {
-        const responses = await Promise.all(
-            idsToFetch.map(id => axiosInstance.get(`/api/tickets/${id}`))
-        );
-        const fioById = new Map();
-        responses.forEach(response => {
-            const data = response?.data;
-            if (!data?.id) return;
-            fioById.set(data.id, parseFioFromFormData(data.formData) || '—');
-        });
-
-        ticketList.forEach(ticket => {
-            if (!ticket?.id) return;
-            if (fioById.has(ticket.id)) {
-                ticket.requesterName = fioById.get(ticket.id);
-            }
-        });
-    } catch (error) {
-        console.error('Ошибка при загрузке ФИО заявителей:', error);
-    }
+const enrichTicketsWithFio = (ticketList) => {
+    return (ticketList || []).map(ticket => ({
+        ...ticket,
+        requesterName: parseFioFromFormData(ticket?.formData) || '—'
+    }));
 };
 
 // Функции для стилизации статусов и приоритетов
@@ -499,9 +466,8 @@ const fetchTickets = async () => {
     try {
         loading.value = true;
         if (useMockData.value) {
-            tickets.value = mockTickets;
-            totalRecords.value = mockTickets.length;
-            await loadFioForTickets(tickets.value);
+            tickets.value = enrichTicketsWithFio(mockTickets.tickets);
+            totalRecords.value = mockTickets.totalCount || 0;
             return;
         }
         const userId = getUserId();
@@ -517,9 +483,8 @@ const fetchTickets = async () => {
         }
 
         const { data } = await axiosInstance.post('/api/tickets', payload);
-        tickets.value = data.tickets || [];
+        tickets.value = enrichTicketsWithFio(data.tickets);
         totalRecords.value = data.totalCount || 0;      
-        await loadFioForTickets(tickets.value);
     } catch (error) {
         console.error('Ошибка при получении заявок:', error);
     } finally {
