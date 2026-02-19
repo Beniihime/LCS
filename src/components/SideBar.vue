@@ -112,6 +112,17 @@
                             <div v-if="!collapsed" class="menucrumb">Расписание</div>
                         </div>
                     </router-link>
+                    <router-link 
+                        to="/faq" 
+                        class="menu-item" 
+                        active-class="active-link"
+                        v-tooltip.right="collapsed ? 'Вопросы и ответы' : ''"
+                    >
+                        <div class="menu-item-content">
+                            <i class="pi pi-question-circle"></i>
+                            <div v-if="!collapsed" class="menucrumb">Вопросы и ответы</div>
+                        </div>
+                    </router-link>
                 </div>
     
                 <div class="menu">
@@ -305,6 +316,7 @@ const checkPermission = (path) => {
         '/users': hasPermission('User', 'Read'),
         '/sso/config': hasPermission('SsoResource', 'Read'),
         '/autorole': hasPermission('RoleAutoAssigner', 'Read'),
+        '/faq': hasPermission('FAQ', 'Read'),
         '/tickets': hasPermission('Tickets', 'Read'),
         '/tickets/responsibles' : hasPermission('ResponsibleTicketStudentGroup', 'Read'),
         '/services': hasPermission('InfraManager', 'Read'),

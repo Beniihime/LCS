@@ -166,6 +166,30 @@ const routes = [
                 }
             },
             {
+                path: "/faq",
+                component: () => import('@/views/FaqPage.vue'),
+                name: 'Faq',
+                meta: {
+                    title: 'Вопросы и ответы'
+                }
+            },
+            {
+                path: "/faq/articles/create",
+                component: () => import('@/views/FaqArticleCreatePage.vue'),
+                name: 'FaqArticleCreate',
+                meta: {
+                    title: 'Новая статья'
+                }
+            },
+            {
+                path: "/faq/articles/:id",
+                component: () => import('@/views/FaqArticlePage.vue'),
+                name: 'FaqArticle',
+                meta: {
+                    title: 'Статья'
+                }
+            },
+            {
                 path: "/schedule/group/:idGroup",
                 component: () => import('@/components/Schedule/ScheduleGroup.vue'),
                 name: 'ScheduleGroup',

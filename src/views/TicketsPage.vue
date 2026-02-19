@@ -236,6 +236,9 @@ import { debounce } from 'lodash';
 import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import TicketDetailsModal from '@/components/Tickets/TicketDetails.vue';
 import { usePermissionStore } from '@/stores/permissions';
+import { mockTickets } from '@/mocks/tickets.js';
+import { USE_MOCK_DATA } from '@/mocks/config.js';
+import { mockTicketDetails } from '@/mocks/tickets.js';
 
 const permissionStore = usePermissionStore();
 
@@ -243,6 +246,8 @@ const tickets = ref([]);
 const totalRecords = ref(0);
 const loading = ref(true);
 const isFirstLoadDone = ref(false);
+const useMockData = ref(USE_MOCK_DATA);
+
 
 // Модальное окно
 const ticketModalVisible = ref(false);
@@ -272,9 +277,10 @@ const filters = ref({
 });
 
 const columns = ref([
-    { field: 'number', header: '№', placeholder: 'Поиск по номеру', filterType: 'number', style: 'width: 180px; max-width: 200px;' },
-    { field: 'requestType', header: 'Тип заявки', placeholder: 'Поиск по типу' },
-    { field: 'status', header: 'Статус', placeholder: 'Выберите статус', filterType: 'select', style: 'width: 200px; max-width: 200px;' },
+    { field: 'number', header: '№', placeholder: 'Поиск по номеру', filterType: 'number', style: 'width: 200px; max-width: 200px;' },
+    { field: 'requesterName', header: 'ФИО' },
+    { field: 'requestType', header: 'Тип заявки', placeholder: 'Поиск по типу', style: 'width: 150px; max-width: 200px;' },
+    { field: 'status', header: 'Статус', placeholder: 'Выберите статус', filterType: 'select' },
     { field: 'priority', header: 'Приоритет', placeholder: 'Выберите приоритет', filterType: 'select' },
     { field: 'requesterSystem', header: 'Система-источник', placeholder: 'Поиск по системе' },
     { field: 'requesterId', header: 'ID инициатора', placeholder: 'Поиск по ID', filterType: 'string' },
@@ -284,7 +290,7 @@ const columns = ref([
     { field: 'closedAt', header: 'Дата закрытия', placeholder: 'Поиск по дате' },
 ]);
 
-const defaultColumns = ['number', 'requestType', 'status', 'priority', 'createdAt'];
+const defaultColumns = ['number', 'requesterName', 'requestType', 'status', 'priority', 'createdAt'];
 
 const selectedColumnFields = ref(defaultColumns);
 const selectedColumns = computed(() => 
@@ -381,6 +387,54 @@ const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString('ru-RU');
 };
 
+const parseFioFromFormData = (formData) => {
+    if (!formData) return null;
+    try {
+        const parsed = typeof formData === 'string' ? JSON.parse(formData) : formData;
+        return parsed?.fio || null;
+    } catch {
+        return null;
+    }
+};
+
+const loadFioForTickets = async (ticketList) => {
+    const idsToFetch = ticketList
+        .filter(ticket => ticket?.id && !ticket.requesterName)
+        .map(ticket => ticket.id);
+
+    if (idsToFetch.length === 0) return;
+
+    if (useMockData.value) {
+        ticketList.forEach(ticket => {
+            if (ticket?.id === mockTicketDetails.id) {
+                ticket.requesterName = parseFioFromFormData(mockTicketDetails.formData) || '—';
+            }
+        });
+        return;
+    }
+
+    try {
+        const responses = await Promise.all(
+            idsToFetch.map(id => axiosInstance.get(`/api/tickets/${id}`))
+        );
+        const fioById = new Map();
+        responses.forEach(response => {
+            const data = response?.data;
+            if (!data?.id) return;
+            fioById.set(data.id, parseFioFromFormData(data.formData) || '—');
+        });
+
+        ticketList.forEach(ticket => {
+            if (!ticket?.id) return;
+            if (fioById.has(ticket.id)) {
+                ticket.requesterName = fioById.get(ticket.id);
+            }
+        });
+    } catch (error) {
+        console.error('Ошибка при загрузке ФИО заявителей:', error);
+    }
+};
+
 // Функции для стилизации статусов и приоритетов
 const getStatusSeverity = (status) => {
     const map = {
@@ -444,6 +498,12 @@ const onPage = async (event) => {
 const fetchTickets = async () => {
     try {
         loading.value = true;
+        if (useMockData.value) {
+            tickets.value = mockTickets;
+            totalRecords.value = mockTickets.length;
+            await loadFioForTickets(tickets.value);
+            return;
+        }
         const userId = getUserId();
         
         const payload = {
@@ -459,6 +519,7 @@ const fetchTickets = async () => {
         const { data } = await axiosInstance.post('/api/tickets', payload);
         tickets.value = data.tickets || [];
         totalRecords.value = data.totalCount || 0;      
+        await loadFioForTickets(tickets.value);
     } catch (error) {
         console.error('Ошибка при получении заявок:', error);
     } finally {

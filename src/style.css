@@ -163,6 +163,24 @@ svg.lcs {
   transition: all 0.5s;
 }
 
+/* Global skeleton opacity transition for all PrimeVue Skeleton components */
+.p-skeleton {
+  background: var(--p-grey-5) !important;
+  opacity: 1;
+  transition: opacity 0.25s ease;
+}
+
+/* Shared cross-fade for skeleton/content swaps */
+.content-fade-enter-active,
+.content-fade-leave-active {
+  transition: opacity 0.22s ease;
+}
+
+.content-fade-enter-from,
+.content-fade-leave-to {
+  opacity: 0;
+}
+
 /* Убираем стрелку у popover */
 .p-popover::before, .p-popover::after {
   display: none !important;
@@ -190,6 +208,14 @@ svg.lcs {
 /* .p-datatable-tbody > tr {
   background-color: var(--p-bg-color-2) !important;
 } */
+
+.faq-danger-item > div > a > span{
+  color: var(--p-red-500) !important;
+}
+
+.p-menu-submenu-label {
+  display: none !important;
+}
 
 :root {
   --p-bg-color-0: rgba(255, 255, 255, 0.5);
