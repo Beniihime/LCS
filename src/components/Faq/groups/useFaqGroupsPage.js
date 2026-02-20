@@ -292,11 +292,18 @@ export const useFaqGroupsPage = () => {
                     }
                 }
                 const payloadOrder = getNextGroupOrder(groupDialog.value.parentId);
-                await axiosInstance.post('/api/faq/addgroup', {
-                    parentId: groupDialog.value.parentId,
+
+                const payload = {
                     title: payloadTitle,
                     order: payloadOrder,
-                });
+                };
+
+                if (groupDialog.value.parentId !== ROOT_PARENT_ID) {
+                    payload.parentId = groupDialog.value.parentId;
+                }
+
+                await axiosInstance.post('/api/faq/addgroup', payload);
+
                 if (groupDialog.value.parentId === ROOT_PARENT_ID) {
                     await fetchRootGroups();
                 } else {

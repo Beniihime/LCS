@@ -197,21 +197,19 @@ export const useFaqArticleCreatePage = () => {
         actionLoading.value = true;
         try {
             const payload = {
-                addArticleRequest: {
-                    groupId: groupId.value,
-                    question: question.value.trim(),
-                    order: 0,
-                    blocks: blocks.value.map((block, idx) => ({
-                        image: block.type === 'Image' ? (block.image || '') : '',
-                        text: block.type === 'Text' ? (block.text || '') : '',
-                        order: idx,
-                        type: block.type || 'None',
-                    })),
-                },
+                groupId: groupId.value,
+                question: question.value.trim(),
+                order: 1,
+                blocks: blocks.value.map((block, idx) => ({
+                    image: block.type === 'Image' ? (block.image || '') : '',
+                    text: block.type === 'Text' ? (block.text || '') : '',
+                    order: idx,
+                    type: block.type || 'None',
+                })),
             };
-            await axiosInstance.post('/api/faq/addarticle', payload);
+            const response = await axiosInstance.post('/api/faq/addarticle', payload);
             toast.add({ severity: 'success', summary: 'FAQ', detail: 'Статья создана', life: 2200 });
-            router.push('/faq');
+            router.push(`/faq/articles/${response.data.id}`);
         } catch (createError) {
             console.debug('Ошибка при создании статьи:', createError);
             toast.add({ severity: 'error', summary: 'FAQ', detail: 'Не удалось создать статью', life: 2600 });

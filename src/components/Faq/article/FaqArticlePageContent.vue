@@ -35,7 +35,7 @@
                         @click="exitEditMode"
                     />
                     <Button
-                        v-if="!editMode"
+                        v-if="canEdit && !editMode"
                         type="button"
                         icon="pi pi-ellipsis-h"
                         text
@@ -147,7 +147,7 @@
 
                     <div v-if="blockDialog.contentType === 'Text'" class="faq-field">
                         <label for="faq-block-text">Текст</label>
-                        <InputText id="faq-block-text" v-model="blockDialog.text" class="w-100" />
+                        <Textarea rows="5" id="faq-block-text" v-model="blockDialog.text" class="w-100" />
                     </div>
 
                     <div v-else class="faq-field">
@@ -205,6 +205,7 @@ const {
     error,
     actionLoading,
     editMode,
+    canEdit,
     headerMenuRef,
     dialogImageInputRef,
     isDialogDragOver,
@@ -244,7 +245,7 @@ const {
 
 <style scoped>
 main {
-    height: 100vh;
+    height: 100%;
     padding: 10px;
 }
 .faq-article-page {
@@ -388,8 +389,8 @@ main {
     height: auto;
     display: block;
     border-bottom: 1px solid var(--article-border);
-    max-height: 460px;
-    object-fit: cover;
+    max-height: 560px;
+    object-fit: contain;
 }
 .article-image.is-edit-preview {
     margin: 0.35rem 0.6rem 0;

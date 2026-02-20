@@ -51,6 +51,9 @@ export const useFaqArticlePage = () => {
     const dragFromIndex = ref(-1);
     const dragOverIndex = ref(-1);
 
+    const originalArticleSnapshot = ref(null);
+    const originalBlocksById = ref(new Map());
+
     const articleDialog = ref({
         visible: false,
         question: '',
@@ -76,11 +79,19 @@ export const useFaqArticlePage = () => {
     const pendingArticleChanged = ref(false);
     const pendingCreatedBlockIds = ref(new Set());
     const pendingDeletedBlockIds = ref(new Set());
+    const pendingUpdatedBlockIds = ref(new Set());
 
     const contentTypeOptions = [
         { label: 'Текст', value: 'Text' },
         { label: 'Изображение', value: 'Image' },
     ];
+
+    const currentUserId = ref(localStorage.getItem('userId') || '');
+    const isAuthor = computed(() => {
+        if (!article.value) return false;
+        return String(article.value.authorId || '') === String(currentUserId.value || '');
+    });
+    const canEdit = computed(() => isAuthor.value);
 
     const sortedBlocks = computed(() => {
         if (!article.value?.blocks?.length) return [];
@@ -88,9 +99,10 @@ export const useFaqArticlePage = () => {
     });
 
     const hasPendingChanges = computed(() => (
-        pendingArticleChanged.value
-        || pendingCreatedBlockIds.value.size > 0
-        || pendingDeletedBlockIds.value.size > 0
+        pendingArticleChanged.value ||
+        pendingCreatedBlockIds.value.size > 0 ||
+        pendingDeletedBlockIds.value.size > 0 ||
+        pendingUpdatedBlockIds.value.size > 0
     ));
 
     const headerMenuItems = computed(() => ([
@@ -149,6 +161,18 @@ export const useFaqArticlePage = () => {
         pendingDeletedBlockIds.value = next;
     };
 
+    const addPendingUpdatedBlockId = (id) => {
+        const next = new Set(pendingUpdatedBlockIds.value);
+        next.add(id);
+        pendingUpdatedBlockIds.value = next;
+    };
+
+    const removePendingUpdatedBlockId = (id) => {
+        const next = new Set(pendingUpdatedBlockIds.value);
+        next.delete(id);
+        pendingUpdatedBlockIds.value = next;
+    };
+
     const fetchArticle = async (id) => {
         if (!id) return;
         loading.value = true;
@@ -174,9 +198,29 @@ export const useFaqArticlePage = () => {
 
     const openArticleEdit = () => {
         if (!article.value) return;
+        // 1. Snapshot article metadata
+        originalArticleSnapshot.value = {
+            question: article.value.question || '',
+            order: Number(article.value.order) ?? 0,
+            // add groupId, etc. if they can be edited
+        };
+
+        // 2. Snapshot all blocks (deep enough for your use-case)
+        originalBlocksById.value.clear();
+        (article.value.blocks || []).forEach(block => {
+            const copy = {
+                id: block.id,
+                order: Number(block.order) ?? 0,
+                contentTypes: normalizeBlockType(block),
+                text: block.text || '',
+                image: block.image || '',     // base64 string
+            };
+            originalBlocksById.value.set(block.id, copy);
+        });
+
         if (editMode.value) return;
         editMode.value = true;
-        toast.add({ severity: 'info', summary: 'FAQ', detail: 'Режим редактирования включен. Сохранение по кнопке "Готово"', life: 2600 });
+        toast.add({ severity: 'info', summary: 'FAQ', detail: 'Режим редактирования включен. Сохранение по кнопке "Готово"', life: 2400 });
     };
 
     const openTitleEditDialog = () => {
@@ -189,6 +233,11 @@ export const useFaqArticlePage = () => {
 
     const submitPendingChanges = async () => {
         if (!article.value?.id) return;
+
+        if (!hasPendingChanges.value) {
+            editMode.value = false;
+            return;
+        }
         actionLoading.value = true;
         try {
             await delay(SAVE_DELAY_MS);
@@ -196,41 +245,72 @@ export const useFaqArticlePage = () => {
             const orderedBlocks = [...sortedBlocks.value];
             const requests = [];
 
+            // ─── Article change ───────────────────────────────────────
             if (pendingArticleChanged.value) {
-                requests.push(axiosInstance.put(faqWriteEndpoint(`articles/${article.value.id}`), {
-                    groupId: article.value.groupId,
-                    authorId: article.value.authorId,
+                const orig = originalArticleSnapshot.value;
+                const curr = {
                     question: article.value.question || '',
-                    order: typeof article.value.order === 'number' ? article.value.order : 0,
-                }));
+                    order: Number(article.value.order) ?? 0,
+                };
+
+                if (orig.question !== curr.question || orig.order !== curr.order) {
+                    requests.push(axiosInstance.put(faqWriteEndpoint(`articles/${article.value.id}`), {
+                        groupId: article.value.groupId,
+                        authorId: article.value.authorId,
+                        question: article.value.question || '',
+                        order: typeof article.value.order === 'number' ? article.value.order : 0,
+                    }));
+                }
             }
 
+            // ─── Deletions ────────────────────────────────────────────
             pendingDeletedBlockIds.value.forEach((blockId) => {
-                requests.push(axiosInstance.delete(faqWriteEndpoint(`article-blocks/${blockId}`)));
+                requests.push(axiosInstance.delete(faqWriteEndpoint(`article-blocks/${blockId}`), {
+                    params: { articleId: article.value.id },
+                }));
             });
 
-            orderedBlocks.forEach((block, index) => {
+            // ─── Creates + Updates ─────────────────────────────────────
+            orderedBlocks.forEach((block, targetIndex) => {
                 const isText = normalizeBlockType(block) === 'Text';
-                const payload = {
+                const payloadBase = {
                     articleId: article.value.id,
                     image: isText ? '' : (block.image || ''),
                     text: isText ? (block.text || '') : '',
-                    order: index,
+                    order: targetIndex,
                 };
 
                 if (pendingCreatedBlockIds.value.has(block.id)) {
                     requests.push(axiosInstance.post(faqWriteEndpoint('addarticleblock'), {
-                        ...payload,
+                        ...payloadBase,
                         type: isText ? 'Text' : 'Image',
                     }));
                     return;
                 }
 
-                if (!isTempBlockId(block.id) && !pendingDeletedBlockIds.value.has(block.id)) {
-                    requests.push(axiosInstance.put(faqWriteEndpoint(`article-blocks/${block.id}`), {
-                        ...payload,
-                        contentTypes: isText ? 'Text' : 'Image',
-                    }));
+                if (pendingDeletedBlockIds.value.has(block.id)) return;
+
+                // Existing block → compare with original
+                const original = originalBlocksById.value.get(block.id);
+                if (!original) {
+                    // defensive — block appeared from nowhere → treat as update
+                    requests.push(createPutRequest(block.id, payloadBase, isText));
+                    return;
+                }
+
+                const currentOrder = targetIndex;
+                const currentType  = isText ? 'Text' : 'Image';
+                const currentText  = isText ? (block.text || '') : '';
+                const currentImage = isText ? '' : (block.image || '');
+
+                const changed =
+                    original.order !== currentOrder ||
+                    original.contentTypes !== currentType ||
+                    original.text !== currentText ||
+                    original.image !== currentImage;
+
+                if (changed) {
+                    requests.push(createPutRequest(block.id, payloadBase, isText));
                 }
             });
 
@@ -247,6 +327,19 @@ export const useFaqArticlePage = () => {
             actionLoading.value = false;
         }
     };
+
+    function createPutRequest(id, payloadBase, isText) {
+        return axiosInstance.put(
+            faqWriteEndpoint(`article-blocks/${id}`),
+            {
+                ...payloadBase,
+                contentTypes: isText ? 'Text' : 'Image',
+            },
+            {
+                params: { articleId: article.value.id }
+            }
+        );
+    }
 
     const exitEditMode = () => {
         if (!article.value?.id) {
@@ -342,7 +435,7 @@ export const useFaqArticlePage = () => {
                 });
                 addPendingCreatedBlockId(tempId);
             } else {
-                article.value.blocks = article.value.blocks.map((block) => (
+                article.value.blocks = article.value.blocks.map((block) => 
                     block.id === blockDialog.value.blockId
                         ? {
                             ...block,
@@ -351,7 +444,10 @@ export const useFaqArticlePage = () => {
                             contentTypes: isText ? 'Text' : 'Image',
                         }
                         : block
-                ));
+                );
+                if (!isTempBlockId(blockDialog.value.blockId)) {
+                    addPendingUpdatedBlockId(blockDialog.value.blockId);
+                }
             }
             normalizeLocalBlockOrder();
             blockDialog.value.visible = false;
@@ -466,6 +562,7 @@ export const useFaqArticlePage = () => {
         error,
         actionLoading,
         editMode,
+        canEdit,
         headerMenuRef,
         dialogImageInputRef,
         isDialogDragOver,

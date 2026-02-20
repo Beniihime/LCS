@@ -9,7 +9,7 @@
                 <i v-else class="pi pi-question-circle faq-dot"></i>
                 <span class="faq-row-title">{{ item.title }}</span>
             </div>
-            <div v-if="item.type === 'group'" class="faq-row-right">
+            <div class="faq-row-right">
                 <Button
                     v-if="isAuthor"
                     class="group-actions-btn"
@@ -28,9 +28,10 @@
                     :popup="true"
                     :id="`group-actions-${item.id}`"
                 />
-                <Tag rounded>
+                <Tag rounded v-if="item.type === 'group'" >
                     {{ loadingGroupId === item.id ? 'Загрузка...' : 'Группа' }}
                 </Tag>
+                <Tag rounded severity="success" v-else>Статья</Tag>
             </div>
         </div>
 
@@ -141,7 +142,7 @@ const onRowClick = () => {
     gap: 0.75rem;
     padding: 0.82rem 1rem;
     border-radius: 16px;
-    background: var(--p-grey-7);
+    background: var(--p-grey-6);
     border: 1px solid var(--p-grey-4);
     transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
     cursor: pointer;
@@ -149,7 +150,7 @@ const onRowClick = () => {
     overflow: hidden;
 }
 
-.faq-row:hover {
+.faq-row:hover{
     border-color: var(--p-blue-400);
     transform: translateY(-1px);
 }
@@ -175,7 +176,7 @@ const onRowClick = () => {
 .faq-row.is-article {
     font-weight: 500;
     color: var(--p-text-color);
-    background: var(--p-grey-7)
+    background: var(--p-grey-7);
 }
 
 .faq-row-left {
@@ -205,16 +206,6 @@ const onRowClick = () => {
     letter-spacing: 0.01em;
 }
 
-.faq-chip {
-    font-size: 0.75rem;
-    background: var(--p-blue-100);
-    color: var(--p-blue-500);
-    padding: 0.2rem 0.6rem;
-    border-radius: 999px;
-    flex-shrink: 0;
-    font-weight: 600;
-}
-
 .faq-arrow {
     font-size: 0.75rem;
     color: var(--p-text-color);
@@ -242,14 +233,6 @@ const onRowClick = () => {
     align-items: center;
     gap: 0.55rem;
     padding: 0.5rem 0.25rem;
-}
-
-.article-wrap .faq-row {
-    border-left: 1px solid var(--p-blue-100);
-}
-
-.article-wrap .faq-row:hover {
-    border-left-color: var(--p-blue-400);
 }
 
 @keyframes faqFadeIn {
