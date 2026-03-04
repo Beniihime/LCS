@@ -18,6 +18,12 @@ const fileToBase64Data = (file) => new Promise((resolve, reject) => {
     reader.readAsDataURL(file);
 });
 
+const extractPlainTextFromHtml = (html = '') => {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = String(html);
+    return (tempDiv.textContent || tempDiv.innerText || '').trim();
+};
+
 const normalizeBlockType = (block) => {
     const source = block?.contentTypes || block?.type || 'Text';
     const normalized = String(source).toLowerCase();
@@ -411,7 +417,7 @@ export const useFaqArticlePage = () => {
         if (!article.value?.id) return;
 
         const isText = blockDialog.value.contentType === 'Text';
-        if (isText && !blockDialog.value.text?.trim()) {
+        if (isText && !extractPlainTextFromHtml(blockDialog.value.text)) {
             toast.add({ severity: 'warn', summary: 'FAQ', detail: 'Введите текст блока', life: 2200 });
             return;
         }

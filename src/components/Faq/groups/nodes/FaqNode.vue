@@ -1,6 +1,13 @@
 <template>
     <div class="faq-row-wrap" :class="item.type === 'group' ? 'group-wrap' : 'article-wrap'">
-        <div class="faq-row" :class="[item.type === 'group' ? 'is-group' : 'is-article', { 'has-actions': isAuthor }]" @click="onRowClick">
+        <div
+            class="faq-row"
+            :class="[
+                item.type === 'group' ? 'is-group' : 'is-article',
+                { 'has-actions': isAuthor },
+            ]"
+            @click="onRowClick"
+        >
             <div class="faq-row-left">
                 <i
                     v-if="item.type === 'group'"

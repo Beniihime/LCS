@@ -13,6 +13,12 @@ const fileToBase64Data = (file) => new Promise((resolve, reject) => {
     reader.readAsDataURL(file);
 });
 
+const extractPlainTextFromHtml = (html = '') => {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = String(html);
+    return (tempDiv.textContent || tempDiv.innerText || '').trim();
+};
+
 export const useFaqArticleCreatePage = () => {
     const route = useRoute();
     const router = useRouter();
@@ -81,10 +87,11 @@ export const useFaqArticleCreatePage = () => {
 
     const saveBlockDialog = () => {
         const isText = blockDialog.value.contentType === 'Text';
-        const text = (blockDialog.value.text || '').trim();
+        const text = blockDialog.value.text || '';
+        const plainText = extractPlainTextFromHtml(text);
         const image = (blockDialog.value.image || '').trim();
 
-        if (isText && !text) {
+        if (isText && !plainText) {
             toast.add({ severity: 'warn', summary: 'FAQ', detail: 'Введите текст блока', life: 2200 });
             return;
         }
@@ -207,9 +214,9 @@ export const useFaqArticleCreatePage = () => {
                     type: block.type || 'None',
                 })),
             };
-            const response = await axiosInstance.post('/api/faq/addarticle', payload);
+            await axiosInstance.post('/api/faq/addarticle', payload);
             toast.add({ severity: 'success', summary: 'FAQ', detail: 'Статья создана', life: 2200 });
-            router.push(`/faq/articles/${response.data.id}`);
+            router.push('/faq');
         } catch (createError) {
             console.debug('Ошибка при создании статьи:', createError);
             toast.add({ severity: 'error', summary: 'FAQ', detail: 'Не удалось создать статью', life: 2600 });

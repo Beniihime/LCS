@@ -93,7 +93,7 @@
                                 <i class="pi pi-image"></i>
                                 <span>Блок изображения</span>
                             </div>
-                            <div v-if="block.text" class="article-text">{{ block.text }}</div>
+                            <div v-if="block.text" class="article-text" v-html="block.text"></div>
                         </div>
                     </div>
 
@@ -146,8 +146,23 @@
                     </div>
 
                     <div v-if="blockDialog.contentType === 'Text'" class="faq-field">
-                        <label for="faq-block-text">Текст</label>
-                        <Textarea rows="5" id="faq-block-text" v-model="blockDialog.text" class="w-100" />
+                        <label>Текст</label>
+                        <Editor
+                            v-model="blockDialog.text"
+                            editorStyle="height: 220px"
+                            class="faq-block-editor"
+                            placeholder="Введите текст блока..."
+                        >
+                            <template #toolbar>
+                                <span class="ql-formats">
+                                    <button v-tooltip.bottom="'Полужирный'" class="ql-bold"></button>
+                                    <button v-tooltip.bottom="'Курсив'" class="ql-italic"></button>
+                                    <button v-tooltip.bottom="'Подчеркнутый'" class="ql-underline"></button>
+                                    <button v-tooltip.bottom="'Зачеркнутый'" class="ql-strike"></button>
+                                    <button v-tooltip.bottom="'Нумерация'" value="ordered" class="ql-list"></button>
+                                </span>
+                            </template>
+                        </Editor>
                     </div>
 
                     <div v-else class="faq-field">
@@ -418,7 +433,21 @@ main {
     line-height: 1.7;
     color: var(--p-text-color);
     font-size: 1rem;
-    white-space: pre-wrap;
+    white-space: normal;
+}
+.article-text :deep(p) {
+    margin: 0 0 0.8rem;
+}
+.article-text :deep(p:last-child) {
+    margin-bottom: 0;
+}
+.article-text :deep(ol),
+.article-text :deep(ul) {
+    margin: 0.5rem 0 0.5rem 1.2rem;
+    padding: 0;
+}
+.article-text :deep(li) {
+    margin: 0.25rem 0;
 }
 
 .add-block-button {
@@ -456,6 +485,10 @@ main {
 .faq-field label {
     font-weight: 600;
     color: var(--p-text-color);
+}
+
+.faq-block-editor {
+    width: 100%;
 }
 
 .faq-dropzone {
