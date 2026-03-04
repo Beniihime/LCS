@@ -34,8 +34,8 @@
                     <Transition name="content-fade" mode="out-in">
                         <Skeleton key="schedule-teach-card-skeleton" v-if="isLoading" width="100%" height="3rem" />
                         <div key="schedule-teach-card-content" v-else>
-                            <span class="card-title">{{ headerTitles[index] }}</span>
-                            <span class="card-value">{{ headerValues[index] }}</span>
+                            <div class="card-title">{{ headerTitles[index] }}</div>
+                            <div class="card-value">{{ headerValues[index] }}</div>
                         </div>
                     </Transition>
                 </div>
@@ -127,6 +127,7 @@ import { ref, onMounted, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 import { useGroupsStore } from '@/stores/groups';
+import { saveScheduleSelection, SCHEDULE_TYPE_GROUP, SCHEDULE_TYPE_ROOM, SCHEDULE_TYPE_TEACHER } from '@/utils/scheduleStorage.js';
 
 import { formatDateRuLong as formatDate, formatRuWeekdayCapitalized } from "@/utils/date.js";
 import WelcomeScreen from "@/components/Utils/WelcomeScreen.vue";
@@ -221,6 +222,12 @@ const fetchScheduleData = async () => {
         scheduleData.value = response.data.data.info;
         
         teacherName.value = scheduleData.value?.prepod?.name;
+        saveScheduleSelection({
+            type: SCHEDULE_TYPE_TEACHER,
+            id: idTeacher,
+            name: scheduleData.value?.prepod?.name,
+            setAsLast: true
+        });
 
         scheduleRasp.value = response.data.data.rasp;
 
@@ -330,11 +337,25 @@ const toggle = (index, event) => {
 };
 
 const ScheduleAud = (lesson) => {
+    saveScheduleSelection({
+        type: SCHEDULE_TYPE_ROOM,
+        id: lesson.код,
+        name: lesson.аудитория,
+        setAsLast: true
+    });
     router.push(`/schedule/room/${lesson.код}`)
 }
 
 const ScheduleGroup = (lesson, group) => {
     const groupData = groupsStore.groups.find(g => g.name === group.trim());
+    if (!groupData?.id) return;
+
+    saveScheduleSelection({
+        type: SCHEDULE_TYPE_GROUP,
+        id: groupData.id,
+        name: groupData.name,
+        setAsLast: true
+    });
 
     router.push(`/schedule/group/${groupData.id}`)
 }

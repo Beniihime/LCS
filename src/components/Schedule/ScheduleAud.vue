@@ -34,8 +34,8 @@
                     <Transition name="content-fade" mode="out-in">
                         <Skeleton key="schedule-aud-card-skeleton" v-if="isLoading" width="100%" height="3rem" />
                         <div key="schedule-aud-card-content" v-else>
-                            <span class="card-title">{{ headerTitles[index] }}</span>
-                            <span class="card-value">{{ headerValues[index] }}</span>
+                            <div class="card-title">{{ headerTitles[index] }}</div>
+                            <div class="card-value">{{ headerValues[index] }}</div>
                         </div>
                     </Transition>
                 </div>
@@ -116,6 +116,7 @@
 import { ref, onMounted, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
+import { saveScheduleSelection, SCHEDULE_TYPE_GROUP, SCHEDULE_TYPE_ROOM, SCHEDULE_TYPE_TEACHER } from '@/utils/scheduleStorage.js';
 
 import { formatDateRuLong as formatDate, formatRuWeekdayCapitalized } from "@/utils/date.js";
 import WelcomeScreen from "@/components/Utils/WelcomeScreen.vue";
@@ -181,10 +182,22 @@ const toggle = (index, event) => {
 };
 
 const ScheduleTeacher = (lesson) => {
+    saveScheduleSelection({
+        type: SCHEDULE_TYPE_TEACHER,
+        id: lesson.кодПреподавателя,
+        name: lesson.преподаватель,
+        setAsLast: true
+    });
     router.push(`/schedule/teacher/${lesson.кодПреподавателя}`)
 }
 
 const ScheduleGroup = (lesson) => {
+    saveScheduleSelection({
+        type: SCHEDULE_TYPE_GROUP,
+        id: lesson.кодГруппы,
+        name: lesson.группа,
+        setAsLast: true
+    });
     router.push(`/schedule/group/${lesson.кодГруппы}`)
 }
 
@@ -228,6 +241,12 @@ const fetchScheduleData = async () => {
         scheduleData.value = response.data.data.info;
         
         audName.value = scheduleData.value?.aud?.name;
+        saveScheduleSelection({
+            type: SCHEDULE_TYPE_ROOM,
+            id: idAudLine,
+            name: scheduleData.value?.aud?.name,
+            setAsLast: true
+        });
 
         scheduleRasp.value = response.data.data.rasp;
 

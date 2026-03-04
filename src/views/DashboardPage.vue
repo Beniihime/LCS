@@ -13,9 +13,8 @@
         </section>
 
         <section class="quick-actions">
-            <h2>Быстрые действия</h2>
             <div class="actions-grid">
-                <router-link class="action-card" to="/requests">
+                <router-link class="action-card" :to="{ path: '/requests', query: { create: '1' } }">
                     <div class="action-icon">
                         <i class="pi pi-pen-to-square"></i>
                     </div>
@@ -33,7 +32,7 @@
                         <div class="action-subtitle">Мои справки и заявки</div>
                     </div>
                 </router-link>
-                <router-link class="action-card" to="/schedule">
+                <router-link class="action-card" :to="openScheduleLink">
                     <div class="action-icon">
                         <i class="pi pi-calendar"></i>
                     </div>
@@ -48,46 +47,29 @@
         <section class="overview-grid">
             <div class="panel-card">
                 <div class="panel-header">
-                    <div class="panel-title">
-                        <h3>Мой статус</h3>
-                        <span class="panel-subtitle">Краткий обзор профиля</span>
-                    </div>
-                    <div class="panel-icon">
-                        <i class="pi pi-user"></i>
-                    </div>
-                </div>
-                <div class="panel-content status-grid">
-                    <div class="status-item">
-                        <span class="label">Профиль</span>
-                        <router-link to="/profile" class="value-link">Открыть</router-link>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">Полномочия</span>
-                        <router-link to="/me-permissions" class="value-link">Просмотреть</router-link>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">Роль</span>
-                        <span class="value">{{ roleTitle || '—' }}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">Infra статус</span>
-                        <span class="value">{{ infraStatusText }}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">Пользователь</span>
-                        <span class="value">{{ isBlocked ? 'Заблокирован' : 'Активен' }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="panel-card">
-                <div class="panel-header">
                     <h3>Расписание</h3>
+
+                    <SelectButton
+                        v-model="selectedScheduleType"
+                        :options="scheduleModeOptions"
+                        optionValue="value"
+                        class="schedule-mode-switch"
+                    >
+                        <template #option="{ option }">
+                            <span class="schedule-mode-icon" :title="option.label">
+                                <i :class="option.icon"></i>
+                            </span>
+                        </template>
+                    </SelectButton>
+
                     <i class="pi pi-calendar"></i>
                 </div>
                 <div class="panel-content">
-                    <div v-if="!scheduleGroupName" class="activity-item muted">
-                        Выберите группу в расписании, чтобы отобразить
+                    <div v-if="scheduleSelection.name" class="schedule-current-target">
+                        {{ scheduleSelection.name }}
+                    </div>
+                    <div v-if="!scheduleSelection.id" class="activity-item muted">
+                        Выберите {{ selectedScheduleTypeLabel.toLowerCase() }} в расписании, чтобы отобразить
                     </div>
                     <div v-else-if="todayLessons.length === 0" class="activity-item muted">
                         Ближайших занятий нет
@@ -109,7 +91,6 @@
                             <span class="schedule-room badge" v-if="lesson.room">{{ lesson.room }}</span>
                         </div>
                     </div>
-                    <router-link to="/schedule" class="value-link">Открыть расписание</router-link>
                 </div>
             </div>
 
@@ -120,7 +101,6 @@
                 </div>
                 <div class="panel-content">
                     <div class="activity-item">Здесь будут ваши последние заявки</div>
-                    <router-link to="/requests" class="value-link">Открыть список</router-link>
                 </div>
             </div>
         </section>
@@ -128,19 +108,45 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import axios from 'axios';
 import axiosInstance from '@/utils/axios.js';
+import {
+    buildSchedulePath,
+    getLastScheduleSelection,
+    getScheduleSelectionByType,
+    normalizeScheduleType,
+    SCHEDULE_TYPE_GROUP,
+    SCHEDULE_TYPE_ROOM,
+    SCHEDULE_TYPE_TEACHER
+} from '@/utils/scheduleStorage.js';
 
+const DASHBOARD_SCHEDULE_TYPE_KEY = 'dashboardScheduleType';
 const firstName = localStorage.getItem('firstName');
 const userId = localStorage.getItem('userId');
 const roleTitle = ref('');
 const isBlocked = ref(false);
 const infraStatusText = ref('—');
-const scheduleGroupId = ref(localStorage.getItem('scheduleGroupId'));
-const scheduleGroupName = ref(localStorage.getItem('scheduleGroupName'));
 const todayLessons = ref([]);
 const scheduleDateLabel = ref('');
+
+const scheduleModeOptions = [
+    { label: 'Группа', value: SCHEDULE_TYPE_GROUP, icon: 'pi pi-users' },
+    { label: 'Аудитория', value: SCHEDULE_TYPE_ROOM, icon: 'pi pi-building' },
+    { label: 'Преподаватель', value: SCHEDULE_TYPE_TEACHER, icon: 'pi pi-user' }
+];
+
+const lastSchedule = getLastScheduleSelection();
+const savedDashboardType = localStorage.getItem(DASHBOARD_SCHEDULE_TYPE_KEY);
+const selectedScheduleType = ref(normalizeScheduleType(lastSchedule.type || savedDashboardType));
+const scheduleSelection = ref(getScheduleSelectionByType(selectedScheduleType.value));
+
+const selectedScheduleTypeLabel = computed(() => {
+    const option = scheduleModeOptions.find((item) => item.value === selectedScheduleType.value);
+    return option?.label || 'Группа';
+});
+
+const openScheduleLink = computed(() => buildSchedulePath(selectedScheduleType.value, scheduleSelection.value.id));
 
 const fetchUserStatus = async () => {
     try {
@@ -169,12 +175,21 @@ const formatLocalDate = (date) => {
     return `${year}-${month}-${day}`;
 };
 
+const getScheduleParamName = (type) => {
+    if (type === SCHEDULE_TYPE_ROOM) return 'idAudLine';
+    if (type === SCHEDULE_TYPE_TEACHER) return 'idTeacher';
+    return 'idGroup';
+};
+
 const fetchScheduleForDate = async (date) => {
-    if (!scheduleGroupId.value) return;
+    if (!scheduleSelection.value.id) return [];
 
     try {
         const formattedDate = formatLocalDate(date);
-        const response = await axios.get(`https://umu.sibadi.org/api/Rasp?idGroup=${scheduleGroupId.value}&sdate=${formattedDate}`);
+        const paramName = getScheduleParamName(selectedScheduleType.value);
+        const response = await axios.get(
+            `https://umu.sibadi.org/api/Rasp?${paramName}=${scheduleSelection.value.id}&sdate=${formattedDate}`
+        );
         const lessons = response.data?.data?.rasp || [];
         return lessons.filter((lesson) => {
             if (!lesson?.дата) return false;
@@ -186,36 +201,35 @@ const fetchScheduleForDate = async (date) => {
     }
 };
 
-// Очистка названия дисциплины от "лек.", "лаб.", "пр."
 const cleanDiscipline = (discipline) => {
     const match = discipline?.match(/^(лек|лаб|пр|экз|зач)\s*/i, '');
-    let type = "";
-    let color = "blue";
+    let type = '';
+    let color = 'blue';
     if (match) {
         const typeAbbr = match[1].toLowerCase();
         switch (typeAbbr) {
-            case "лек":
-                type = "Лекция";
-                color = "green";
+            case 'лек':
+                type = 'Лекция';
+                color = 'green';
                 break;
-            case "лаб":
-                type = "Лабораторная";
-                color = "purple";
+            case 'лаб':
+                type = 'Лабораторная';
+                color = 'purple';
                 break;
-            case "пр":
-                type = "Практика";
-                color = "amber";
+            case 'пр':
+                type = 'Практика';
+                color = 'amber';
                 break;
-            case "экз":
-                type = "Экзамен";
-                color = "sky";
+            case 'экз':
+                type = 'Экзамен';
+                color = 'sky';
                 break;
-            case "зач":
-                type = "Зачет";
-                color = "sky";
+            case 'зач':
+                type = 'Зачет';
+                color = 'sky';
                 break;
             default:
-                type = "";
+                type = '';
         }
     }
     return {
@@ -226,13 +240,19 @@ const cleanDiscipline = (discipline) => {
 };
 
 const setScheduleLessons = (lessons, date) => {
+    const mapRoom = (lesson) => {
+        if (selectedScheduleType.value === SCHEDULE_TYPE_GROUP) return lesson.аудитория;
+        if (selectedScheduleType.value === SCHEDULE_TYPE_ROOM) return lesson.группа;
+        return lesson.аудитория || lesson.группа;
+    };
+
     todayLessons.value = lessons.slice(0, 4).map((lesson, index) => ({
         key: lesson.код || index,
         time: `${lesson.начало.replace('-', ':')} - ${lesson.конец.replace('-', ':')}`,
         title: cleanDiscipline(lesson.дисциплина).cleanedDiscipline,
         type: cleanDiscipline(lesson.дисциплина).type,
         typeColor: cleanDiscipline(lesson.дисциплина).color,
-        room: lesson.аудитория
+        room: mapRoom(lesson)
     }));
     scheduleDateLabel.value = date.toLocaleDateString('ru-RU', {
         weekday: 'short',
@@ -242,7 +262,11 @@ const setScheduleLessons = (lessons, date) => {
 };
 
 const fetchNearestSchedule = async () => {
-    if (!scheduleGroupId.value) return;
+    if (!scheduleSelection.value.id) {
+        todayLessons.value = [];
+        scheduleDateLabel.value = '';
+        return;
+    }
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -261,17 +285,27 @@ const fetchNearestSchedule = async () => {
     scheduleDateLabel.value = '';
 };
 
+watch(selectedScheduleType, (newType) => {
+    localStorage.setItem(DASHBOARD_SCHEDULE_TYPE_KEY, newType);
+    scheduleSelection.value = getScheduleSelectionByType(newType);
+    fetchNearestSchedule();
+});
+
 onMounted(() => {
     const cleanUrl = window.location.origin + window.location.pathname;
     window.history.replaceState({}, document.title, cleanUrl);
 
     fetchUserStatus();
     fetchInfraStatus();
+    scheduleSelection.value = getScheduleSelectionByType(selectedScheduleType.value);
     fetchNearestSchedule();
 });
 </script>
 
 <style scoped>
+h3 {
+    margin: 0 !important;
+}
 .dashboard {
     display: flex;
     flex-direction: column;
@@ -350,7 +384,6 @@ onMounted(() => {
     margin: 0;
     color: var(--p-grey-2);
 }
-.quick-actions h2,
 .overview-grid h3 {
     margin: 0 0 12px;
     color: var(--p-text-color);
@@ -450,6 +483,21 @@ onMounted(() => {
     flex-direction: column;
     gap: 8px;
 }
+
+.schedule-mode-switch :deep(.p-togglebutton-content) {
+    padding: 2px 0.5rem;
+}
+.schedule-mode-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    font-size: 1rem;
+}
+.schedule-current-target {
+    color: var(--p-text-color);
+    font-weight: 600;
+}
 .status-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -541,7 +589,6 @@ onMounted(() => {
 .schedule-title {
     font-size: 0.95rem;
     color: var(--p-text-color);
-    font-weight: 600;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

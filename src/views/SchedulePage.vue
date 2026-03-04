@@ -79,6 +79,14 @@ import { ref, onMounted, watch, computed } from "vue";
 import axios from "axios";
 import { useRouter } from 'vue-router';
 import { useGroupsStore } from '@/stores/groups';
+import {
+    categoryToScheduleType,
+    getLastScheduleSelection,
+    getSavedScheduleCategory,
+    saveScheduleSelection,
+    saveSelectedScheduleCategory,
+    scheduleTypeToCategory
+} from '@/utils/scheduleStorage.js';
 
 
 const filteredSchedule = ref([]);
@@ -132,11 +140,10 @@ const onPageChange = (event) => {
 };
 
 const goToSchedule = (item) => {
-    if (selectedCategory.value === 1) {
-        localStorage.setItem('scheduleGroupId', item.id);
-        localStorage.setItem('scheduleGroupName', item.name);
-        router.push({ path: `/schedule/group/${item.id}` });
-    }
+    const type = categoryToScheduleType(selectedCategory.value);
+    saveScheduleSelection({ type, id: item.id, name: item.name, setAsLast: true });
+
+    if (selectedCategory.value === 1) router.push({ path: `/schedule/group/${item.id}` });
     else if (selectedCategory.value === 2) router.push({ path: `/schedule/room/${item.id}` });
     else if (selectedCategory.value === 3) router.push({ path: `/schedule/teacher/${item.id}` });
 }
@@ -232,14 +239,16 @@ watch(selectedYear, () => {
 });
 
 watch(selectedCategory, (newCategory) => {
-    sessionStorage.setItem("selectedCategory", newCategory);
+    saveSelectedScheduleCategory(newCategory);
 })
 
 onMounted(() => {
-    const savedCategory = sessionStorage.getItem("selectedCategory");
-    if (savedCategory) {
-        selectedCategory.value = Number(savedCategory); // Приводим к числу
-    }
+    const savedCategory = getSavedScheduleCategory();
+    const lastSelection = getLastScheduleSelection();
+
+    if (savedCategory) selectedCategory.value = savedCategory;
+    else if (lastSelection?.id) selectedCategory.value = scheduleTypeToCategory(lastSelection.type);
+
     searchQuery.value = localStorage.getItem(getSearchKey(selectedCategory.value)) || "";
     
     fetchYears().then(() => {
