@@ -5,6 +5,7 @@ import ToastService from 'primevue/toastservice';
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "quill/dist/quill.core.css";
+import "quill/dist/quill.snow.css";
 import 'primeicons/primeicons.css';
 import PrimeVue from 'primevue/config';
 import ConfirmationService from 'primevue/confirmationservice';
