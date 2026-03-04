@@ -2,7 +2,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import axiosInstance from '@/utils/axios.js';
-import formatDate from '@/utils/formatDate.js';
+import { formatDateRuLongWithTime as formatDate } from '@/utils/date.js';
 import { FAQ_ADMIN_SEGMENT, USE_SU_FAQ_ENDPOINTS } from '@/mocks/config.js';
 
 const SAVE_DELAY_MS = 350;

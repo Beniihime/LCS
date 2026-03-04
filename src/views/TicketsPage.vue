@@ -42,7 +42,6 @@
                                             <Button
                                                 label="Автоназначение ответственных"
                                                 icon="pi pi-users"
-                                                severity="warn"
                                                 :loading="autoAssignLoading"
                                                 :disabled="autoAssignLoading"
                                                 @click="runAutoAssignResponsible"
@@ -257,6 +256,7 @@ import TicketDetailsModal from '@/components/Tickets/TicketDetails.vue';
 import { usePermissionStore } from '@/stores/permissions';
 import { mockTickets } from '@/mocks/tickets.js';
 import { USE_MOCK_DATA } from '@/mocks/config.js';
+import { formatDateRuLongWithTime as formatDate } from '@/utils/date.js';
 
 const permissionStore = usePermissionStore();
 
@@ -429,12 +429,6 @@ const debouncedFetchTickets = debounce(async () => {
 
 const rowClass = () => {
     return [{ 'pointer': true }];
-};
-
-// Функции для форматирования
-const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleString('ru-RU');
 };
 
 const parseFioFromFormData = (formData) => {

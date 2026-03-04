@@ -1,7 +1,7 @@
 <script setup>
 import { useNotificationStore } from '@/stores/notifications.js';
 import { onMounted } from 'vue';
-import formatDate from '@/utils/formatDate.js';  // Функция для форматирования даты
+import { formatDateRuLongWithTime as formatDate } from '@/utils/date.js';  // Функция для форматирования даты
 
 const notificationStore = useNotificationStore();
 

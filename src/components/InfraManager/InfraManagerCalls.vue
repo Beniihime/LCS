@@ -169,6 +169,9 @@
 <script setup>
 import { ref, watch } from 'vue';
 import axiosInstance from '@/utils/axios.js';
+import { useInfraCallDetails } from '@/components/InfraManager/composables/useInfraCallDetails.js';
+import { getInfraStatusIcon, getInfraStatusSeverity } from '@/utils/infraStatus.js';
+import { formatDateOmskFromUnixSeconds, formatDateOmskFromUtcString, formatFileSize } from '@/utils/date.js';
 
 // Пропс для передачи ID пользователя
 const props = defineProps({
@@ -178,86 +181,27 @@ const props = defineProps({
 });
 
 const lastCalls = ref([]);  // Список последних заявок
-const isDialogVisible = ref(false);  // Видимость модального окна
-const selectedCall = ref(null);  // Выбранная заявка
-const documents = ref([]); // Список документов для выбранной заявки
-const errorOccurred = ref(false);
-const negotiations = ref([]);
+const {
+  isDialogVisible,
+  selectedCall,
+  documents,
+  errorOccurred,
+  negotiations,
+  timelineEvents,
+  openCallDetails,
+  closeDialog,
+} = useInfraCallDetails({
+  axiosInstance,
+  loadCallById: async (callId) => {
+    const response = await axiosInstance.get(`/api/infra-manager/calls/${callId}`);
+    return response.data;
+  },
+});
 
-const timelineEvents = ref([]);
-
-// Получение цвета статуса
-const getStatusSeverity = (status) => {
-  switch (status) {
-    case 'Открыта':
-      return 'info';
-    case 'Закрыта':
-      return 'success';
-    case 'Ожидает':
-      return 'secondary';
-    case 'Зарегистрирована':
-      return 'warn';
-    case 'Инициирована':
-      return '';
-    default:
-      return null;
-  }
-}
-
-// Получение иконки статуса
-const getStatusIcon = (status) => {
-  switch (status) {
-    case 'Открыта':
-      return 'pi pi-info-circle';
-    case 'Закрыта':
-      return 'pi pi-check';
-    case 'Ожидает':
-      return 'pi pi-hourglass';
-    case 'Зарегистрирована':
-      return 'pi pi-book';
-    case 'Инициирована':
-      return 'pi pi-eject';
-    default:
-      return null;
-  }
-}
-
-// Функция для форматирования размера файла
-const formatFileSize = (size) => {
-  if (size < 1024) return `${size} B`;
-  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
-  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-};
-
-const fetchUserFullName = async (userId) => {
-  if (!userId) return '';
-  try {
-    const response = await axiosInstance.get(`/api/infra-manager/users/${userId}`);
-    return response?.data?.fullName || '';
-  } catch (error) {
-    console.debug(`Не удалось загрузить пользователя ${userId}:`, error);
-    return '';
-  }
-};
-
-// Функция для загрузки документов
-const fetchDocuments = async (callId) => {
-  try {
-    const response = await axiosInstance.get(`/api/infra-manager/calls/${callId}/documents`);
-    documents.value = response.data;
-  } catch (error) {
-    console.error('Ошибка при загрузке документов:', error);
-  }
-};
-
-const fetchNegotiations = async (callId) => {
-    try {
-        const response = await axiosInstance.get(`/api/infra-manager/calls/${callId}/negotiations`);
-        negotiations.value = response.data;
-    } catch (error) {
-        console.error('Ошибка при загрузке данных о согласованиях:', error);
-    }
-};
+const getStatusSeverity = getInfraStatusSeverity;
+const getStatusIcon = getInfraStatusIcon;
+const formatTimestampToOmsk = formatDateOmskFromUnixSeconds;
+const formatUTCToOmsk = formatDateOmskFromUtcString;
 
 // Функция для получения последних заявок по ID пользователя
 const fetchUserCalls = async () => {
@@ -282,89 +226,6 @@ watch(() => props.userId, async (newUserId) => {
         await fetchUserCalls();
     }
 }, { immediate: true })
-
-// Открыть модальное окно с информацией по заявке
-const openCallDetails = async (callId) => {
-  isDialogVisible.value = true;
-  errorOccurred.value = false;
-  try {
-    const response = await axiosInstance.get(`/api/infra-manager/calls/${callId}`);
-    const callData = response.data;
-
-    timelineEvents.value = [
-      { date: callData.utcDateRegistered, label: 'Регистраиця' },
-      { date: callData.utcDateOpened, label: 'Открытие' },
-      { date: callData.utcDateAccomplished, label: 'Выполнение' },
-      { date: callData.utcDateClosed, label: 'Закрытие' },
-    ].filter(event => event.date);
-
-    const [initiatorFullName, clientFullName, ownerFullName, executorFullName, accomplisherFullName] = await Promise.all([
-      fetchUserFullName(callData.initiatorID),
-      fetchUserFullName(callData.clientID),
-      fetchUserFullName(callData.ownerID),
-      fetchUserFullName(callData.executorID),
-      fetchUserFullName(callData.accomplisherID),
-    ]);
-
-    // Обновляем заявку с именами пользователей
-    selectedCall.value = {
-      ...callData,
-      initiatorFullName,
-      clientFullName,
-      ownerFullName,
-      executorFullName,
-      accomplisherFullName,
-    };
-    // Загружаем данные о согласованиях
-    await fetchNegotiations(callId);
-
-    await fetchDocuments(callId); // Загружаем документы для выбранной заявки
-
-  } catch (error) {
-    console.debug('Ошибка при загрузке информации о заявке:', error);
-    errorOccurred.value = true;
-  }
-};
-
-// Закрыть модальное окно
-const closeDialog = () => {
-  isDialogVisible.value = false;
-  selectedCall.value = null;
-};
-
-const formatTimestampToOmsk = (timestamp) => {
-  if (!timestamp) return '';
-  const date = new Date(timestamp * 1000); // Умножаем на 1000, чтобы перевести из секунд в миллисекунды
-  return new Intl.DateTimeFormat('ru-RU', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-    timeZone: 'Asia/Omsk', // Часовой пояс Омска
-  }).format(date);
-};
-
-const formatUTCToOmsk = (utcString) => {
-  if (!utcString) return '';
-
-  // Добавляем 'Z', чтобы обозначить, что строка — в формате UTC
-  const date = new Date(`${utcString}Z`);
-
-  // Добавляем 6 часов для Омского времени
-  date.setHours(date.getUTCHours() + 6);
-
-  // Форматируем дату с учётом 24-часового формата и Омского времени
-  return new Intl.DateTimeFormat('ru-RU', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(date);
-};
 
 defineExpose({ openCallDetails });
 </script>

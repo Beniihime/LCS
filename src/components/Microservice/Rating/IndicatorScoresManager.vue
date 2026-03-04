@@ -468,6 +468,7 @@
 import { ref, computed, watch } from 'vue';
 import axiosInstance from '@/utils/axios';
 import { smartTableParser, extractPointsAndFormula, normalizeText, extractAdditionalPoints } from '@/utils/universalParser';
+import { formatDateRuShort as formatDate } from '@/utils/date.js';
 import DeleteEmployeeValue from "@/components/Microservice/Rating/Methods/DeleteEmployeeValue.vue";
 
 const props = defineProps({
@@ -895,11 +896,6 @@ const getPointsSeverity = (points) => {
     if (points >= 5) return 'warn';
     return 'danger';
 }
-
-const formatDate = (dateString) => {
-    if (!dateString) return '—';
-    return new Date(dateString).toLocaleDateString('ru-RU');
-};
 
 const submitEvaluation = async () => {
     if (!canSubmit.value) return;
