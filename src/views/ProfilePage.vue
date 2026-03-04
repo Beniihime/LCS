@@ -222,16 +222,20 @@
                                     <div class="col">
                                         <h2>{{ fullName }}</h2>
                                         <p class="profile-email">{{ email }}</p>
-                                        <div class="profile-role" v-if="userRole">
-                                            <Chip class="role-label">
-                                                <span class="roleType" :class="getRoleTypeClass()">
-                                                    {{ userRole?.type?.[0] }}
-                                                </span>
-                                                <span>{{ userRole.title }}</span>
-                                            </Chip>
-                                        </div>
-                                        <div class="profile-role" v-else>
-                                            <Tag severity="warn">Нет ролей</Tag>
+                                        <div class="profile-role d-flex flex-row gap-2">
+                                            <template v-if="userRoles.length > 0">
+                                                <div v-for="ur in userRoles" :key="ur.id">
+                                                    <Chip class="role-label" >
+                                                        <span class="roleType" :class="getRoleTypeClass(ur)">
+                                                            {{ ur.type[0] }}
+                                                        </span>
+                                                        <span>{{ ur.title }}</span>
+                                                    </Chip>
+                                                </div>
+                                            </template>
+                                            <template v-else>
+                                                <Tag severity="warn">Нет ролей</Tag>
+                                            </template>
                                         </div>
                                     </div>
                                     <div class="col-auto d-flex align-items-center">
@@ -270,20 +274,6 @@
                         <!-- <div class="info-card">
                             <span class="field">Телефон</span>
                         </div> -->
-                        <div>
-                            <div class="field">Роль</div>
-                            <div v-if="userRoles.length">
-                                <Chip v-for="role in userRoles" :key="role.id || role.title" class="role-label">
-                                    <span class="roleType" :class="getRoleTypeClass(role)">
-                                        {{ role?.type?.[0] }}
-                                    </span>
-                                    <span>{{ role.title }}</span>
-                                </Chip>
-                            </div>
-                            <div v-else>
-                                <Tag severity="warn">Нет ролей</Tag>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -1127,7 +1117,7 @@ main {
     border-radius: 12px;
     transition: all 0.5s;
     width: 100%;
-    padding: 10px;
+    padding: 20px;
 }
 .profile-card-user {
     position: relative;

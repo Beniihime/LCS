@@ -247,7 +247,7 @@ const notificationStore = useNotificationStore();
 const permissionStore = usePermissionStore();
 
 // Сезоны
-const debugMode = ref(true);
+const debugMode = ref(false);
 const allowSeasonSelection = ref(false);
 const currentSeason = ref(getCurrentSeason());
 const selectedSeason = ref(null);
