@@ -43,7 +43,7 @@ main {
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    padding: 20px 8rem;
+    padding: 10px 2rem;
     overflow: hidden;
     color: var(--p-text-color);
 }

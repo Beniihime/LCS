@@ -5,28 +5,26 @@
                 <h2 class="m-0">Мои полномочия</h2>
             </div>
             
-            <Transition name="content-fade" mode="out-in">
-                <div v-if="loading" key="me-permissions-skeleton" class="permissions-skeleton">
-                    <div v-for="idx in 3" :key="idx" class="mt-4">
-                        <Skeleton width="20rem" height="1.5rem" class="mb-2" />
-                        <Skeleton width="32rem" height="1rem" class="mb-3" />
-                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xxl-4 g-2">
-                            <div class="col" v-for="permIdx in 8" :key="permIdx">
-                                <div class="permission-item h-100">
-                                    <Skeleton width="65%" height="1.2rem" class="mb-2" />
-                                    <Skeleton width="100%" height="0.95rem" class="mb-2" />
-                                    <Skeleton width="84%" height="0.95rem" />
-                                </div>
-                            </div>
-                        </div>
-                        <Divider />
+            <div v-for="resource in filteredResources" :key="resource.id" class="mt-3">
+                <div class="row align-items-center">
+                    <div class="col-auto pe-0">
+                        <h4>{{ resource.title }}</h4>
+                    </div>
+                    <div class="col-auto pe-0"><Tag :value="resource.type" severity="info" class="mx-2"/></div>
+                    <div class="col-auto ps-0">
+                        <Tag 
+                            v-if="!resource.permissions.some(permission => permission.isCustomizable)" 
+                            value="Нет регулируемых полномочий" 
+                            severity="warn" 
+                            icon="pi pi-exclamation-triangle"
+                        />
                     </div>
                 </div>
                 <div class="resource-info">
                     <p class="resource-description">{{ resource.description }}</p>
                 </div>
                 <div class="w-100">
-                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xxl-4 g-2">
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-2">
                         <div v-for="permission in resource.permissions" :key="permission.id" class="col">
                             <div class="permission-item h-100">
                                 <div class="permission-header">
@@ -61,17 +59,16 @@
                                         <div v-else>
                                             <Tag severity="danger" icon="pi pi-lock" style="padding: 7px;"/>
                                         </div>
-                                        <p class="permission-description">{{ permission.description }}</p>
                                     </div>
-                                    
                                 </div>
+                                <p class="permission-description">{{ permission.description }}</p>
                             </div>
+                            
                         </div>
-                    
-                        <Divider />
                     </div>
                 </div>
-            </Transition>
+                <Divider />
+            </div>
         </div>
     </main>
 </template>

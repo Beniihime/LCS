@@ -45,39 +45,55 @@
                         <Divider />
                     </div>
                 </div>
-                <div class="resource-info">
-                    <p class="resource-description">{{ resource.description }}</p>
-                </div>
-                <div class="w-100">
-                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-3">
-                        <div v-for="permission in resource.permissions" :key="permission.id" class="col">
-                            <div class="permission-item h-100">
-                                <div class="permission-header">
-                                    <h3 class="permission-title">{{ permission.title }}</h3>
-                                    <div class="d-flex">
-                                        <Button class="me-2" text style="padding: 1px;" @click="openDialog(permission.id)" severity="info">
-                                            <i class="pi pi-info-circle" style="font-size: 20px;"/>
-                                        </Button>
-                                        <Dialog 
-                                            v-model:visible="infoDialogVisible[permission.id]"
-                                            modal
-                                            :header="permission.title" 
-                                            :style="{ 'min-width': '20rem', 'max-width': '40rem' }"
-                                        >
-                                            <p>{{ permission.description }}</p>
-                                            <Tag 
-                                                v-if="permission.isCustomizable" 
-                                                value="Регулируемое" 
-                                                severity="success" 
-                                                icon="pi pi-cog"
-                                            />
-                                            <Tag 
-                                                v-else 
-                                                value="Не регулируемое" 
-                                                severity="warn" 
-                                                icon="pi pi-exclamation-triangle"
-                                            />
-                                        </Dialog>
+                <div v-else key="role-permissions-content">
+                    <div v-for="resource in filteredResources" :key="resource.id || resource.title" class="w-100">
+                        <div class="row align-items-center">
+                            <div class="col-auto pe-0">
+                                <h4>{{ resource.title }}</h4>
+                            </div>
+                            <div class="col-auto pe-0"><Tag :value="resource.type" severity="info" class="mx-2"/></div>
+                            <div class="col-auto ps-0">
+                                <Tag 
+                                    v-if="!resource.permissions.some(permission => permission.isCustomizable)" 
+                                    value="Нет регулируемых полномочий" 
+                                    severity="warn" 
+                                    icon="pi pi-exclamation-triangle"
+                                />
+                            </div>
+                        </div>
+                        <div class="resource-info">
+                            <p class="resource-description">{{ resource.description }}</p>
+                        </div>
+                        <div class="w-100">
+                            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+                                <div v-for="permission in resource.permissions" :key="permission.id" class="col">
+                                    <div class="permission-item h-100">
+                                        <div class="permission-header">
+                                            <h3 class="permission-title">{{ permission.title }}</h3>
+                                            <div class="d-flex">
+                                                <Button class="me-2" text style="padding: 1px;" @click="openDialog(permission.id)" severity="info">
+                                                    <i class="pi pi-info-circle" style="font-size: 20px;"/>
+                                                </Button>
+                                                <Dialog 
+                                                    v-model:visible="infoDialogVisible[permission.id]"
+                                                    modal
+                                                    :header="permission.title" 
+                                                    :style="{ 'min-width': '20rem', 'max-width': '40rem' }"
+                                                >
+                                                    <p>{{ permission.description }}</p>
+                                                    <Tag 
+                                                        v-if="permission.isCustomizable" 
+                                                        value="Регулируемое" 
+                                                        severity="success" 
+                                                        icon="pi pi-cog"
+                                                    />
+                                                    <Tag 
+                                                        v-else 
+                                                        value="Не регулируемое" 
+                                                        severity="warn" 
+                                                        icon="pi pi-exclamation-triangle"
+                                                    />
+                                                </Dialog>
 
                                                 <div v-if="permission.isCustomizable" class="d-flex">
                                                     <ToggleSwitch v-model="permission.enabled" @update:model-value="togglePermission(roleStore.roleId, permission.id, $event)">
@@ -96,11 +112,9 @@
                                         </div>
                                         <p class="permission-description">{{ permission.description }}</p>
                                     </div>
-                                    
                                 </div>
                             </div>
                         </div>
-                    
                         <Divider />
                     </div>
                 </div>
@@ -257,7 +271,7 @@ onMounted(async () => {
 }
 .permissions-wrapper {
     position: relative;
-    padding: 1.25rem 8rem;
+    padding: 10px 2rem;
     color: var(--p-text-color);
 }
 .search {

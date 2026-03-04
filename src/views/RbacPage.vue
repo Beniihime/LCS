@@ -2,7 +2,6 @@
     <main>
         <div class="content-wrapper">
             <div class="statistics">
-                <h2 class="statistics-title">Статистика ролей</h2>
                 <div class="rows gap-3">
                     <div class="col" v-for="i in 4" :key="i">
                         <div class="stat-card">

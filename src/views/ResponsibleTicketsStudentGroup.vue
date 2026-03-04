@@ -1,9 +1,5 @@
 <template>
     <main>
-        <div class="header">
-            <h2 class="m-0">Управление ответственными</h2>
-        </div>
-
         <div class="content-wrapper">
             <Transition name="content-fade" mode="out-in">
             <DataTable 
