@@ -163,6 +163,24 @@ svg.lcs {
   transition: all 0.5s;
 }
 
+/* Global skeleton opacity transition for all PrimeVue Skeleton components */
+.p-skeleton {
+  background: var(--p-grey-5) !important;
+  opacity: 1;
+  transition: opacity 0.25s ease;
+}
+
+/* Shared cross-fade for skeleton/content swaps */
+.content-fade-enter-active,
+.content-fade-leave-active {
+  transition: opacity 0.22s ease;
+}
+
+.content-fade-enter-from,
+.content-fade-leave-to {
+  opacity: 0;
+}
+
 /* Убираем стрелку у popover */
 .p-popover::before, .p-popover::after {
   display: none !important;
@@ -191,6 +209,41 @@ svg.lcs {
   background-color: var(--p-bg-color-2) !important;
 } */
 
+.faq-danger-item > div > a > span{
+  color: var(--p-red-500) !important;
+}
+
+.p-menu-submenu-label {
+  display: none !important;
+}
+
+.ql-editor {
+    white-space: wrap !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    font-size: 16px !important;
+}
+
+.ql-container {
+    font-family: inherit !important;
+}
+
+.ql-editor p {
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+}
+
+.ql-editor .ql-better-line-breaks {
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+}
+
+.ql-editor.ql-blank::before {
+    color: var(--p-grey-2) !important;
+}
+
 :root {
   --p-bg-color-0: rgba(255, 255, 255, 0.5);
   --p-bg-color-1: rgba(255,255,255,1.0);
@@ -210,7 +263,7 @@ svg.lcs {
   --p-blue-500: rgb(68, 143, 255) !important;
   --p-blue-500-rgb: 68, 143, 255 !important;
   --p-blue-400: rgb(86, 118, 221) !important;
-  --p-color-icon-menu: 86, 118, 221;
+  /* --p-color-icon-menu: 86, 118, 221; */
   --p-blue-500-low-op: rgb(202, 218, 253) !important;
 
   --p-separator-opaque: rgba(198, 198, 200, 0.30) !important;

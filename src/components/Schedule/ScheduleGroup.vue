@@ -119,7 +119,8 @@ import { useRoute, useRouter } from "vue-router";
 import Popover from 'primevue/popover';
 import axios from "axios";
 
-import formatDate from "@/utils/formatDateWithoutTime.js";
+import { formatDateRuLong as formatDate, formatRuWeekdayCapitalized } from "@/utils/date.js";
+import WelcomeScreen from "@/components/Utils/WelcomeScreen.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -274,9 +275,7 @@ const groupedLessons = computed(() => {
 });
 
 const getDayOfWeek = (dateString) => {
-    const date = new Date(dateString);
-    const dayOfWeek = new Intl.DateTimeFormat('ru-RU', { weekday: 'long' }).format(date);
-    return dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1);
+    return formatRuWeekdayCapitalized(dateString, '');
 };
 
 const isDateAvailable = (dateObj) => {

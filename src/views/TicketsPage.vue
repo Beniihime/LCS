@@ -1,24 +1,25 @@
 <template>
     <div class="content">
         <div class="content-wrapper">
-            <WelcomeScreen :visible="loading"/>
-            <!-- Основная таблица -->
-            <DataTable 
-                lazy
-                v-if="isFirstLoadDone"
-                :value="tickets"
-                paginator
-                scrollable
-                stripedRows
-                :rows="rowsPerPage"
-                :rowClass="rowClass"
-                @row-click="(event) => openTicketModal(event.data.id)"
-                :totalRecords="totalRecords"
-                @page="onPage"
-                :rowsPerPageOptions="[5, 10, 15]"
-                filterDisplay="row"
-                class="tickets-table"
-            >
+            <Transition name="content-fade" mode="out-in">
+                <!-- Основная таблица -->
+                <DataTable 
+                    key="tickets-content"
+                    lazy
+                    v-if="isFirstLoadDone"
+                    :value="tickets"
+                    paginator
+                    scrollable
+                    stripedRows
+                    :rows="rowsPerPage"
+                    :rowClass="rowClass"
+                    @row-click="(event) => openTicketModal(event.data.id)"
+                    :totalRecords="totalRecords"
+                    @page="onPage"
+                    :rowsPerPageOptions="[5, 10, 15]"
+                    filterDisplay="row"
+                    class="tickets-table"
+                >
                 <template #header>
                     <div class="page-header">
                         <div class="d-flex justify-content-between align-items-center">
@@ -30,6 +31,23 @@
                             </div>
                             <div class="page-controls">
                                 <div class="d-flex gap-2 align-items-center">
+                                    <Button
+                                        icon="pi pi-sliders-h"
+                                        outlined
+                                        severity="secondary"
+                                        @click="toggleSpecialFeaturesPanel"
+                                    />
+                                    <OverlayPanel ref="specialFeaturesPanel">
+                                        <div class="special-features-panel">
+                                            <Button
+                                                label="Автоназначение ответственных"
+                                                icon="pi pi-users"
+                                                :loading="autoAssignLoading"
+                                                :disabled="autoAssignLoading"
+                                                @click="runAutoAssignResponsible"
+                                            />
+                                        </div>
+                                    </OverlayPanel>
                                     <MultiSelect 
                                         :modelValue="selectedColumns"
                                         :options="columns"
@@ -205,19 +223,20 @@
                         />
                     </template>
                 </Column> -->
-            </DataTable>
+                </DataTable>
 
-            <!-- Состояние загрузки при первом открытии -->
-            <div v-else-if="loading" class="skeleton-container">
-                <div class="skeleton-header mb-4">
-                    <Skeleton width="200px" height="40px" class="mb-2" />
-                    <Skeleton width="300px" height="20px" />
+                <!-- Состояние загрузки при первом открытии -->
+                <div key="tickets-skeleton" v-else-if="loading" class="skeleton-container">
+                    <div class="skeleton-header mb-4">
+                        <Skeleton width="200px" height="40px" class="mb-2" />
+                        <Skeleton width="300px" height="20px" />
+                    </div>
+                    <div class="skeleton-filters mb-4">
+                        <Skeleton width="100%" height="50px" />
+                    </div>
+                    <Skeleton width="100%" height="100%" class="skeleton-table" />
                 </div>
-                <div class="skeleton-filters mb-4">
-                    <Skeleton width="100%" height="50px" />
-                </div>
-                <Skeleton width="100%" height="100%" class="skeleton-table" />
-            </div>
+            </Transition>
         </div>
 
         <!-- Модальное окно деталей тикета -->
@@ -233,9 +252,11 @@
 import { ref, onMounted, computed } from 'vue';
 import axiosInstance from '@/utils/axios.js';
 import { debounce } from 'lodash';
-import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import TicketDetailsModal from '@/components/Tickets/TicketDetails.vue';
 import { usePermissionStore } from '@/stores/permissions';
+import { mockTickets } from '@/mocks/tickets.js';
+import { USE_MOCK_DATA } from '@/mocks/config.js';
+import { formatDateRuLongWithTime as formatDate } from '@/utils/date.js';
 
 const permissionStore = usePermissionStore();
 
@@ -243,6 +264,10 @@ const tickets = ref([]);
 const totalRecords = ref(0);
 const loading = ref(true);
 const isFirstLoadDone = ref(false);
+const useMockData = ref(USE_MOCK_DATA);
+const specialFeaturesPanel = ref(null);
+const autoAssignLoading = ref(false);
+
 
 // Модальное окно
 const ticketModalVisible = ref(false);
@@ -264,6 +289,36 @@ const onAssigneeToggle = () => {
     fetchTickets();
 };
 
+const toggleSpecialFeaturesPanel = (event) => {
+    specialFeaturesPanel.value?.toggle(event);
+};
+
+const runAutoAssignResponsible = async () => {
+    try {
+        autoAssignLoading.value = true;
+        await axiosInstance.post('/api/tickets/function/auto/assign-tickets');
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: {
+                severity: 'success',
+                summary: 'Справки',
+                detail: 'Автоназначение ответственных запущено'
+            }
+        }));
+        specialFeaturesPanel.value?.hide();
+    } catch (error) {
+        console.error('Ошибка при автоназначении ответственных:', error);
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: {
+                severity: 'error',
+                summary: 'Справки',
+                detail: 'Не удалось запустить автоназначение ответственных'
+            }
+        }));
+    } finally {
+        autoAssignLoading.value = false;
+    }
+};
+
 const filters = ref({
     number: null,
     status: null,
@@ -272,9 +327,10 @@ const filters = ref({
 });
 
 const columns = ref([
-    { field: 'number', header: '№', placeholder: 'Поиск по номеру', filterType: 'number', style: 'width: 180px; max-width: 200px;' },
-    { field: 'requestType', header: 'Тип заявки', placeholder: 'Поиск по типу' },
-    { field: 'status', header: 'Статус', placeholder: 'Выберите статус', filterType: 'select', style: 'width: 200px; max-width: 200px;' },
+    { field: 'number', header: '№', placeholder: 'Поиск по номеру', filterType: 'number', style: 'width: 200px; max-width: 200px;' },
+    { field: 'requesterName', header: 'ФИО' },
+    { field: 'requestType', header: 'Тип заявки', placeholder: 'Поиск по типу', style: 'width: 150px; max-width: 200px;' },
+    { field: 'status', header: 'Статус', placeholder: 'Выберите статус', filterType: 'select' },
     { field: 'priority', header: 'Приоритет', placeholder: 'Выберите приоритет', filterType: 'select' },
     { field: 'requesterSystem', header: 'Система-источник', placeholder: 'Поиск по системе' },
     { field: 'requesterId', header: 'ID инициатора', placeholder: 'Поиск по ID', filterType: 'string' },
@@ -284,7 +340,7 @@ const columns = ref([
     { field: 'closedAt', header: 'Дата закрытия', placeholder: 'Поиск по дате' },
 ]);
 
-const defaultColumns = ['number', 'requestType', 'status', 'priority', 'createdAt'];
+const defaultColumns = ['number', 'requesterName', 'requestType', 'status', 'priority', 'createdAt'];
 
 const selectedColumnFields = ref(defaultColumns);
 const selectedColumns = computed(() => 
@@ -375,10 +431,21 @@ const rowClass = () => {
     return [{ 'pointer': true }];
 };
 
-// Функции для форматирования
-const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleString('ru-RU');
+const parseFioFromFormData = (formData) => {
+    if (!formData) return null;
+    try {
+        const parsed = typeof formData === 'string' ? JSON.parse(formData) : formData;
+        return parsed?.fio || null;
+    } catch {
+        return null;
+    }
+};
+
+const enrichTicketsWithFio = (ticketList) => {
+    return (ticketList || []).map(ticket => ({
+        ...ticket,
+        requesterName: parseFioFromFormData(ticket?.formData) || '—'
+    }));
 };
 
 // Функции для стилизации статусов и приоритетов
@@ -444,6 +511,11 @@ const onPage = async (event) => {
 const fetchTickets = async () => {
     try {
         loading.value = true;
+        if (useMockData.value) {
+            tickets.value = enrichTicketsWithFio(mockTickets.tickets);
+            totalRecords.value = mockTickets.totalCount || 0;
+            return;
+        }
         const userId = getUserId();
         
         const payload = {
@@ -457,7 +529,7 @@ const fetchTickets = async () => {
         }
 
         const { data } = await axiosInstance.post('/api/tickets', payload);
-        tickets.value = data.tickets || [];
+        tickets.value = enrichTicketsWithFio(data.tickets);
         totalRecords.value = data.totalCount || 0;      
     } catch (error) {
         console.error('Ошибка при получении заявок:', error);
@@ -509,6 +581,13 @@ onMounted(async () => {
 
 .column-selector {
     min-width: 200px;
+}
+
+.special-features-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 280px;
 }
 
 /* Статистика таблицы */

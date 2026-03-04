@@ -20,14 +20,22 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import SideBar from '@/components/SideBar.vue';
 import MobileSpeedDial from '@/components/Utils/MobileSpeedDial.vue';
 import { isAuthenticated } from '@/utils/auth';
 import { useRoute } from 'vue-router';
 
-const isExpanded = ref(true);
+const SIDEBAR_EXPANDED_STORAGE_KEY = 'sidebarExpanded';
+
+const getSavedSidebarState = () => {
+  const saved = localStorage.getItem(SIDEBAR_EXPANDED_STORAGE_KEY);
+  if (saved === null) return true;
+  return saved === 'true';
+};
+
+const isExpanded = ref(getSavedSidebarState());
 const toast = useToast();
 const route = useRoute();
 
@@ -44,6 +52,10 @@ if (message === 'success') {
 const toggleSidebar = () => {
   isExpanded.value = !isExpanded.value;
 };
+
+watch(isExpanded, (value) => {
+  localStorage.setItem(SIDEBAR_EXPANDED_STORAGE_KEY, String(value));
+});
 
 onMounted(() => {
 const query = route.query;
@@ -78,6 +90,11 @@ if (query.message) {
   padding: 10px;
   background: transparent;
   box-sizing: border-box;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+  width: none;
 }
 
 .sidebar-collapsed {

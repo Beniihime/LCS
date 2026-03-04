@@ -284,6 +284,8 @@ import axiosInstance from '@/utils/axios.js';
 import { useRoute, useRouter } from 'vue-router';
 import { debounce } from 'lodash';
 import qs from 'qs';
+import { getInfraStatusIcon, getInfraStatusSeverity } from '@/utils/infraStatus.js';
+import { formatDateOmskFromUtcString } from '@/utils/date.js';
 
 import InfraManagerCalls from '@/components/InfraManager/InfraManagerCalls.vue';
 
@@ -318,61 +320,9 @@ const rowsPerPageOptions = [
     { label: '50', value: 50 },
 ];
 
-// Получение цвета статуса
-const getStatusSeverity = (status) => {
-  switch (status) {
-    case 'Открыта':
-      return 'info';
-    case 'Закрыта':
-      return 'success';
-    case 'Ожидает':
-      return 'secondary';
-    case 'Зарегистрирована':
-      return 'warn';
-    case 'Инициирована':
-      return '';
-    default:
-      return null;
-  }
-}
-
-// Получение иконки статуса
-const getStatusIcon = (status) => {
-  switch (status) {
-    case 'Открыта':
-      return 'pi pi-info-circle';
-    case 'Закрыта':
-      return 'pi pi-check';
-    case 'Ожидает':
-      return 'pi pi-hourglass';
-    case 'Зарегистрирована':
-      return 'pi pi-book';
-    case 'Инициирована':
-      return 'pi pi-eject';
-    default:
-      return null;
-  }
-}
-
-const formatUTCToOmsk = (utcString) => {
-  if (!utcString) return '';
-
-  // Добавляем 'Z', чтобы обозначить, что строка — в формате UTC
-  const date = new Date(`${utcString}Z`);
-
-  // Добавляем 6 часов для Омского времени
-  date.setHours(date.getUTCHours() + 6);
-
-  // Форматируем дату с учётом 24-часового формата и Омского времени
-  return new Intl.DateTimeFormat('ru-RU', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(date);
-};
+const getStatusSeverity = getInfraStatusSeverity;
+const getStatusIcon = getInfraStatusIcon;
+const formatUTCToOmsk = formatDateOmskFromUtcString;
 
 const rowClass = (data) => {
     return [{ 'removed-row': data.removed , 'not-allowed': data.removed, 'pointer': !data.removed }];

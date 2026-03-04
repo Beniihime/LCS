@@ -22,6 +22,23 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <h3 class="m-0 ps-4">Пользователи</h3>
                         <div class="d-flex gap-2">
+                            <Button
+                                icon="pi pi-sliders-h"
+                                outlined
+                                severity="secondary"
+                                @click="toggleSpecialUsersPanel"
+                            />
+                            <OverlayPanel ref="specialUsersPanel">
+                                <div class="special-users-panel">
+                                    <Button
+                                        label="Синхронизировать с InfraManager"
+                                        icon="pi pi-sync"
+                                        :loading="syncLoading"
+                                        :disabled="syncLoading"
+                                        @click="syncPasImAccounts"
+                                    />
+                                </div>
+                            </OverlayPanel>
                             <MultiSelect :modelValue="selectedColumns" :options="columns" optionLabel="header" @update:modelValue="onToggle"
                                 display="chip" placeholder="Выберите поля" />
                             <CreateUser v-if="hasPermission('User', 'Create')"/>
@@ -51,7 +68,7 @@
                 <template #empty>Не найдено.</template>
                 <template #loading>Данные загружаются. Подождите.</template>
 
-                <Column header="OTP" :showFilterMenu="false" :exportable="false">
+                <Column header="OTP" :showFilterMenu="false" :exportable="false" style="min-width: 60px;">
                     <template #body="{ data }">
                         <GetOtpButton 
                             :userId="data.id"
@@ -67,6 +84,7 @@
                     :key="col.field"
                     :header="col.header"
                     :showFilterMenu="false"
+                    :style="col.style"
                 >
                     <template #filter>
                         <InputText 
@@ -79,7 +97,7 @@
                     </template>
                 </Column>
                 
-                <Column field="roleIds" header="Роли" :showFilterMenu="false" v-if="selectedColumnFields.includes('roleIds')">
+                <Column field="roleIds" header="Роли" :showFilterMenu="false" v-if="selectedColumnFields.includes('roleIds')" style="min-width: 280px;">
                     <template #body="{ data }">
                         <div class="role-label-container">
                             <Chip v-if="data.roles.length > 0" class="role-label">
@@ -208,6 +226,8 @@ const customers = ref([]);
 const totalRecords = ref(0);
 const loading = ref(true);
 const isFirstLoadDone = ref(false);
+const specialUsersPanel = ref(null);
+const syncLoading = ref(false);
 
 const roles = ref([]);
 const userPriority = ref(null);
@@ -225,12 +245,12 @@ const filters = ref({
 });
 
 const columns = ref([
-    { field: 'lastName', header:'Фамилия', placeholder: 'Поиск по фамилии' },
-    { field: 'firstName', header: 'Имя', placeholder: 'Поиск по имени' },
-    { field: 'middleName', header: 'Отчество', placeholder: 'Поиск по отчеству' },
-    { field: 'email', header: 'E-mail', placeholder: 'Поиск по E-mail' },
-    { field: 'roleIds', header: 'Роли', placeholder: 'Выберите роли' },
-    { field: 'isBlocked', header: 'Статус', placeholder: 'Выберите статус' }
+    { field: 'lastName', header:'Фамилия', placeholder: 'Поиск по фамилии', style: 'min-width: 260px;' },
+    { field: 'firstName', header: 'Имя', placeholder: 'Поиск по имени', style: 'min-width: 260px;' },
+    { field: 'middleName', header: 'Отчество', placeholder: 'Поиск по отчеству', style: 'min-width: 260px;' },
+    { field: 'email', header: 'E-mail', placeholder: 'Поиск по E-mail', style: 'min-width: 260px;' },
+    { field: 'roleIds', header: 'Роли', placeholder: 'Выберите роли', style: 'min-width: 280px;' },
+    { field: 'isBlocked', header: 'Статус', placeholder: 'Выберите статус', style: 'min-width: 120px;' }
 ]);
 const defaultColumns = ['lastName', 'firstName', 'middleName', 'roleIds'];
 
@@ -283,6 +303,36 @@ const navigateToProfile = (userId, roleId) => {
         name: 'Profile', 
         query: { id: userId, r: roleId }
     });
+};
+
+const toggleSpecialUsersPanel = (event) => {
+    specialUsersPanel.value?.toggle(event);
+};
+
+const syncPasImAccounts = async () => {
+    try {
+        syncLoading.value = true;
+        await axiosInstance.post('/api/users/other-accounts/sync-pas-im');
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: {
+                severity: 'success',
+                summary: 'Пользователи',
+                detail: 'Синхронизация с InfraManager успешно запущена'
+            }
+        }));
+        specialUsersPanel.value?.hide();
+    } catch (error) {
+        console.debug('Ошибка синхронизации с InfraManager: ', error);
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: {
+                severity: 'error',
+                summary: 'Пользователи',
+                detail: 'Не удалось запустить синхронизацию с InfraManager'
+            }
+        }));
+    } finally {
+        syncLoading.value = false;
+    }
 };
 
 // Классы для отображения ролей в зависимости от их типа
@@ -357,6 +407,12 @@ h3 {
     height: 100%;
     color: var(--p-text-color);
     transition: all 0.5s;
+}
+.special-users-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 300px;
 }
 .search {
     border-radius: 12px;

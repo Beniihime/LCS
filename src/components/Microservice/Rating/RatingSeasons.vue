@@ -105,7 +105,6 @@ import { useRouter } from "vue-router";
 import axiosInstance from "@/utils/axios.js";
 import { getQuarterPeriod } from '@/utils/formatSeason.js';
 
-
 import CreateSeason from "@/components/Microservice/Rating/Methods/Seasons/CreateSeason.vue";
 import UpdateSeason from "@/components/Microservice/Rating/Methods/Seasons/UpdateSeason.vue";
 import DeleteSeason from "@/components/Microservice/Rating/Methods/Seasons/DeleteSeason.vue";

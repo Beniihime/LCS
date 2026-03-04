@@ -3,7 +3,7 @@
     <div 
         class="sidebar-container" 
         :class="[
-            collapsed ? 'bg-image' : ['season-' + currentSeason, 'bg-image-' + currentSeason],
+            ['season-' + currentSeason, 'bg-image-' + currentSeason],
             { 'sidebar-collapsed': collapsed, 'sidebar-expanded': !collapsed }
         ]"
         v-if="isMobile"
@@ -112,6 +112,17 @@
                             <div v-if="!collapsed" class="menucrumb">Расписание</div>
                         </div>
                     </router-link>
+                    <router-link 
+                        to="/faq" 
+                        class="menu-item" 
+                        active-class="active-link"
+                        v-tooltip.right="collapsed ? 'Вопросы и ответы' : ''"
+                    >
+                        <div class="menu-item-content">
+                            <i class="pi pi-question-circle"></i>
+                            <div v-if="!collapsed" class="menucrumb">Вопросы и ответы</div>
+                        </div>
+                    </router-link>
                 </div>
     
                 <div class="menu">
@@ -197,7 +208,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import LogoutSvg from '@/assets/logout.svg';
 import axiosInstance from '@/utils/axios.js';
 
@@ -217,11 +228,9 @@ import { stopTokenWorker } from '@/utils/TokenService.js';
 import { 
     getCurrentSeason, 
     getSeasonName, 
-    getSeasonBackground, 
     getSeasonIcon,
-    getSeasonGradient,
-    getSeasonAccentColor 
 } from '@/utils/seasons.js';
+import { applySeasonPrimaryTheme } from '@/utils/seasonTheme.js';
 
 const props = defineProps({
     collapsed: {
@@ -238,7 +247,7 @@ const notificationStore = useNotificationStore();
 const permissionStore = usePermissionStore();
 
 // Сезоны
-const debugMode = ref(false);
+const debugMode = ref(true);
 const allowSeasonSelection = ref(false);
 const currentSeason = ref(getCurrentSeason());
 const selectedSeason = ref(null);
@@ -261,15 +270,11 @@ const initials = ref('');
 const fullName = ref('');
 const searchQuery = ref('');
 const showRequests = ref(false);
+const INFRA_MANAGER_SYSTEM_TYPE = 0;
 
 // Вычисляемые свойства для сезона
 const seasonName = computed(() => getSeasonName(currentSeason.value));
 const seasonIcon = computed(() => getSeasonIcon(currentSeason.value));
-const seasonBackground = computed(() => getSeasonBackground(currentSeason.value));
-const seasonStyle = computed(() => ({
-    '--season-gradient': getSeasonGradient(currentSeason.value),
-    '--season-accent': getSeasonAccentColor(currentSeason.value)
-}));
 
 const menuItemsAdmin = [
     { name: 'Пользователи', path: '/users', icon: 'pi pi-users' },
@@ -305,6 +310,7 @@ const checkPermission = (path) => {
         '/users': hasPermission('User', 'Read'),
         '/sso/config': hasPermission('SsoResource', 'Read'),
         '/autorole': hasPermission('RoleAutoAssigner', 'Read'),
+        '/faq': hasPermission('FAQ', 'Read'),
         '/tickets': hasPermission('Tickets', 'Read'),
         '/tickets/responsibles' : hasPermission('ResponsibleTicketStudentGroup', 'Read'),
         '/services': hasPermission('InfraManager', 'Read'),
@@ -363,6 +369,10 @@ const loadSeasonPreference = () => {
         currentSeason.value = getCurrentSeason();
     }
 };
+
+watch(currentSeason, (season) => {
+    applySeasonPrimaryTheme(season);
+});
 
 // Проверка изменения месяца
 let lastCheckedMonth = null;
@@ -426,6 +436,7 @@ const logout = async () => {
 
 onMounted(async () => {
     loadSeasonPreference();
+    applySeasonPrimaryTheme(currentSeason.value);
     lastCheckedMonth = new Date().getMonth();
 
     try {
@@ -444,19 +455,23 @@ onMounted(async () => {
         localStorage.setItem('firstName', response.data.firstName);
 
         try {
-            const statusResponse = await axiosInstance.get(
-                `/api/infra-manager/db/users/${userId.value}/status`
-            );
+            const otherAccountsResponse = await axiosInstance.get('/api/users/other-accounts/getall');
+            const accounts = otherAccountsResponse.data?.accounts || [];
+            const infraAccount = accounts.find(account => Number(account.systemType) === INFRA_MANAGER_SYSTEM_TYPE);
 
-            const data = statusResponse.data;
-
-            localStorage.setItem("InfraStatus", "true");
-            localStorage.setItem("infraManagerUserId", data.infraManagerUserId || '');
-
-            showRequests.value = !!data.infraManagerUserId;
+            if (infraAccount) {
+                localStorage.setItem("InfraStatus", "true");
+                localStorage.setItem("infraManagerUserId", infraAccount.userIdInOtherSystem || '');
+                showRequests.value = true;
+            } else {
+                localStorage.setItem("InfraStatus", "false");
+                localStorage.setItem("infraManagerUserId", '');
+                showRequests.value = false;
+            }
         } catch (statusError) {
-            console.warn('Не удалось получить статус инфраструктуры:', statusError);
+            console.warn('Не удалось получить внешние аккаунты:', statusError);
             localStorage.setItem("InfraStatus", "false");
+            localStorage.setItem("infraManagerUserId", '');
 
             showRequests.value = false;
         }
@@ -536,17 +551,17 @@ const checkIsMobile = () => {
 
 .sidebar-container.season-spring::before {
     background-image: url('/src/assets/backgrounds/spring.webp');
-    opacity: 0.4;
+    opacity: 0.2;
 }
 
 .sidebar-container.season-summer::before {
     background-image: url('/src/assets/backgrounds/summer.webp');
-    opacity: 0.4;
+    opacity: 0.2;
 }
 
 .sidebar-container.season-autumn::before {
     background-image: url('/src/assets/backgrounds/autism.webp');
-    opacity: 0.3;
+    opacity: 0.2;
 }
 
 .sidebar-container.bg-image::before {
@@ -598,8 +613,7 @@ const checkIsMobile = () => {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    margin: 0.75rem 0;
-    padding-bottom: 25px;
+    margin: .5rem 0;
     scrollbar-width: none;
 
     mask-image: linear-gradient(
@@ -616,6 +630,10 @@ const checkIsMobile = () => {
         black 88%,
         rgba(0, 0, 0, 0.35) 100%
     );
+}
+
+.sidebar-middle::-webkit-scrollbar {
+    display: none;
 }
 
 /* Фоновый градиент */
@@ -647,7 +665,7 @@ const checkIsMobile = () => {
 .sidebar-bottom {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: .5rem;
     padding-top: 0.5rem;
     z-index: 2;
     width: 100%;
@@ -668,9 +686,9 @@ const checkIsMobile = () => {
 }
 
 .rectangle.collapsed .initials-circle {
-    width: 40px !important;
-    height: 40px !important;
-    font-size: 14px;
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 16px;
 }
 
 .rectangle.collapsed .logout-button {
@@ -896,7 +914,7 @@ const checkIsMobile = () => {
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     text-decoration: none;
     color: var(--p-text-color);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.15);
     border: 2px solid transparent;
     contain: layout;
     width: 100%;
@@ -1215,11 +1233,6 @@ const checkIsMobile = () => {
     
     .menu-item {
         height: 42px;
-    }
-    
-    .scroll-fade {
-        height: 40px;
-        bottom: calc(100% - 40px);
     }
 }
 

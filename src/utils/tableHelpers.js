@@ -1,3 +1,5 @@
+import { formatDateRuShort } from '@/utils/date.js';
+
 // Общие утилиты для таблиц
 export const getMethodSeverity = (method) => {
     switch (method) {
@@ -8,9 +10,7 @@ export const getMethodSeverity = (method) => {
 };
 
 export const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU');
+    return formatDateRuShort(dateString, '-');
 };
 
 // Декоратор с debounce

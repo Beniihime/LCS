@@ -155,194 +155,35 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import axiosInstance from '@/utils/axios.js';
+import { useInfraCallDetails } from '@/components/InfraManager/composables/useInfraCallDetails.js';
+import { getInfraStatusIcon, getInfraStatusSeverity } from '@/utils/infraStatus.js';
+import { formatDateOmskFromUnixSeconds, formatDateOmskFromUtcString, formatFileSize } from '@/utils/date.js';
 
 const lastCalls = ref([]);  // Список последних заявок
-const isDialogVisible = ref(false);  // Видимость модального окна
-const selectedCall = ref(null);  // Выбранная заявка
 const isCallsVisible = ref(false);
-const documents = ref([]); // Список документов для выбранной заявки
-const errorOccurred = ref(false);
-const negotiations = ref([]);
-
-const timelineEvents = ref([]); 
-
-// Получение цвета статуса
-const getStatusSeverity = (status) => {
-  switch (status) {
-    case 'Открыта':
-      return 'info';
-    case 'Закрыта':
-      return 'success';
-    case 'Ожидает':
-      return 'secondary';
-    case 'Зарегистрирована':
-      return 'warn';
-    case 'Инициирована':
-      return '';
-    default:
-      return null;
-  }
-};
-
-// Функция для форматирования размера файла
-const formatFileSize = (size) => {
-  if (size < 1024) return `${size} B`;
-  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
-  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-};
-
-// Функция для загрузки документов
-const fetchDocuments = async (callId) => {
-  try {
-    const response = await axiosInstance.get(`/api/infra-manager/calls/${callId}/documents`);
-    documents.value = response.data;
-  } catch (error) {
-    console.error('Ошибка при загрузке документов:', error);
-  }
-};
-
-const fetchNegotiations = async (callId) => {
-    try {
-        const response = await axiosInstance.get(`/api/infra-manager/calls/${callId}/negotiations`);
-        negotiations.value = response.data;
-    } catch (error) {
-        console.error('Ошибка при загрузке данных о согласованиях:', error);
-    }
-};
-
-
-// Получение иконки статуса
-const getStatusIcon = (status) => {
-  switch (status) {
-    case 'Открыта':
-      return 'pi pi-info-circle';
-    case 'Закрыта':
-      return 'pi pi-check';
-    case 'Ожидает':
-      return 'pi pi-hourglass';
-    case 'Зарегистрирована':
-      return 'pi pi-book';
-    case 'Инициирована':
-      return 'pi pi-eject';
-    default:
-      return null;
-  }
-}
-
-// Открыть модальное окно с информацией по заявке
-const openCallDetails = async (callId) => {
-  isDialogVisible.value = true;
-  errorOccurred.value = false;
-  try {
+const {
+  isDialogVisible,
+  selectedCall,
+  documents,
+  errorOccurred,
+  negotiations,
+  timelineEvents,
+  openCallDetails,
+  closeDialog,
+} = useInfraCallDetails({
+  axiosInstance,
+  loadCallById: async (callId) => {
     const response = await axiosInstance.get(`/api/infra-manager/users/me/calls/${callId}`);
-    const callData = response.data;
+    return response.data;
+  },
+});
 
-    timelineEvents.value = [
-      { date: callData.utcDateRegistered, label: 'Регистраиця' },
-      { date: callData.utcDateOpened, label: 'Открытие' },
-      { date: callData.utcDateAccomplished, label: 'Выполнение' },
-      { date: callData.utcDateClosed, label: 'Закрытие' },
-    ].filter(event => event.date);
-
-    // Делаем параллельные запросы для всех ID
-    const requests = [];
-
-    if (callData.initiatorID) {
-      requests.push(axiosInstance.get(`/api/infra-manager/users/${callData.initiatorID}`));
-    } else {
-      requests.push(Promise.resolve({ data: { fullName: null } }));
-    }
-
-    if (callData.clientID) {
-      requests.push(axiosInstance.get(`/api/infra-manager/users/${callData.clientID}`));
-    } else {
-      requests.push(Promise.resolve({ data: { fullName: null } }));
-    }
-
-    if (callData.ownerID) {
-      requests.push(axiosInstance.get(`/api/infra-manager/users/${callData.ownerID}`));
-    } else {
-      requests.push(Promise.resolve({ data: { fullName: null } }));
-    }
-
-    if (callData.executorID) {
-      requests.push(axiosInstance.get(`/api/infra-manager/users/${callData.executorID}`));
-    } else {
-      requests.push(Promise.resolve({ data: { fullName: null } }));
-    }
-
-    if (callData.accomplisherID) {
-      requests.push(axiosInstance.get(`/api/infra-manager/users/${callData.accomplisherID}`));
-    } else {
-      requests.push(Promise.resolve({ data: { fullName: null } }));
-    }
-
-    // Выполняем все запросы
-    const [initiator, client, owner, executor, accomplisher] = await Promise.all(requests);
-
-    // Обновляем заявку с именами пользователей
-    selectedCall.value = {
-      ...callData,
-      initiatorFullName: initiator.data.fullName || '',
-      clientFullName: client.data.fullName || '',
-      ownerFullName: owner.data.fullName || '',
-      executorFullName: executor.data.fullName || '',
-      accomplisherFullName: accomplisher.data.fullName || '',
-    };
-
-    // Загружаем данные о согласованиях
-    await fetchNegotiations(callId);
-
-    await fetchDocuments(callId); // Загружаем документы для выбранной заявки
-
-  } catch (error) {
-    console.debug('Ошибка при загрузке информации о заявке:', error);
-    errorOccurred.value = true;
-  }
-};
-
-// Закрыть модальное окно
-const closeDialog = () => {
-  isDialogVisible.value = false;
-  selectedCall.value = null;
-};
-
-// Форматировать дату
-const formatTimestampToOmsk = (timestamp) => {
-  if (!timestamp) return '';
-  const date = new Date(timestamp * 1000); // Умножаем на 1000, чтобы перевести из секунд в миллисекунды
-  return new Intl.DateTimeFormat('ru-RU', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-    timeZone: 'Asia/Omsk', // Часовой пояс Омска
-  }).format(date);
-};
-
-const formatUTCToOmsk = (utcString) => {
-  if (!utcString) return '';
-
-  // Добавляем 'Z', чтобы обозначить, что строка — в формате UTC
-  const date = new Date(`${utcString}Z`);
-
-  // Добавляем 6 часов для Омского времени
-  date.setHours(date.getUTCHours() + 6);
-
-  // Форматируем дату с учётом 24-часового формата и Омского времени
-  return new Intl.DateTimeFormat('ru-RU', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(date);
-};
+const getStatusSeverity = getInfraStatusSeverity;
+const getStatusIcon = getInfraStatusIcon;
+const formatTimestampToOmsk = formatDateOmskFromUnixSeconds;
+const formatUTCToOmsk = formatDateOmskFromUtcString;
 
 // Загрузить последние заявки или скрыть их по повторному нажатию
 const fetchCallsInfo = async () => {
