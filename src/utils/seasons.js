@@ -81,11 +81,5 @@ export const getSeasonGradient = (season) => {
     * @returns {string} - CSS переменная цвета
 */
 export const getSeasonAccentColor = (season) => {
-    const colors = {
-        'winter': 'var(--p-blue-400)',
-        'spring': 'var(--p-green-400)',
-        'summer': 'var(--p-yellow-500)',
-        'autumn': 'var(--p-orange-400)'
-    };
-    return colors[season] || colors.winter;
+    return 'var(--p-primary-color)';
 };

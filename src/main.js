@@ -16,6 +16,8 @@ import AppState from './plugins/appState.js';
 import { createPinia } from 'pinia';
 
 import Tooltip from 'primevue/tooltip';
+import { getCurrentSeason } from '@/utils/seasons.js';
+import { applySeasonPrimaryTheme } from '@/utils/seasonTheme.js';
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -25,6 +27,12 @@ import { startTokenWorker } from "@/utils/TokenService.js";
 if (localStorage.getItem("refreshToken") && localStorage.getItem("userId")) {
     startTokenWorker();
 }
+
+const seasonOverride = localStorage.getItem('seasonOverride');
+const initialSeason = ['winter', 'spring', 'summer', 'autumn'].includes(seasonOverride)
+    ? seasonOverride
+    : getCurrentSeason();
+applySeasonPrimaryTheme(initialSeason);
 
 app.use(PrimeVue, {
     theme: {

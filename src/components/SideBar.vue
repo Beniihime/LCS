@@ -208,7 +208,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import LogoutSvg from '@/assets/logout.svg';
 import axiosInstance from '@/utils/axios.js';
 
@@ -228,11 +228,9 @@ import { stopTokenWorker } from '@/utils/TokenService.js';
 import { 
     getCurrentSeason, 
     getSeasonName, 
-    getSeasonBackground, 
     getSeasonIcon,
-    getSeasonGradient,
-    getSeasonAccentColor 
 } from '@/utils/seasons.js';
+import { applySeasonPrimaryTheme } from '@/utils/seasonTheme.js';
 
 const props = defineProps({
     collapsed: {
@@ -249,7 +247,7 @@ const notificationStore = useNotificationStore();
 const permissionStore = usePermissionStore();
 
 // Сезоны
-const debugMode = ref(false);
+const debugMode = ref(true);
 const allowSeasonSelection = ref(false);
 const currentSeason = ref(getCurrentSeason());
 const selectedSeason = ref(null);
@@ -277,11 +275,6 @@ const INFRA_MANAGER_SYSTEM_TYPE = 0;
 // Вычисляемые свойства для сезона
 const seasonName = computed(() => getSeasonName(currentSeason.value));
 const seasonIcon = computed(() => getSeasonIcon(currentSeason.value));
-const seasonBackground = computed(() => getSeasonBackground(currentSeason.value));
-const seasonStyle = computed(() => ({
-    '--season-gradient': getSeasonGradient(currentSeason.value),
-    '--season-accent': getSeasonAccentColor(currentSeason.value)
-}));
 
 const menuItemsAdmin = [
     { name: 'Пользователи', path: '/users', icon: 'pi pi-users' },
@@ -377,6 +370,10 @@ const loadSeasonPreference = () => {
     }
 };
 
+watch(currentSeason, (season) => {
+    applySeasonPrimaryTheme(season);
+});
+
 // Проверка изменения месяца
 let lastCheckedMonth = null;
 
@@ -439,6 +436,7 @@ const logout = async () => {
 
 onMounted(async () => {
     loadSeasonPreference();
+    applySeasonPrimaryTheme(currentSeason.value);
     lastCheckedMonth = new Date().getMonth();
 
     try {
@@ -552,17 +550,17 @@ const checkIsMobile = () => {
 
 .sidebar-container.season-spring::before {
     background-image: url('/src/assets/backgrounds/spring.webp');
-    opacity: 0.4;
+    opacity: 0.2;
 }
 
 .sidebar-container.season-summer::before {
     background-image: url('/src/assets/backgrounds/summer.webp');
-    opacity: 0.4;
+    opacity: 0.2;
 }
 
 .sidebar-container.season-autumn::before {
     background-image: url('/src/assets/backgrounds/autism.webp');
-    opacity: 0.3;
+    opacity: 0.2;
 }
 
 .sidebar-container.bg-image::before {
@@ -614,10 +612,8 @@ const checkIsMobile = () => {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    margin: 1rem 0;
-    padding-bottom: 25px;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(var(--p-blue-500-rgb), 0.5) transparent;
+    margin: .5rem 0;
+    scrollbar-width: none;
 
     mask-image: linear-gradient(
         to bottom,
@@ -633,6 +629,10 @@ const checkIsMobile = () => {
         black 96%,
         transparent 100%
     );
+}
+
+.sidebar-middle::-webkit-scrollbar {
+    display: none;
 }
 
 /* Фоновый градиент */
@@ -661,29 +661,10 @@ const checkIsMobile = () => {
     }
 }
 
-.sidebar-middle::-webkit-scrollbar {
-    width: 4px;
-}
-
-.sidebar-middle::-webkit-scrollbar-track {
-    background: transparent;
-    border-radius: 2px;
-}
-
-.sidebar-middle::-webkit-scrollbar-thumb {
-    background: rgba(var(--p-blue-500), 0.3);
-    border-radius: 2px;
-    transition: background 0.3s ease;
-}
-
-.sidebar-middle::-webkit-scrollbar-thumb:hover {
-    background: rgba(var(--p-blue-500), 0.5);
-}
-
 .sidebar-bottom {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: .5rem;
     padding-top: 0.5rem;
     z-index: 2;
     width: 100%;
@@ -704,9 +685,9 @@ const checkIsMobile = () => {
 }
 
 .rectangle.collapsed .initials-circle {
-    width: 40px !important;
-    height: 40px !important;
-    font-size: 14px;
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 16px;
 }
 
 .rectangle.collapsed .logout-button {
@@ -932,7 +913,7 @@ const checkIsMobile = () => {
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     text-decoration: none;
     color: var(--p-text-color);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.15);
     border: 2px solid transparent;
     contain: layout;
     width: 100%;
@@ -1152,27 +1133,6 @@ const checkIsMobile = () => {
     }
 }
 
-/* ============ SCROLLBAR ============ */
-
-.rectangle::-webkit-scrollbar {
-    width: 0px !important;
-}
-
-.rectangle::-webkit-scrollbar-track {
-    background: transparent;
-    border-radius: 2px;
-}
-
-.rectangle::-webkit-scrollbar-thumb {
-    background: var(--p-blue-500);
-    border-radius: 2px;
-    transition: background 0.3s ease;
-}
-
-.rectangle::-webkit-scrollbar-thumb:hover {
-    background: var(--p-blue-500);
-}
-
 /* ============ TOOLTIP ADJUSTMENTS ============ */
 [v-tooltip] {
     position: relative;
@@ -1272,11 +1232,6 @@ const checkIsMobile = () => {
     
     .menu-item {
         height: 42px;
-    }
-    
-    .scroll-fade {
-        height: 40px;
-        bottom: calc(100% - 40px);
     }
 }
 
