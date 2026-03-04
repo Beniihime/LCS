@@ -108,7 +108,7 @@
                                 :value="filteredScores" 
                                 :scrollable="true" 
                                 scrollHeight="400px"
-                                class="scores-table"
+                                class="scores-table no-row-hover"
                                 :loading="loading"
                             >
                                 <Column field="employeeName" header="Сотрудник" style="width: 300px">
@@ -1498,7 +1498,7 @@ watch(comment, (newValue) => {
 /* Остальные стили из AddEmpToInd и ViewIndicatorScores */
 .stats-overview {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(clamp(180px, 38vw, 240px), 1fr));
     gap: 1rem;
     margin-bottom: 1.5rem;
 }
@@ -1530,8 +1530,10 @@ watch(comment, (newValue) => {
     border-radius: 12px;
 }
 
-:deep(.p-datatable-tbody > tr:hover) {
-    background-color: none !important;
+:deep(.no-row-hover .p-datatable-tbody > tr:hover),
+:deep(.no-row-hover .p-datatable-tbody > tr.p-row-hover),
+:deep(.no-row-hover.p-datatable-hoverable-rows .p-datatable-tbody > tr:hover) {
+    background: transparent !important;
 }
 
 .employee-info_1 {

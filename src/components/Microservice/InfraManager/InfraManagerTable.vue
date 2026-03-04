@@ -1,12 +1,14 @@
 <template>
     <main>
-        <WelcomeScreen :visible="loading" />
         <div class="content">
             <div class="content-wrap">
                 <div v-if="showScrollHint" class="scroll-hint" @click="hideScrollHint">
                     Прокрутите таблицу вправо, чтобы увидеть больше данных.
                 </div>
+                <Transition name="content-fade" mode="out-in">
                 <DataTable
+                    key="infra-manager-table-content"
+                    v-if="!loading || calls.length"
                     :value="calls"
                     :filters="filters"
                     filterDisplay="row"
@@ -257,6 +259,19 @@
                         </div>
                     </template>
                 </DataTable>
+                <div key="infra-manager-table-skeleton" v-else class="infra-table-skeleton">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <Skeleton width="7rem" height="2.1rem" />
+                        <Skeleton width="10rem" height="1.6rem" />
+                        <Skeleton width="14rem" height="2.1rem" />
+                    </div>
+                    <Skeleton width="100%" height="3rem" class="mb-2" />
+                    <Skeleton width="100%" height="3rem" class="mb-2" />
+                    <Skeleton width="100%" height="3rem" class="mb-2" />
+                    <Skeleton width="100%" height="3rem" class="mb-2" />
+                    <Skeleton width="100%" height="3rem" />
+                </div>
+                </Transition>
             </div>
         </div>
         <InfraManagerCalls ref="callDetailsRef" class="position-absolute opacity-0"/>
@@ -272,7 +287,6 @@ import qs from 'qs';
 import { getInfraStatusIcon, getInfraStatusSeverity } from '@/utils/infraStatus.js';
 import { formatDateOmskFromUtcString } from '@/utils/date.js';
 
-import WelcomeScreen from '@/components/Utils/WelcomeScreen.vue';
 import InfraManagerCalls from '@/components/InfraManager/InfraManagerCalls.vue';
 
 const loading = ref(true);
@@ -538,6 +552,9 @@ main {
     color: var(--p-text-color);
     transition: all 0.5s;
     height: 100%;
+}
+.infra-table-skeleton {
+    width: 100%;
 }
 .openCall:hover {
     text-decoration: underline;

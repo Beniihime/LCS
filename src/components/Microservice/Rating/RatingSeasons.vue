@@ -1,6 +1,5 @@
 <template>
     <main>
-        <WelcomeScreen :visible="loading"/>
 
         <!-- Секция сезонов -->
         <section class="content-wrapper">
@@ -10,72 +9,83 @@
                     <h2 class="section-title">Сезоны</h2>
                 </div>
             </div>
-            <div class="seasons-grid">
-                <div 
-                    v-for="(item, index) in seasons" 
-                    :key="item.id" 
-                    class="season-card card-animated" 
-                    :class="{'season-closed': item.isClosed}"
-                    @click="goToSeason(item.id)"
-                >
-                    <div class="card-status-indicator" :class="item.isClosed ? 'status-closed' : 'status-open'"></div>
-                    <div class="season-top-row">
-                        <div class="season-header">
-                            <h3 class="card-title">{{ item.title }}</h3>
-                        </div>
-                        <div class="menu">
-                            <Button 
-                                type="button" 
-                                icon="pi pi-ellipsis-v" 
-                                class="edit-btn" 
-                                text
-                                rounded
-                                @click.stop="(event) => toggle(event, index)" 
-                                aria-haspopup="true" 
-                                aria-controls="overlay_menu" 
-                                v-tooltip.top="'Действия'" 
-                            />
-                            <Menu :ref="(el) => { if (el) menus[index] = el }" :model="menuItems[index]" :popup="true" id="season_edit"/>
-                        </div>
-                    </div>
-
-                    <Tag :severity="item.isClosed ? 'danger' : 'success'" class="status-badge">
-                        <span class="status-dot" :class="item.isClosed ? 'closed' : 'open'"></span>
-                        {{ item.isClosed ? 'Закрыт' : 'Открыт' }}
-                    </Tag>
-                    
-                    <div class="card-content">
-                        <div class="info-item primary-info">
-                            <div class="info-icon-wrapper">
-                                <i class="pi pi-calendar"></i>
-                            </div>
-                            <span class="info-text">{{ item.period }}</span>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-icon-wrapper">
-                                <i class="pi pi-chart-bar"></i>
-                            </div>
-                            <div class="info-details">
-                                <span class="info-label">Показателей</span>
-                                <span class="info-value">{{ item.indicatorsCount }}</span>
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-icon-wrapper">
-                                <i class="pi pi-users"></i>
-                            </div>
-                            <div class="info-details">
-                                <span class="info-label">Оценок сотрудников</span>
-                                <span class="info-value">{{ item.pointsCount }}</span>
-                            </div>
-                        </div>
+            <Transition name="content-fade" mode="out-in">
+                <div v-if="loading" key="rating-seasons-skeleton" class="seasons-grid">
+                    <div v-for="idx in 6" :key="idx" class="season-card card-animated">
+                        <Skeleton width="55%" height="1.5rem" class="mb-3" />
+                        <Skeleton width="35%" height="1.4rem" class="mb-3" />
+                        <Skeleton width="100%" height="1rem" class="mb-2" />
+                        <Skeleton width="75%" height="1rem" class="mb-2" />
+                        <Skeleton width="60%" height="1rem" />
                     </div>
                 </div>
-                
-                <CreateSeason @created="fetchSeasons" />
-                <UpdateSeason @edited="fetchSeasons" :season="selectedSeason" v-model:visible="showEditDialog" />
-                <DeleteSeason @deleted="fetchSeasons" :season="selectedSeason" v-model:visible="showDeleteDialog"/>
-            </div>
+                <div v-else key="rating-seasons-content" class="seasons-grid">
+                    <div 
+                        v-for="(item, index) in seasons" 
+                        :key="item.id" 
+                        class="season-card card-animated" 
+                        :class="{'season-closed': item.isClosed}"
+                        @click="goToSeason(item.id)"
+                    >
+                        <div class="card-status-indicator" :class="item.isClosed ? 'status-closed' : 'status-open'"></div>
+                        <div class="season-top-row">
+                            <div class="season-header">
+                                <h3 class="card-title">{{ item.title }}</h3>
+                            </div>
+                            <div class="menu">
+                                <Button 
+                                    type="button" 
+                                    icon="pi pi-ellipsis-v" 
+                                    class="edit-btn" 
+                                    text
+                                    rounded
+                                    @click.stop="(event) => toggle(event, index)" 
+                                    aria-haspopup="true" 
+                                    aria-controls="overlay_menu" 
+                                    v-tooltip.top="'Действия'" 
+                                />
+                                <Menu :ref="(el) => { if (el) menus[index] = el }" :model="menuItems[index]" :popup="true" id="season_edit"/>
+                            </div>
+                        </div>
+
+                        <Tag :severity="item.isClosed ? 'danger' : 'success'" class="status-badge">
+                            <span class="status-dot" :class="item.isClosed ? 'closed' : 'open'"></span>
+                            {{ item.isClosed ? 'Закрыт' : 'Открыт' }}
+                        </Tag>
+                        
+                        <div class="card-content">
+                            <div class="info-item primary-info">
+                                <div class="info-icon-wrapper">
+                                    <i class="pi pi-calendar"></i>
+                                </div>
+                                <span class="info-text">{{ item.period }}</span>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon-wrapper">
+                                    <i class="pi pi-chart-bar"></i>
+                                </div>
+                                <div class="info-details">
+                                    <span class="info-label">Показателей</span>
+                                    <span class="info-value">{{ item.indicatorsCount }}</span>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon-wrapper">
+                                    <i class="pi pi-users"></i>
+                                </div>
+                                <div class="info-details">
+                                    <span class="info-label">Оценок сотрудников</span>
+                                    <span class="info-value">{{ item.pointsCount }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <CreateSeason @created="fetchSeasons" />
+                    <UpdateSeason @edited="fetchSeasons" :season="selectedSeason" v-model:visible="showEditDialog" />
+                    <DeleteSeason @deleted="fetchSeasons" :season="selectedSeason" v-model:visible="showDeleteDialog"/>
+                </div>
+            </Transition>
         </section>
 
         <!-- Секция сотрудников -->
@@ -263,7 +273,7 @@ h3 {
 .seasons-grid {
     display: grid;
     gap: 1.5rem;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(clamp(240px, 40vw, 300px), 1fr));
 }
 
 /* ========== Базовые стили карточек ========== */
@@ -470,7 +480,7 @@ h3 {
     }
     
     .seasons-grid {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(clamp(260px, 45vw, 320px), 1fr));
     }
 }
 
@@ -480,7 +490,7 @@ h3 {
     }
     
     .seasons-grid {
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(clamp(260px, 55vw, 320px), 1fr));
         gap: 1.25rem;
     }
     

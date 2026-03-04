@@ -18,7 +18,16 @@
                 </div>
             </div>
             <Divider v-if="selectedInfraUserDetails" class="my-4"/>
-            <div v-if="selectedInfraUserDetails" class="row mt-4">
+            <div v-if="loadingDetails" class="row mt-4">
+                <div class="col">
+                    <h4 class="mb-3"><strong>Информация о пользователе</strong></h4>
+                    <Skeleton width="50%" height="1.2rem" class="mb-2" />
+                    <Skeleton width="42%" height="1.2rem" class="mb-2" />
+                    <Skeleton width="40%" height="1.2rem" class="mb-2" />
+                    <Skeleton width="38%" height="1.2rem" />
+                </div>
+            </div>
+            <div v-else-if="selectedInfraUserDetails" class="row mt-4">
                 <div class="col">
                     <h4 class="mb-3"><strong>Информация о пользователе</strong></h4>
                     <p>ФИО: {{ selectedInfraUserDetails.fullName }}</p>
@@ -27,8 +36,16 @@
                     <p v-if="selectedInfraUserLocation">Местоположение: {{ selectedInfraUserLocation.roomName }}</p>
                 </div>
             </div>
-            <Divider v-if="selectedInfraUserDetails" class="my-4"/>
-            <div v-if="selectedInfraUserDetails" class="row my-4">
+            <Divider v-if="selectedInfraUserDetails || loadingDetails" class="my-4"/>
+            <div v-if="loadingDetails" class="row my-4">
+                <div class="col">
+                    <h4 class="mb-3"><strong>Доступные сервисы</strong></h4>
+                    <Skeleton width="65%" height="1.1rem" class="mb-2" />
+                    <Skeleton width="48%" height="1.1rem" class="mb-2" />
+                    <Skeleton width="72%" height="1.1rem" class="mb-2" />
+                </div>
+            </div>
+            <div v-else-if="selectedInfraUserDetails" class="row my-4">
                 <div class="col">
                     <h4 class="mb-3"><strong>Доступные сервисы</strong></h4>
                     <Tree 
@@ -50,10 +67,10 @@
                     </Tree>
                 </div>
             </div>
-            <Divider v-if="selectedInfraUserDetails" class="my-4"/>
+            <Divider v-if="selectedInfraUserDetails || loadingDetails" class="my-4"/>
             <div class="row my-4">
                 <div class="col">
-                    <InfraManagerCalls v-if="selectedInfraUserDetails" :userId="selectedInfraUser.id" />
+                    <InfraManagerCalls v-if="selectedInfraUserDetails && !loadingDetails" :userId="selectedInfraUser.id" />
                 </div>
             </div>
         </Dialog>
@@ -76,6 +93,7 @@ const filteredInfraUsers = ref([]);
 const selectedInfraUserDetails = ref(null);
 const selectedInfraUserLocation = ref(null);
 const servicesTree = ref([]); // Данные для дерева сервисов
+const loadingDetails = ref(false);
 
 // Раскрытые узлы дерева
 const expandedKeys = ref({});
@@ -106,6 +124,7 @@ const searchInfraUsers = async (event) => {
 // Функция, вызываемая при выборе пользователя InfraManager
 const onInfraUserSelect = async (event) => {
     const user = event.value;
+    loadingDetails.value = true;
     try {
         // Запрос основной информации о пользователе
         const userDetailsResponse = await axiosInstance.get(`/api/infra-manager/users/${user.id}`);
@@ -130,6 +149,8 @@ const onInfraUserSelect = async (event) => {
         servicesTree.value = transformServicesToTree(servicesResponse.data); // Преобразуем в формат дерева
     } catch (error) {
         console.debug('Ошибка при загрузке информации о пользователе InfraManager:', error);
+    } finally {
+        loadingDetails.value = false;
     }
 }
 
@@ -170,6 +191,7 @@ const clearInfraUserSelection = () => {
     lastCalls.value = [];
     servicesTree.value = [];
     expandedKeys.value = {};
+    loadingDetails.value = false;
 };
 
 // Добавляем метод для управления состоянием из родителя

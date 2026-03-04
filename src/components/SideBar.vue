@@ -509,18 +509,19 @@ const checkIsMobile = () => {
     will-change: width;
     contain: strict;
     isolation: isolate;
-    min-width: 90px;
-    max-width: 280px;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 }
 
 .sidebar-container.sidebar-collapsed {
-    width: 90px !important;
+    width: 100% !important;
 }
 
 .sidebar-container.sidebar-expanded {
-    width: 280px !important;
+    width: 100% !important;
 }
 
 /* ============ ФОНОВОЕ ИЗОБРАЖЕНИЕ ============ */
@@ -617,17 +618,17 @@ const checkIsMobile = () => {
 
     mask-image: linear-gradient(
         to bottom,
-        transparent 0%,
-        black 4%,
-        black 96%,
-        transparent 100%
+        rgba(0, 0, 0, 0.35) 0%,
+        black 12%,
+        black 88%,
+        rgba(0, 0, 0, 0.35) 100%
     );
     -webkit-mask-image: linear-gradient(
         to bottom,
-        transparent 0%,
-        black 4%,
-        black 96%,
-        transparent 100%
+        rgba(0, 0, 0, 0.35) 0%,
+        black 12%,
+        black 88%,
+        rgba(0, 0, 0, 0.35) 100%
     );
 }
 
@@ -718,7 +719,7 @@ const checkIsMobile = () => {
 }
 
 .rectangle.collapsed .logoLCS {
-    transform: scale(0.7);
+    transform: scale(0.5);
 }
 
 .logoLCS:hover {

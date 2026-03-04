@@ -5,19 +5,21 @@
                 <h2 class="m-0">Мои полномочия</h2>
             </div>
             
-            <div v-for="resource in filteredResources" :key="resource.id" class="mt-3">
-                <div class="row align-items-center">
-                    <div class="col-auto pe-0">
-                        <h4>{{ resource.title }}</h4>
-                    </div>
-                    <div class="col-auto pe-0"><Tag :value="resource.type" severity="info" class="mx-2"/></div>
-                    <div class="col-auto ps-0">
-                        <Tag 
-                            v-if="!resource.permissions.some(permission => permission.isCustomizable)" 
-                            value="Нет регулируемых полномочий" 
-                            severity="warn" 
-                            icon="pi pi-exclamation-triangle"
-                        />
+            <Transition name="content-fade" mode="out-in">
+                <div v-if="loading" key="me-permissions-skeleton" class="permissions-skeleton">
+                    <div v-for="idx in 3" :key="idx" class="mt-4">
+                        <Skeleton width="20rem" height="1.5rem" class="mb-2" />
+                        <Skeleton width="32rem" height="1rem" class="mb-3" />
+                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xxl-4 g-2">
+                            <div class="col" v-for="permIdx in 8" :key="permIdx">
+                                <div class="permission-item h-100">
+                                    <Skeleton width="65%" height="1.2rem" class="mb-2" />
+                                    <Skeleton width="100%" height="0.95rem" class="mb-2" />
+                                    <Skeleton width="84%" height="0.95rem" />
+                                </div>
+                            </div>
+                        </div>
+                        <Divider />
                     </div>
                 </div>
                 <div class="resource-info">
@@ -59,17 +61,17 @@
                                         <div v-else>
                                             <Tag severity="danger" icon="pi pi-lock" style="padding: 7px;"/>
                                         </div>
+                                        <p class="permission-description">{{ permission.description }}</p>
                                     </div>
+                                    
                                 </div>
-                                <p class="permission-description">{{ permission.description }}</p>
                             </div>
-                            
                         </div>
+                    
+                        <Divider />
                     </div>
                 </div>
-               
-                <Divider />
-            </div>
+            </Transition>
         </div>
     </main>
 </template>
@@ -186,47 +188,7 @@ onMounted(() => {
 
 <style scoped>
 .permissions-wrapper {
-    padding: 10px;
     color: var(--p-text-color);
-}
-.search {
-    border-radius: 12px;
-    transition: all 0.5s;
-    width: 100%; 
-}
-.back-btn {
-    border-radius: 12px;
-    font-size: 1.25rem;
-}
-.card {
-    border-radius: 12px;
-    transition: transform 0.3s ease;
-    background-color: var(--p-grey-7);
-    color: var(--p-text-color);
-    display: flex;
-    border: none;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: all 0.5s;
-}
-.card-body {
-    padding: 5px;
-}
-.card-title {
-    font-size: 1.5rem;
-    margin-bottom: 10px;
-    font-family: 'SF Pro Rounded';
-    color: var(--p-text-color);
-}
-.card-text {
-    font-size: 1rem;
-    font-family: 'SF Pro Rounded', sans-serif;
-    color: var(--p-grey-1);
-    margin: 0;
-}
-.resourse-type {
-    color: var(--p-grey-1);
-    font-size: 1.5rem;
 }
 .resource-description {
     color: var(--p-grey-1);
@@ -236,7 +198,12 @@ onMounted(() => {
     flex-direction: column;
     padding: 18px;
     border-radius: 12px;
-    background-color: var(--p-grey-6);
+    background: linear-gradient(
+        180deg,
+        rgba(var(--p-blue-500-rgb), 0.04),
+        rgba(255, 255, 255, 0)
+    );
+    border: 1px solid rgba(var(--p-blue-500-rgb), 0.14);
     transition: all 0.5s;
     box-sizing: border-box;
     position: relative;
@@ -269,14 +236,24 @@ onMounted(() => {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.switch-container {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-}
 h2 {
     margin-bottom: 5px;
     font-size: 28px;
     font-weight: bold;
+}
+h5 {
+    margin-bottom: 0;
+    font-weight: bold;
+}
+.permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(clamp(220px, 45vw, 280px), 1fr));
+    gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+    .permissions-grid {
+        grid-template-columns: 1fr;
+    }
 }
 </style>

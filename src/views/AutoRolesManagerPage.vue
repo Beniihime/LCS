@@ -1,9 +1,10 @@
 <template>
     <div class="auto-roles-manager">
-        <WelcomeScreen :visible="loading" />
 
         <div class="table-container">
+            <Transition name="content-fade" mode="out-in">
             <DataTable
+                key="autoroles-content"
                 v-if="!loading"
                 :value="autoRoles" 
                 :paginator="true" 
@@ -12,7 +13,7 @@
                 paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                 currentPageReportTemplate="{first} - {last} из {totalRecords}"
                 stripedRows
-                class="auto-roles-table"
+                class="auto-roles-table no-row-hover"
                 :class="{ 'empty-table': autoRoles.length === 0 }"
             >
                 <template #header>
@@ -119,7 +120,8 @@
                     </div>
                 </template>
             </DataTable>
-            <Skeleton v-else width="100%" height="100%"/>
+            <Skeleton key="autoroles-skeleton" v-else width="100%" height="100%"/>
+            </Transition>
         </div>
 
         <!-- Диалог создания новой авто-роли -->
@@ -268,7 +270,6 @@ import { ref, onMounted, computed } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import axiosInstance from '@/utils/axios.js';
 import { usePermissionStore } from '@/stores/permissions.js';
-import WelcolmeScreen from "@/components/Utils/WelcomeScreen.vue";
 
 const toast = useToast();
 const permissionStore = usePermissionStore();
@@ -482,7 +483,7 @@ onMounted(async () => {
 
 <style scoped>
 .auto-roles-manager {
-    padding: 1.5rem 2rem;
+    padding: 10px 2rem;
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -858,5 +859,11 @@ onMounted(async () => {
     .role-option-meta {
         margin-left: 0;
     }
+}
+
+:deep(.no-row-hover .p-datatable-tbody > tr:hover),
+:deep(.no-row-hover .p-datatable-tbody > tr.p-row-hover),
+:deep(.no-row-hover.p-datatable-hoverable-rows .p-datatable-tbody > tr:hover) {
+    background: transparent !important;
 }
 </style>
