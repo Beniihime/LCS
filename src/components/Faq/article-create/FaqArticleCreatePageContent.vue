@@ -167,7 +167,7 @@ const {
 <style scoped>
 main {
     height: 100vh;
-    padding: 10px;
+    padding: 10px 2rem;
 }
 .faq-article-page {
     --article-bg-1: var(--p-bg-color-2);
@@ -182,7 +182,7 @@ main {
     background:
         radial-gradient(900px 220px at 10% 0%, rgba(var(--p-blue-500-rgb), 0.08), transparent 60%),
         linear-gradient(180deg, var(--article-bg-1) 0%, var(--article-bg-2) 86%);
-    border-radius: 24px;
+    border-radius: 12px;
     border: 1px solid var(--article-border);
     box-shadow: var(--article-shadow);
 }
