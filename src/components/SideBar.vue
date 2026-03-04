@@ -3,7 +3,7 @@
     <div 
         class="sidebar-container" 
         :class="[
-            collapsed ? 'bg-image' : ['season-' + currentSeason, 'bg-image-' + currentSeason],
+            ['season-' + currentSeason, 'bg-image-' + currentSeason],
             { 'sidebar-collapsed': collapsed, 'sidebar-expanded': !collapsed }
         ]"
         v-if="isMobile"
@@ -272,6 +272,7 @@ const initials = ref('');
 const fullName = ref('');
 const searchQuery = ref('');
 const showRequests = ref(false);
+const INFRA_MANAGER_SYSTEM_TYPE = 0;
 
 // Вычисляемые свойства для сезона
 const seasonName = computed(() => getSeasonName(currentSeason.value));
@@ -456,19 +457,23 @@ onMounted(async () => {
         localStorage.setItem('firstName', response.data.firstName);
 
         try {
-            const statusResponse = await axiosInstance.get(
-                `/api/infra-manager/db/users/${userId.value}/status`
-            );
+            const otherAccountsResponse = await axiosInstance.get('/api/users/other-accounts/getall');
+            const accounts = otherAccountsResponse.data?.accounts || [];
+            const infraAccount = accounts.find(account => Number(account.systemType) === INFRA_MANAGER_SYSTEM_TYPE);
 
-            const data = statusResponse.data;
-
-            localStorage.setItem("InfraStatus", "true");
-            localStorage.setItem("infraManagerUserId", data.infraManagerUserId || '');
-
-            showRequests.value = !!data.infraManagerUserId;
+            if (infraAccount) {
+                localStorage.setItem("InfraStatus", "true");
+                localStorage.setItem("infraManagerUserId", infraAccount.userIdInOtherSystem || '');
+                showRequests.value = true;
+            } else {
+                localStorage.setItem("InfraStatus", "false");
+                localStorage.setItem("infraManagerUserId", '');
+                showRequests.value = false;
+            }
         } catch (statusError) {
-            console.warn('Не удалось получить статус инфраструктуры:', statusError);
+            console.warn('Не удалось получить внешние аккаунты:', statusError);
             localStorage.setItem("InfraStatus", "false");
+            localStorage.setItem("infraManagerUserId", '');
 
             showRequests.value = false;
         }
@@ -1148,12 +1153,13 @@ const checkIsMobile = () => {
 }
 
 /* ============ SCROLLBAR ============ */
+
 .rectangle::-webkit-scrollbar {
-    width: 4px;
+    width: 0px !important;
 }
 
 .rectangle::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
+    background: transparent;
     border-radius: 2px;
 }
 
