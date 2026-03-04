@@ -81,7 +81,7 @@ if (query.message) {
 
 .sidebar::-webkit-scrollbar-track {
   background: transparent;
-  width: 0px;
+  width: none;
 }
 
 .sidebar-collapsed {

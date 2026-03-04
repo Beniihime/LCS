@@ -288,12 +288,12 @@ const headerStats = computed(() => [
     {
         icon: 'pi pi-chart-line',
         value: certainSeason.value.indicatorsCount,
-        label: 'Всего показателей'
+        label: 'Показатели'
     },
     {
         icon: 'pi pi-users',
         value: certainSeason.value.pointsCount,
-        label: 'Оценки сотрудников'
+        label: 'Оценки'
     },
     {
         icon: 'pi pi-calendar',
@@ -587,7 +587,7 @@ onMounted(fetchIndicators);
 
 .page-title {
     margin: 0;
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 700;
     background: linear-gradient(135deg, var(--p-primary-color), #3498db);
     background-clip: text;
@@ -622,7 +622,7 @@ onMounted(fetchIndicators);
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 1.25rem;
+    padding: .75rem 1.25rem;
     background: var(--p-grey-7);
     border-radius: 16px;
     min-width: 220px;
@@ -659,7 +659,7 @@ onMounted(fetchIndicators);
 
 .stat-icon {
     color: white;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     z-index: 2;
     position: relative;
 }
@@ -677,13 +677,18 @@ onMounted(fetchIndicators);
 .stat-info {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
 }
 
 .stat-value {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--p-text-color);
+}
+
+.stat-card:last-child {
+    .stat-value {
+        font-size: .85rem;
+    }
 }
 
 .stat-label {

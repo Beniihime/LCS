@@ -13,16 +13,11 @@
                     <div v-if="showCreateButton" class="create-button-wrapper">
                         <Button 
                             icon="pi pi-plus"
-                            :label="createButtonLabel"
                             @click="$emit('create')"
                             class="create-button"
                             :class="{ 'create-button-icon-only': createButtonIconOnly }"
                             v-tooltip="createButtonIconOnly ? 'Создать' : null"
-                        >
-                            <template #icon>
-                                <i class="pi pi-plus create-button-icon"></i>
-                            </template>
-                        </Button>
+                        />
                     </div>
                 </slot>
             </div>
@@ -712,14 +707,12 @@ defineExpose({
     padding: 1rem;
     background: linear-gradient(135deg, var(--p-primary-600), var(--p-primary-400));
     border-radius: 16px;
-    box-shadow: 0 8px 25px rgba(var(--p-primary-color-rgb, 59, 130, 246), 0.3);
     transition: all 0.3s ease;
     flex-shrink: 0;
 }
 
 .p-dark .section-icon {
     background: linear-gradient(135deg, var(--p-primary-700), var(--p-primary-500));
-    box-shadow: 0 8px 25px rgba(var(--p-primary-color-rgb, 59, 130, 246), 0.4);
 }
 
 /* ========== Кнопка создания ========== */
@@ -756,7 +749,6 @@ defineExpose({
     background: linear-gradient(135deg, var(--p-primary-700), var(--p-primary-500));
     transform: translateY(-2px);
     border: none !important;
-    box-shadow: 0 8px 25px rgba(var(--p-primary-color-rgb, 59, 130, 246), 0.35);
 }
 
 .create-button:hover::before {
@@ -765,7 +757,6 @@ defineExpose({
 
 .create-button:active {
     transform: translateY(0);
-    box-shadow: 0 4px 15px rgba(var(--p-primary-color-rgb, 59, 130, 246), 0.3);
 }
 
 .create-button-icon {

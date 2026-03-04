@@ -35,7 +35,7 @@
                     :popup="true"
                     :id="`group-actions-${item.id}`"
                 />
-                <Tag rounded v-if="item.type === 'group'" >
+                <Tag rounded v-if="item.type === 'group'" severity="info">
                     {{ loadingGroupId === item.id ? 'Загрузка...' : 'Группа' }}
                 </Tag>
                 <Tag rounded severity="success" v-else>Статья</Tag>

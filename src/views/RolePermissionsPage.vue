@@ -54,7 +54,7 @@
                                 <div class="permission-header">
                                     <h3 class="permission-title">{{ permission.title }}</h3>
                                     <div class="d-flex">
-                                        <Button class="me-2" text style="padding: 1px;" @click="openDialog(permission.id)">
+                                        <Button class="me-2" text style="padding: 1px;" @click="openDialog(permission.id)" severity="info">
                                             <i class="pi pi-info-circle" style="font-size: 20px;"/>
                                         </Button>
                                         <Dialog 

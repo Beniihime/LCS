@@ -32,7 +32,6 @@
                                     <Button
                                         label="Синхронизировать с InfraManager"
                                         icon="pi pi-sync"
-                                        severity="warn"
                                         :loading="syncLoading"
                                         :disabled="syncLoading"
                                         @click="syncPasImAccounts"
