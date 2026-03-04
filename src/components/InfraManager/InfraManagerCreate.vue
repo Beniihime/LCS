@@ -135,7 +135,7 @@ const clearInfraUserSelection = () => {
 const createLink = async () => {
     if (selectedLKSUser.value && selectedInfraUser.value) {
         try {
-            await axiosInstance.post('/api/infra-manager/db/users', {
+            await axiosInstance.post('/api/infra-manager/users', {
                 personalAccountUserId: selectedLKSUser.value.id,
                 infraManagerUserId: selectedInfraUser.value.id
             });

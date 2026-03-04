@@ -229,6 +229,17 @@ const formatFileSize = (size) => {
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 };
 
+const fetchUserFullName = async (userId) => {
+  if (!userId) return '';
+  try {
+    const response = await axiosInstance.get(`/api/infra-manager/users/${userId}`);
+    return response?.data?.fullName || '';
+  } catch (error) {
+    console.debug(`Не удалось загрузить пользователя ${userId}:`, error);
+    return '';
+  }
+};
+
 // Функция для загрузки документов
 const fetchDocuments = async (callId) => {
   try {
@@ -287,50 +298,22 @@ const openCallDetails = async (callId) => {
       { date: callData.utcDateClosed, label: 'Закрытие' },
     ].filter(event => event.date);
 
-    // Делаем параллельные запросы для всех ID
-    const requests = [];
-
-    if (callData.initiatorID) {
-      requests.push(axiosInstance.get(`/api/infra-manager/users/${callData.initiatorID}`));
-    } else {
-      requests.push(Promise.resolve({ data: { fullName: null } }));
-    }
-
-    if (callData.clientID) {
-      requests.push(axiosInstance.get(`/api/infra-manager/users/${callData.clientID}`));
-    } else {
-      requests.push(Promise.resolve({ data: { fullName: null } }));
-    }
-
-    if (callData.ownerID) {
-      requests.push(axiosInstance.get(`/api/infra-manager/users/${callData.ownerID}`));
-    } else {
-      requests.push(Promise.resolve({ data: { fullName: null } }));
-    }
-
-    if (callData.executorID) {
-      requests.push(axiosInstance.get(`/api/infra-manager/users/${callData.executorID}`));
-    } else {
-      requests.push(Promise.resolve({ data: { fullName: null } }));
-    }
-
-    if (callData.accomplisherID) {
-      requests.push(axiosInstance.get(`/api/infra-manager/users/${callData.accomplisherID}`));
-    } else {
-      requests.push(Promise.resolve({ data: { fullName: null } }));
-    }
-
-    // Выполняем все запросы
-    const [initiator, client, owner, executor, accomplisher] = await Promise.all(requests);
+    const [initiatorFullName, clientFullName, ownerFullName, executorFullName, accomplisherFullName] = await Promise.all([
+      fetchUserFullName(callData.initiatorID),
+      fetchUserFullName(callData.clientID),
+      fetchUserFullName(callData.ownerID),
+      fetchUserFullName(callData.executorID),
+      fetchUserFullName(callData.accomplisherID),
+    ]);
 
     // Обновляем заявку с именами пользователей
     selectedCall.value = {
       ...callData,
-      initiatorFullName: initiator.data.fullName || '',
-      clientFullName: client.data.fullName || '',
-      ownerFullName: owner.data.fullName || '',
-      executorFullName: executor.data.fullName || '',
-      accomplisherFullName: accomplisher.data.fullName || '',
+      initiatorFullName,
+      clientFullName,
+      ownerFullName,
+      executorFullName,
+      accomplisherFullName,
     };
     // Загружаем данные о согласованиях
     await fetchNegotiations(callId);
