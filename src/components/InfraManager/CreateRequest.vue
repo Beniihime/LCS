@@ -1,6 +1,6 @@
 <template>
     <div class="d-flex justify-content-center">
-        <Button icon="pi pi-plus" @click="visible = true"/>
+        <Button v-if="showButton" icon="pi pi-plus" @click="visible = true"/>
         <Dialog v-model:visible="visible" modal header="Создание заявки" :style="{ 'max-width': '32rem' }">
             <template #container="{ closeCallback }">
                 <div class="p-4">
@@ -91,6 +91,12 @@ import PrioritySelect from '@/components/InfraManager/PrioritySelect.vue';
 import { usePriorityStore } from '@/stores/priorityStore.js';
 
 const emit = defineEmits(['refreshRequests']);
+defineProps({
+    showButton: {
+        type: Boolean,
+        default: true
+    }
+});
 const visible = ref(false);
 const whoami = ref('');
 const loading = ref(false);
@@ -251,6 +257,14 @@ const op = ref();
 const toggle = (event) => {
     op.value.toggle(event);
 }
+
+const openModal = () => {
+    visible.value = true;
+};
+
+defineExpose({
+    openModal
+});
 
 </script>
 

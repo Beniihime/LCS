@@ -37,7 +37,7 @@
                                 placeholder="Выберите поля"
                                 @update:modelValue="onToggle"
                             />
-                            <CreateRequest @refreshRequests="(id) => fetchCalls(id)"/>
+                            <Button icon="pi pi-plus" @click="openCreateModal" />
                             <Button 
                                 icon="pi pi-sync"
                                 outlined
@@ -133,149 +133,6 @@
                     </template>
                 </Column>
 
-                <!-- <Column field="number" header="№" sortable :showFilterMenu="false" style="min-width: 180px" class="openCall" frozen>
-                    <template #filter="{ filterCallback }">
-                        <div class="d-flex align-items-center">
-                            <InputText 
-                                v-model="filters.number"
-                                placeholder="Введите номер..."
-                                @input="handleFilterInput('number', filters.number)"
-                                class="w-100"
-                            />
-                            <Button 
-                                icon="pi pi-filter-slash"
-                                text
-                                severity="contrast"
-                                class="ms-2"
-                                v-if="filters.number"
-                                @click="clearFilter('number', filterCallback)"
-                            />
-                        </div>
-                    </template>
-                </Column>
-                <Column field="entityStateName" header="Статус" sortable :showFilterMenu="false" style="max-width: 300px;">
-                    <template #body="{ data }">
-                        <Tag :value="data.entityStateName" :severity="getStatusSeverity(data.entityStateName)" :icon="getStatusIcon(data.entityStateName)"/>
-                    </template>
-                    <template #filter="{ filterCallback }">
-                        <div class="d-flex align-items-center">
-                            <MultiSelect 
-                                v-model="filters.entityStateNames"
-                                :options="stateOptions"
-                                optionLabel="label"
-                                optionValue="value"
-                                class="w-75"
-                                placeholder="Выберите статус"
-                                @change="handleFilterInput('entityStateNames', filters.entityStateNames)"
-                            />
-                            <Button 
-                                icon="pi pi-filter-slash"
-                                text
-                                severity="contrast"
-                                class="ms-2"
-                                v-if="filters.entityStateNames"
-                                @click="clearFilter('entityStateNames', filterCallback)"
-                            />
-                        </div>
-                    </template>
-                </Column>
-                <Column field="priorityName" header="Приоритет" sortable :showFilterMenu="false" style="max-width: 160px">
-                    <template #body="{ data }">
-                        <div class="d-flex align-items-center">
-                            <Badge value="" :severity="data.priorityName === 'Высокий' ? 'danger' : data.priorityName === 'Низкий' ? 'success' : 'contrast'" class="me-2 p-2"/>
-                            {{ data.priorityName }}
-                        </div>
-                    </template>
-                    <template #filter="{ filterCallback }">
-                        <div class="d-flex align-items-center">
-                            <Select 
-                                v-model="filters.priorityId"
-                                :options="priorityOptions"
-                                optionLabel="name"
-                                optionValue="id"
-                                class="w-100"
-                                placeholder="Выберите приоритет..."
-                                @change="handleFilterInput('priorityId', filters.priorityId)"
-                            />
-                            <Button 
-                                icon="pi pi-filter-slash"
-                                text
-                                severity="contrast"
-                                class="ms-2"
-                                v-if="filters.priorityId"
-                                @click="clearFilter('priorityId', filterCallback)"
-                            />
-                        </div>
-                    </template>
-                </Column>
-                <Column field="initiatorFullName" header="Инициатор" sortable style="min-width: 200px" />
-                <Column field="clientFullName" header="Клиент" sortable style="min-width: 200px" />
-                <Column field="callSummaryName" header="Сводка" :showFilterMenu="false" style="min-width: 150px">
-                    <template #filter="{ filterCallback }">
-                        <div class="d-flex align-items-center">
-                            <InputText 
-                                v-model="filters.callSummaryName"
-                                placeholder="Введите..."
-                                @input="handleFilterInput('callSummaryName', filters.callSummaryName)"
-                                class="w-100"
-                            />
-                            <Button 
-                                icon="pi pi-filter-slash"
-                                text
-                                severity="contrast"
-                                class="ms-2"
-                                v-if="filters.callSummaryName"
-                                @click="clearFilter('callSummaryName', filterCallback)"
-                            />
-                        </div>
-                    </template>
-                </Column>
-                <Column field="description" header="Описание" style="max-width: 150px">
-                    <template #body="{ data }">
-                        <div style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;" v-tooltip="{ value: data.description, showDelay: 800, hideDelay: 300 }">{{ data.description }}</div>
-                    </template>
-                </Column>
-                <Column field="solution" header="Решение" style="max-width: 150px;">
-                    <template #body="{ data }">
-                        <div style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;" v-tooltip="{ value: data.solution, showDelay: 800, hideDelay: 300 }">{{ data.solution }}</div>
-                    </template>
-                </Column>
-                <Column field="serviceItemFullName" header="Элемент сервиса" style="min-width: 350px" />
-                <Column field="serviceAttendanceFullName" header="Выполнил" sortable style="min-width: 150px" />
-                <Column field="serviceName" header="Сервис" :showFilterMenu="false" style="max-width: 250px">
-                    <template #body="{ data }">
-                        <div style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;" v-tooltip="{ value: data.serviceName, showDelay: 800, hideDelay: 300 }">{{ data.serviceName }}</div>
-                    </template>
-                    <template #filter="{ filterCallback }">
-                        <div class="d-flex align-items-center">
-                            <Select 
-                                v-model="filters.serviceName"
-                                :options="serviceOptions"
-                                :maxSelectedLabels="1"
-                                optionLabel="label"
-                                optionValue="label"
-                                class="w-75"
-                                placeholder="Выберите сервис..."
-                                @change="handleFilterInput('serviceName', filters.serviceName)"
-                            />
-                            <Button 
-                                icon="pi pi-filter-slash"
-                                text
-                                severity="contrast"
-                                class="ms-2"
-                                v-if="filters.serviceName"
-                                @click="clearFilter('serviceName', filterCallback)"
-                            />
-                        </div>
-                    </template>
-                </Column>
-                <Column field="callTypeFullName" header="Тип заявки" style="min-width: 100px" />
-                <Column field="ownerFullName" header="Владелец" sortable style="min-width: 200px" />
-                <Column field="executorFullName" header="Исполнитель" sortable style="min-width: 200px" />
-                <Column field="utcDateRegistered" header="Дата регистрации" sortable style="min-width: 290px" />
-                <Column field="utcDateModified" header="Дата изменения" style="min-width: 290px" />
-                <Column field="utcDateClosed" header="Дата закрытия" style="min-width: 290px" /> -->
-
                 <template #paginatorstart>
                     <div class="d-flex justify-content-between align-items-center">
                         <div>Всего заявок: {{ totalRecords }}</div>
@@ -299,6 +156,7 @@
                 <Skeleton key="requests-skeleton" v-else width="100%" height="100%" class="skeleton-table" />
             </Transition>
         </div>
+        <CreateRequest ref="createRequestRef" :showButton="false" @refreshRequests="(id) => fetchCalls(id)"/>
         <InfraManagerCallsMe ref="callDetailsRef" class="position-absolute opacity-0" style="z-index: -999;"/>
     </div>
 </template>
@@ -527,14 +385,41 @@ watch (
 );
 
 const callDetailsRef = ref(null); // Ссылка на дочерний компонент InfraManagerCalls
+const createRequestRef = ref(null);
+const shouldOpenCreateModal = ref(false);
 
 const openCallDetails = (id) => { nextTick(() => { callDetailsRef.value?.openCallDetails(id); }); };
+const openCreateModal = () => { createRequestRef.value?.openModal?.(); };
 
 const showScrollHint = ref(true);
 
 const hideScrollHint = () => {
     showScrollHint.value = false;
 };
+
+watch(
+    () => route.query.create,
+    (createFlag) => {
+        shouldOpenCreateModal.value = createFlag === '1';
+    },
+    { immediate: true }
+);
+
+watch(
+    [shouldOpenCreateModal, createRequestRef],
+    async ([needOpen]) => {
+        if (!needOpen || !createRequestRef.value?.openModal) return;
+
+        await nextTick();
+        createRequestRef.value.openModal();
+        shouldOpenCreateModal.value = false;
+
+        const query = { ...route.query };
+        delete query.create;
+        router.replace({ query });
+    },
+    { immediate: true }
+);
 
 onMounted(async () => {
     await fetchFilterOptions();
