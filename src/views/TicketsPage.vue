@@ -31,6 +31,24 @@
                             </div>
                             <div class="page-controls">
                                 <div class="d-flex gap-2 align-items-center">
+                                    <Button
+                                        icon="pi pi-sliders-h"
+                                        outlined
+                                        severity="secondary"
+                                        @click="toggleSpecialFeaturesPanel"
+                                    />
+                                    <OverlayPanel ref="specialFeaturesPanel">
+                                        <div class="special-features-panel">
+                                            <Button
+                                                label="Автоназначение ответственных"
+                                                icon="pi pi-users"
+                                                severity="warn"
+                                                :loading="autoAssignLoading"
+                                                :disabled="autoAssignLoading"
+                                                @click="runAutoAssignResponsible"
+                                            />
+                                        </div>
+                                    </OverlayPanel>
                                     <MultiSelect 
                                         :modelValue="selectedColumns"
                                         :options="columns"
@@ -247,6 +265,8 @@ const totalRecords = ref(0);
 const loading = ref(true);
 const isFirstLoadDone = ref(false);
 const useMockData = ref(USE_MOCK_DATA);
+const specialFeaturesPanel = ref(null);
+const autoAssignLoading = ref(false);
 
 
 // Модальное окно
@@ -267,6 +287,36 @@ const canReadTickets = computed(() => {
 const onAssigneeToggle = () => {
     currentPage.value = 1;
     fetchTickets();
+};
+
+const toggleSpecialFeaturesPanel = (event) => {
+    specialFeaturesPanel.value?.toggle(event);
+};
+
+const runAutoAssignResponsible = async () => {
+    try {
+        autoAssignLoading.value = true;
+        await axiosInstance.post('/api/tickets/function/auto/assign-tickets');
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: {
+                severity: 'success',
+                summary: 'Справки',
+                detail: 'Автоназначение ответственных запущено'
+            }
+        }));
+        specialFeaturesPanel.value?.hide();
+    } catch (error) {
+        console.error('Ошибка при автоназначении ответственных:', error);
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: {
+                severity: 'error',
+                summary: 'Справки',
+                detail: 'Не удалось запустить автоназначение ответственных'
+            }
+        }));
+    } finally {
+        autoAssignLoading.value = false;
+    }
 };
 
 const filters = ref({
@@ -537,6 +587,13 @@ onMounted(async () => {
 
 .column-selector {
     min-width: 200px;
+}
+
+.special-features-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 280px;
 }
 
 /* Статистика таблицы */

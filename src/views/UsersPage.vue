@@ -21,6 +21,24 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <h3 class="m-0 ps-4">Пользователи</h3>
                         <div class="d-flex gap-2">
+                            <Button
+                                icon="pi pi-sliders-h"
+                                outlined
+                                severity="secondary"
+                                @click="toggleSpecialUsersPanel"
+                            />
+                            <OverlayPanel ref="specialUsersPanel">
+                                <div class="special-users-panel">
+                                    <Button
+                                        label="Синхронизировать с InfraManager"
+                                        icon="pi pi-sync"
+                                        severity="warn"
+                                        :loading="syncLoading"
+                                        :disabled="syncLoading"
+                                        @click="syncPasImAccounts"
+                                    />
+                                </div>
+                            </OverlayPanel>
                             <MultiSelect :modelValue="selectedColumns" :options="columns" optionLabel="header" @update:modelValue="onToggle"
                                 display="chip" placeholder="Выберите поля" />
                             <CreateUser v-if="hasPermission('User', 'Create')"/>
@@ -162,6 +180,8 @@ const customers = ref([]);
 const totalRecords = ref(0);
 const loading = ref(true);
 const isFirstLoadDone = ref(false);
+const specialUsersPanel = ref(null);
+const syncLoading = ref(false);
 
 const roles = ref([]);
 const userPriority = ref(null);
@@ -239,6 +259,36 @@ const navigateToProfile = (userId, roleId) => {
     });
 };
 
+const toggleSpecialUsersPanel = (event) => {
+    specialUsersPanel.value?.toggle(event);
+};
+
+const syncPasImAccounts = async () => {
+    try {
+        syncLoading.value = true;
+        await axiosInstance.post('/api/users/other-accounts/sync-pas-im');
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: {
+                severity: 'success',
+                summary: 'Пользователи',
+                detail: 'Синхронизация с InfraManager успешно запущена'
+            }
+        }));
+        specialUsersPanel.value?.hide();
+    } catch (error) {
+        console.debug('Ошибка синхронизации с InfraManager: ', error);
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: {
+                severity: 'error',
+                summary: 'Пользователи',
+                detail: 'Не удалось запустить синхронизацию с InfraManager'
+            }
+        }));
+    } finally {
+        syncLoading.value = false;
+    }
+};
+
 // Классы для отображения ролей в зависимости от их типа
 const getRoleTypeClass = (role) => {
     return role.type === 'Custom' ? 'custom-role-type' : 'default-role-type';
@@ -311,6 +361,12 @@ h3 {
     height: 100%;
     color: var(--p-text-color);
     transition: all 0.5s;
+}
+.special-users-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 300px;
 }
 .search {
     border-radius: 12px;
