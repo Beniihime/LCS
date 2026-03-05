@@ -169,7 +169,7 @@
 
                 <router-link 
                     class="profile" 
-                    :to="userId ? `/profile?id=${userId}${!collapsed ? '&r=' + roleId : ''}` : '/profile'"
+                    :to="profileLink"
                     v-tooltip.right="collapsed ? 'Профиль' : ''"
                 >
                     <div class="profile-content">
@@ -275,6 +275,16 @@ const INFRA_MANAGER_SYSTEM_TYPE = 0;
 // Вычисляемые свойства для сезона
 const seasonName = computed(() => getSeasonName(currentSeason.value));
 const seasonIcon = computed(() => getSeasonIcon(currentSeason.value));
+const profileLink = computed(() => {
+    if (!userId.value) return '/profile';
+
+    const params = new URLSearchParams({ id: String(userId.value) });
+    if (roleId.value) {
+        params.set('r', String(roleId.value));
+    }
+
+    return `/profile?${params.toString()}`;
+});
 
 const menuItemsAdmin = [
     { name: 'Пользователи', path: '/users', icon: 'pi pi-users' },

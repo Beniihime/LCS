@@ -152,6 +152,27 @@ svg.lcs {
 .p-dialog-title {
   font-size: 26px !important;
 }
+
+/* Keep all dialogs inside viewport when browser zoom changes effective viewport size */
+.p-dialog {
+  min-width: 0 !important;
+  max-width: calc(100vw - 2rem) !important;
+  max-height: calc(100dvh - 2rem) !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.p-dialog-content {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.p-dialog-header,
+.p-dialog-footer {
+  flex-shrink: 0 !important;
+}
 .p-inputgroupaddon {
   transition-duration: 0.5s !important;
 }

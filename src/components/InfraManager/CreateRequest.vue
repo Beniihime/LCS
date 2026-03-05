@@ -2,83 +2,76 @@
     <div class="d-flex justify-content-center">
         <Button v-if="showButton" icon="pi pi-plus" @click="visible = true"/>
         <Dialog v-model:visible="visible" modal header="Создание заявки" :style="{ 'max-width': '32rem' }">
-            <template #container="{ closeCallback }">
-                <div class="p-4">
-                    <div class="row mb-4">
-                        <h2>Создание заявки</h2>
-                    </div>
-                    <div class="row mb-4">
-                        <div class="col">
-                            <label class="ms-2 mb-1" for="whoami">Для кого заявка?</label>
-                            <div class="input-with-button">
-                                <AutoComplete 
-                                    id="whoami"
-                                    v-model="whoami"
-                                    :suggestions="userSuggestions"
-                                    class="custom-input"
-                                    optionValue="id"
-                                    @complete="searchUsers"
-                                    optionLabel="fullName"
-                                    placeholder="Выберите пользователя..."
-                                />
-                                <Button v-if="!whoami" rounded label="Для меня" severity="secondary" class="input-button" @click="fetchMe" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mb-4">
-                        <div class="col">
-                            <label for="service" class="ms-2 mb-1">Сервис</label>
-                            <TreeSelect 
-                                v-model="selectedService"
-                                :options="serviceTree"
-                                :disabled="!whoami"
-                                placeholder="Выберите сервис..."
-                                filter
-                                class="form-input"
-                            >
-                                <template #value="{ value }">
-                                    <span>{{ formatSelectedService(value) }}</span>
-                                </template>
-                            </TreeSelect>
-                        </div>
-                    </div>
-                    <div class="row mb-4">
-                        <div class="col">
-                            <label for="priority" class="ms-2 mb-1">Приоритет</label>
-                            <InputText id="priority" readonly v-model="store.selectedPriority" class="form-input" placeholder="Выберите приоритет..." @click="toggle"/>
-                            <Popover ref="op">
-                                <PrioritySelect />
-                            </Popover>
-                        </div>
-                    </div>
-                    <div class="row mb-4">
-                        <div class="col">
-                            <label for="shortDescriprion" class="ms-2 mb-1">Тема</label>
-                            <InputText id="shortDescriprion" v-model="shortDescriprion" class="form-input" placeholder="Введите тему..."/>
-                        </div>
-                    </div>
-                    <div class="row mb-4">
-                        <div class="col">
-                            <label for="description" class="ms-2 mb-1">Краткое описание</label>
-                            <Textarea id="descriprion" v-model="description" class="form-input" rows="5" placeholder="Введите описание..."/>
-                        </div>
-                    </div>
-                    <div class="row align-items-center justify-content-end">
-                        <div class="col-auto">
-                            <Button text label="Создать заявку" severity="success" @click="createCall"/>
-                        </div>
-                        <div class="col-auto">
-                            <Button text label="Отмена" severity="danger" @click="handleCancel" />
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col">
+            <div class="p-4">
+                <div class="row mb-4">
+                    <div class="col">
+                        <label class="ms-2 mb-1" for="whoami">Для кого заявка?</label>
+                        <div class="input-with-button">
+                            <AutoComplete 
+                                id="whoami"
+                                v-model="whoami"
+                                :suggestions="userSuggestions"
+                                class="custom-input"
+                                optionValue="id"
+                                @complete="searchUsers"
+                                optionLabel="fullName"
+                                placeholder="Выберите пользователя..."
+                            />
+                            <Button v-if="!whoami" rounded label="Для меня" severity="secondary" class="input-button" @click="fetchMe" />
                         </div>
                     </div>
                 </div>
-
-                
-            </template>
+                <div class="row mb-4">
+                    <div class="col">
+                        <label for="service" class="ms-2 mb-1">Сервис</label>
+                        <TreeSelect 
+                            v-model="selectedService"
+                            :options="serviceTree"
+                            :disabled="!whoami"
+                            placeholder="Выберите сервис..."
+                            filter
+                            class="form-input"
+                        >
+                            <template #value="{ value }">
+                                <span>{{ formatSelectedService(value) }}</span>
+                            </template>
+                        </TreeSelect>
+                    </div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col">
+                        <label for="priority" class="ms-2 mb-1">Приоритет</label>
+                        <InputText id="priority" readonly v-model="store.selectedPriority" class="form-input" placeholder="Выберите приоритет..." @click="toggle"/>
+                        <Popover ref="op">
+                            <PrioritySelect />
+                        </Popover>
+                    </div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col">
+                        <label for="shortDescriprion" class="ms-2 mb-1">Тема</label>
+                        <InputText id="shortDescriprion" v-model="shortDescriprion" class="form-input" placeholder="Введите тему..."/>
+                    </div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col">
+                        <label for="description" class="ms-2 mb-1">Краткое описание</label>
+                        <Textarea id="descriprion" v-model="description" class="form-input" rows="5" placeholder="Введите описание..."/>
+                    </div>
+                </div>
+                <div class="row align-items-center justify-content-end">
+                    <div class="col-auto">
+                        <Button text label="Создать заявку" severity="success" @click="createCall"/>
+                    </div>
+                    <div class="col-auto">
+                        <Button text label="Отмена" severity="danger" @click="handleCancel" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                    </div>
+                </div>
+            </div>
         </Dialog>
     </div>
 </template>

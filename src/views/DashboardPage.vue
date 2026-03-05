@@ -158,16 +158,6 @@ const fetchUserStatus = async () => {
     }
 };
 
-const fetchInfraStatus = async () => {
-    if (!userId) return;
-    try {
-        const response = await axiosInstance.get(`/api/infra-manager/db/users/${userId}/status`);
-        infraStatusText.value = response.data?.infraManagerUserId ? 'Активен' : 'Не назначен';
-    } catch (error) {
-        infraStatusText.value = 'Не назначен';
-    }
-};
-
 const formatLocalDate = (date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -296,7 +286,6 @@ onMounted(() => {
     window.history.replaceState({}, document.title, cleanUrl);
 
     fetchUserStatus();
-    fetchInfraStatus();
     scheduleSelection.value = getScheduleSelectionByType(selectedScheduleType.value);
     fetchNearestSchedule();
 });
