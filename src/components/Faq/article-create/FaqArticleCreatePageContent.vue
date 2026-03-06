@@ -81,6 +81,7 @@
                             editorStyle="height: 220px"
                             class="faq-block-editor"
                             placeholder="Введите текст блока..."
+                            @load="onBlockEditorLoad"
                         >
                             <template #toolbar>
                                 <span class="ql-formats">
@@ -159,6 +160,7 @@ const {
     onDialogImageDrop,
     openDialogImagePicker,
     onDialogImageFileChange,
+    onBlockEditorLoad,
     getBlockImageSrc,
     createArticle,
 } = useFaqArticleCreatePage();

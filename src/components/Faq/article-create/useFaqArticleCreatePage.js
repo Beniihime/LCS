@@ -1,7 +1,8 @@
-import { computed, ref } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import axiosInstance from '@/utils/axios.js';
+import { attachPlainTextPasteToQuill, sanitizeFaqTextHtml } from '@/utils/faqHtml.js';
 
 const fileToBase64Data = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -30,6 +31,7 @@ export const useFaqArticleCreatePage = () => {
     const dragOverIndex = ref(-1);
     const dialogImageInputRef = ref(null);
     const isDialogDragOver = ref(false);
+    let detachBlockEditorPasteHandler = null;
 
     const groupId = computed(() => String(route.query.groupId || ''));
     const groupTitle = computed(() => String(route.query.groupTitle || ''));
@@ -87,7 +89,7 @@ export const useFaqArticleCreatePage = () => {
 
     const saveBlockDialog = () => {
         const isText = blockDialog.value.contentType === 'Text';
-        const text = blockDialog.value.text || '';
+        const text = sanitizeFaqTextHtml(blockDialog.value.text || '');
         const plainText = extractPlainTextFromHtml(text);
         const image = (blockDialog.value.image || '').trim();
 
@@ -185,6 +187,11 @@ export const useFaqArticleCreatePage = () => {
         await applyDialogImageFile(file);
     };
 
+    const onBlockEditorLoad = (event) => {
+        detachBlockEditorPasteHandler?.();
+        detachBlockEditorPasteHandler = attachPlainTextPasteToQuill(event);
+    };
+
     const getBlockImageSrc = (imageRaw) => {
         if (!imageRaw) return '';
         if (String(imageRaw).startsWith('data:image')) return imageRaw;
@@ -209,7 +216,7 @@ export const useFaqArticleCreatePage = () => {
                 order: 1,
                 blocks: blocks.value.map((block, idx) => ({
                     image: block.type === 'Image' ? (block.image || '') : '',
-                    text: block.type === 'Text' ? (block.text || '') : '',
+                    text: block.type === 'Text' ? sanitizeFaqTextHtml(block.text || '') : '',
                     order: idx,
                     type: block.type || 'None',
                 })),
@@ -224,6 +231,21 @@ export const useFaqArticleCreatePage = () => {
             actionLoading.value = false;
         }
     };
+
+    onBeforeUnmount(() => {
+        detachBlockEditorPasteHandler?.();
+        detachBlockEditorPasteHandler = null;
+    });
+
+    watch(
+        () => blockDialog.value.visible,
+        (visible) => {
+            if (!visible) {
+                detachBlockEditorPasteHandler?.();
+                detachBlockEditorPasteHandler = null;
+            }
+        }
+    );
 
     return {
         question,
@@ -250,6 +272,7 @@ export const useFaqArticleCreatePage = () => {
         onDialogImageDrop,
         openDialogImagePicker,
         onDialogImageFileChange,
+        onBlockEditorLoad,
         getBlockImageSrc,
         createArticle,
     };

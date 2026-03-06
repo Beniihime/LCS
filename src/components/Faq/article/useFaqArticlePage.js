@@ -1,8 +1,9 @@
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import axiosInstance from '@/utils/axios.js';
 import { formatDateRuLongWithTime as formatDate } from '@/utils/date.js';
+import { attachPlainTextPasteToQuill, sanitizeFaqTextHtml } from '@/utils/faqHtml.js';
 import { FAQ_ADMIN_SEGMENT, USE_SU_FAQ_ENDPOINTS } from '@/mocks/config.js';
 
 const SAVE_DELAY_MS = 350;
@@ -53,6 +54,7 @@ export const useFaqArticlePage = () => {
     const headerMenuRef = ref(null);
     const dialogImageInputRef = ref(null);
     const isDialogDragOver = ref(false);
+    let detachBlockEditorPasteHandler = null;
 
     const dragFromIndex = ref(-1);
     const dragOverIndex = ref(-1);
@@ -187,7 +189,12 @@ export const useFaqArticlePage = () => {
             const response = await axiosInstance.get(`/api/faq/articles/${id}`);
             article.value = {
                 ...response.data,
-                blocks: Array.isArray(response.data.blocks) ? response.data.blocks : [],
+                blocks: Array.isArray(response.data.blocks)
+                    ? response.data.blocks.map((block) => ({
+                        ...block,
+                        text: sanitizeFaqTextHtml(block?.text || ''),
+                    }))
+                    : [],
             };
             resetPendingState();
         } catch (fetchError) {
@@ -279,10 +286,11 @@ export const useFaqArticlePage = () => {
             // ─── Creates + Updates ─────────────────────────────────────
             orderedBlocks.forEach((block, targetIndex) => {
                 const isText = normalizeBlockType(block) === 'Text';
+                const cleanedText = isText ? sanitizeFaqTextHtml(block.text || '') : '';
                 const payloadBase = {
                     articleId: article.value.id,
                     image: isText ? '' : (block.image || ''),
-                    text: isText ? (block.text || '') : '',
+                    text: cleanedText,
                     order: targetIndex,
                 };
 
@@ -417,7 +425,9 @@ export const useFaqArticlePage = () => {
         if (!article.value?.id) return;
 
         const isText = blockDialog.value.contentType === 'Text';
-        if (isText && !extractPlainTextFromHtml(blockDialog.value.text)) {
+        const cleanedText = isText ? sanitizeFaqTextHtml(blockDialog.value.text || '') : '';
+
+        if (isText && !extractPlainTextFromHtml(cleanedText)) {
             toast.add({ severity: 'warn', summary: 'FAQ', detail: 'Введите текст блока', life: 2200 });
             return;
         }
@@ -435,7 +445,7 @@ export const useFaqArticlePage = () => {
                     id: tempId,
                     articleId: article.value.id,
                     image: isText ? '' : blockDialog.value.image,
-                    text: isText ? blockDialog.value.text : '',
+                    text: isText ? cleanedText : '',
                     order: blockDialog.value.order,
                     contentTypes: isText ? 'Text' : 'Image',
                 });
@@ -446,7 +456,7 @@ export const useFaqArticlePage = () => {
                         ? {
                             ...block,
                             image: isText ? '' : blockDialog.value.image,
-                            text: isText ? blockDialog.value.text : '',
+                            text: isText ? cleanedText : '',
                             contentTypes: isText ? 'Text' : 'Image',
                         }
                         : block
@@ -515,11 +525,33 @@ export const useFaqArticlePage = () => {
         ordered.splice(index, 0, moved);
 
         article.value.blocks = ordered.map((block, idx) => ({ ...block, order: idx }));
+
+        // Reorder must be tracked as pending change even when text/image were not edited.
+        const nextPendingUpdated = new Set(pendingUpdatedBlockIds.value);
+        ordered.forEach((block, idx) => {
+            if (isTempBlockId(block.id) || pendingDeletedBlockIds.value.has(block.id)) return;
+
+            const original = originalBlocksById.value.get(block.id);
+            if (!original) return;
+
+            if (original.order !== idx) {
+                nextPendingUpdated.add(block.id);
+            } else {
+                nextPendingUpdated.delete(block.id);
+            }
+        });
+        pendingUpdatedBlockIds.value = nextPendingUpdated;
+
         onBlockDragEnd();
     };
 
     const openDialogImagePicker = () => {
         dialogImageInputRef.value?.click();
+    };
+
+    const onBlockEditorLoad = (event) => {
+        detachBlockEditorPasteHandler?.();
+        detachBlockEditorPasteHandler = attachPlainTextPasteToQuill(event);
     };
 
     const applyDialogImageFile = async (file) => {
@@ -553,11 +585,24 @@ export const useFaqArticlePage = () => {
     };
 
     onMounted(() => fetchArticle(route.params.id));
+    onBeforeUnmount(() => {
+        detachBlockEditorPasteHandler?.();
+        detachBlockEditorPasteHandler = null;
+    });
     watch(
         () => route.params.id,
         (nextId) => {
             editMode.value = false;
             fetchArticle(nextId);
+        }
+    );
+    watch(
+        () => blockDialog.value.visible,
+        (visible) => {
+            if (!visible) {
+                detachBlockEditorPasteHandler?.();
+                detachBlockEditorPasteHandler = null;
+            }
         }
     );
 
@@ -602,6 +647,7 @@ export const useFaqArticlePage = () => {
         onDialogImageDrop,
         openDialogImagePicker,
         onDialogImageFileChange,
+        onBlockEditorLoad,
         goBack,
     };
 };
