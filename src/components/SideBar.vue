@@ -223,6 +223,8 @@ import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 import { useRouter } from 'vue-router';
 import { stopTokenWorker } from '@/utils/TokenService.js';
+import { getRequestAccess, resetRequestAccessCache } from '@/utils/requestAccess.js';
+import { getCurrentUser, resetCurrentUserCache } from '@/utils/currentUser.js';
 
 // Импортируем утилиты для сезонов
 import { 
@@ -270,7 +272,6 @@ const initials = ref('');
 const fullName = ref('');
 const searchQuery = ref('');
 const showRequests = ref(false);
-const INFRA_MANAGER_SYSTEM_TYPE = 0;
 
 // Вычисляемые свойства для сезона
 const seasonName = computed(() => getSeasonName(currentSeason.value));
@@ -440,6 +441,8 @@ const logout = async () => {
     await permissionStore.clearPermissions();
     await permissionStore.$reset();
     stopTokenWorker();
+    resetRequestAccessCache();
+    resetCurrentUserCache();
     
     router.push('/auth');
 };
@@ -450,41 +453,22 @@ onMounted(async () => {
     lastCheckedMonth = new Date().getMonth();
 
     try {
-        const response = await axiosInstance.get('/api/users/me/info');
+        const response = await getCurrentUser();
 
-        firstName.value = response.data.firstName;
-        lastName.value = response.data.lastName;
-        email.value = response.data.email;
+        firstName.value = response.firstName;
+        lastName.value = response.lastName;
+        email.value = response.email;
 
         fullName.value = `${firstName.value} ${lastName.value}`.trim();
         initials.value = getInitials(firstName.value, lastName.value);
 
-        userId.value = response.data.id;
-        roleId.value = response.data.roles[0]?.id;
+        userId.value = response.id;
+        roleId.value = response.roles[0]?.id;
 
-        localStorage.setItem('firstName', response.data.firstName);
+        localStorage.setItem('firstName', response.firstName);
 
-        try {
-            const otherAccountsResponse = await axiosInstance.get('/api/users/other-accounts/getall');
-            const accounts = otherAccountsResponse.data?.accounts || [];
-            const infraAccount = accounts.find(account => Number(account.systemType) === INFRA_MANAGER_SYSTEM_TYPE);
-
-            if (infraAccount) {
-                localStorage.setItem("InfraStatus", "true");
-                localStorage.setItem("infraManagerUserId", infraAccount.userIdInOtherSystem || '');
-                showRequests.value = true;
-            } else {
-                localStorage.setItem("InfraStatus", "false");
-                localStorage.setItem("infraManagerUserId", '');
-                showRequests.value = false;
-            }
-        } catch (statusError) {
-            console.warn('Не удалось получить внешние аккаунты:', statusError);
-            localStorage.setItem("InfraStatus", "false");
-            localStorage.setItem("infraManagerUserId", '');
-
-            showRequests.value = false;
-        }
+        const requestAccess = await getRequestAccess();
+        showRequests.value = requestAccess.showRequests;
 
     } catch (error) {
         console.debug('Ошибка при получении информации о пользователе: ', error);

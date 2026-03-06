@@ -19,6 +19,8 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { usePermissionStore } from '@/stores/permissions.js';
 import { useRouter } from 'vue-router';
 import { stopTokenWorker } from '@/utils/TokenService.js';
+import { resetRequestAccessCache } from '@/utils/requestAccess.js';
+import { resetCurrentUserCache } from '@/utils/currentUser.js';
 
 const permissionStore = usePermissionStore();
 const isMobile = ref(false);
@@ -43,6 +45,8 @@ const logout = async () => {
     await permissionStore.clearPermissions();
     await permissionStore.$reset();
     stopTokenWorker();
+    resetRequestAccessCache();
+    resetCurrentUserCache();
     
     router.push('/auth');
 };
