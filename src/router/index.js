@@ -2,6 +2,7 @@ import { createMemoryHistory, createRouter, createWebHistory } from "vue-router"
 import { isAuthenticated } from "@/utils/auth";
 import { usePermissionStore } from '@/stores/permissions.js';
 import { isSessionExpiredFlag } from "@/utils/TokenService";
+import { isHiddenAdminUnlocked } from "@/mocks/config";
 
 const routes = [
     { 
@@ -257,7 +258,19 @@ const routes = [
                     requiresAuth: true,
                     title: 'Авто Роли'
                 }
-            }
+            },
+            ...(import.meta.env.DEV
+                ? [{
+                    path: "/_ops/control-room",
+                    component: () => import('@/views/HiddenAdminPanel.vue'),
+                    name: "HiddenAdminPanel",
+                    meta: {
+                        requiresAuth: true,
+                        title: "Control Room",
+                        hiddenAdmin: true
+                    }
+                }]
+                : [])
         ]
     }, 
     {
@@ -300,6 +313,10 @@ router.beforeEach(async (to, from) => {
 
     if (to.path === '/auth' && isAuthenticated() && !isSessionExpiredFlag()) {
         return { path: '/overview' };  // Перенаправляем на главную страницу
+    }
+
+    if (to.meta.hiddenAdmin && !isHiddenAdminUnlocked()) {
+        return { path: '/notFound' };
     }
     
     // Проверка полномочий, если маршрут требует их

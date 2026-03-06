@@ -4,7 +4,7 @@ import { useToast } from 'primevue/usetoast';
 import axiosInstance from '@/utils/axios.js';
 import { formatDateRuLongWithTime as formatDate } from '@/utils/date.js';
 import { attachPlainTextPasteToQuill, sanitizeFaqTextHtml } from '@/utils/faqHtml.js';
-import { FAQ_ADMIN_SEGMENT, USE_SU_FAQ_ENDPOINTS } from '@/mocks/config.js';
+import { getFaqAdminSegment, getUseSuFaqEndpoints } from '@/mocks/config.js';
 
 const SAVE_DELAY_MS = 350;
 
@@ -36,8 +36,8 @@ const createTempBlockId = () => `tmp-${Date.now()}-${Math.random().toString(36).
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const faqWriteEndpoint = (path) => {
-    if (!USE_SU_FAQ_ENDPOINTS) return `/api/faq/${path}`;
-    return `/api/faq/${FAQ_ADMIN_SEGMENT}/${path}`;
+    if (!getUseSuFaqEndpoints()) return `/api/faq/${path}`;
+    return `/api/faq/${getFaqAdminSegment()}/${path}`;
 };
 
 export const useFaqArticlePage = () => {

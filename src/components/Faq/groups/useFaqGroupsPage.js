@@ -2,7 +2,7 @@ import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import axiosInstance from '@/utils/axios.js';
-import { FAQ_ADMIN_SEGMENT, USE_SU_FAQ_ENDPOINTS } from '@/mocks/config.js';
+import { getFaqAdminSegment, getUseSuFaqEndpoints } from '@/mocks/config.js';
 
 const ROOT_PARENT_ID = '00000000-0000-0000-0000-000000000000';
 
@@ -83,8 +83,8 @@ const findGroupById = (list, groupId) => {
 };
 
 const faqWriteEndpoint = (path) => {
-    if (!USE_SU_FAQ_ENDPOINTS) return `/api/faq/${path}`;
-    return `/api/faq/${FAQ_ADMIN_SEGMENT}/${path}`;
+    if (!getUseSuFaqEndpoints()) return `/api/faq/${path}`;
+    return `/api/faq/${getFaqAdminSegment()}/${path}`;
 };
 
 export const useFaqGroupsPage = () => {
