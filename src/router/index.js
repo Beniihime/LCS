@@ -1,6 +1,7 @@
 import { createMemoryHistory, createRouter, createWebHistory } from "vue-router";
 import { isAuthenticated } from "@/utils/auth";
 import { usePermissionStore } from '@/stores/permissions.js';
+import { isSessionExpiredFlag } from "@/utils/TokenService";
 
 const routes = [
     { 
@@ -282,7 +283,7 @@ router.beforeEach(async (to, from) => {
     const permissionStore = usePermissionStore();
 
      // Если пользователь авторизован, загружаем полномочия
-    if (isAuthenticated() && !permissionStore.isLoaded) {
+    if (isAuthenticated() && !permissionStore.isLoaded && !isSessionExpiredFlag()) {
         try {
             await permissionStore.fetchPermissions();  // Дожидаемся загрузки полномочий
         } catch (error) {
@@ -297,7 +298,7 @@ router.beforeEach(async (to, from) => {
         }
     }
 
-    if (to.path === '/auth' && isAuthenticated()) {
+    if (to.path === '/auth' && isAuthenticated() && !isSessionExpiredFlag()) {
         return { path: '/overview' };  // Перенаправляем на главную страницу
     }
     
@@ -313,7 +314,7 @@ router.beforeEach(async (to, from) => {
 
     // Проверка авторизации
     if (to.matched.some(record => record.meta.requiresAuth)) {
-        if (!isAuthenticated()) {
+        if (!isAuthenticated() || isSessionExpiredFlag()) {
             return {
                 path: '/auth',
                 replace: true

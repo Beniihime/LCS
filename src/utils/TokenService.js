@@ -35,6 +35,8 @@ export function saveAuthData({
     accessTokenExpired,
     refreshTokenExpired,
 }) {
+    resetSessionFlags();
+
     localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
     localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
     localStorage.setItem(USER_ID_KEY, userId);
@@ -66,6 +68,7 @@ export function startTokenWorker() {
     const userId = localStorage.getItem(USER_ID_KEY);
 
     if (!refreshToken || !userId) return;
+    resetSessionFlags();
 
     tokenWorker = new TokenWorker();
 
