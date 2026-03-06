@@ -9,56 +9,78 @@ import { PrimeVueResolver } from '@primevue/auto-import-resolver';
 import Components from 'unplugin-vue-components/vite';
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [
-    vue(),
-    svgLoader(),
-    mkcert(),
-    // vueDevTools(),
-    visualizer(),
-    viteStaticCopy({
-      targets: [
-        {
-          src: 'src/assets/icons',
-          dest: 'src/assets',
-        }
-      ],
-    }),
-    Components({
-      resolvers: [
-        PrimeVueResolver()
-      ]
-    })
-  ],
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: (id) => {
-          if (id.includes('node_modules')) {
-            
-            return id.toString().split('node_modules/')[1].split('/')[0].toString();
+export default defineConfig(({ command, mode }) => {
+  const isBuild = command === 'build';
+  const isAnalyze = isBuild && mode === 'analyze';
+
+  return {
+    plugins: [
+      vue(),
+      svgLoader(),
+      command === 'serve' && mkcert(),
+      // vueDevTools(),
+      isAnalyze && visualizer({ filename: 'stats.html', open: false, gzipSize: true, brotliSize: true }),
+      viteStaticCopy({
+        targets: [
+          {
+            src: 'src/assets/icons',
+            dest: 'src/assets',
+          }
+        ],
+      }),
+      Components({
+        resolvers: [
+          PrimeVueResolver()
+        ]
+      })
+    ].filter(Boolean),
+    build: {
+      target: 'es2020',
+      cssCodeSplit: true,
+      reportCompressedSize: false,
+      minify: 'esbuild',
+      rollupOptions: {
+        output: {
+          manualChunks: (id) => {
+            if (!id.includes('node_modules')) return;
+            if (id.includes('/vue/') || id.includes('/vue-router/') || id.includes('/pinia/')) return 'vue-core';
+            if (id.includes('/primevue/')) {
+              const primevuePart = id.split('/primevue/')[1] || '';
+              const primevueEntry = primevuePart.split('/')[0];
+              const primevueCoreEntries = new Set([
+                'core',
+                'icons',
+                'utils',
+                'usestyle',
+                'basecomponent',
+                'basedirective',
+                'baseeditableholder',
+                'config'
+              ]);
+              if (primevueCoreEntries.has(primevueEntry)) return 'primevue-core';
+              return `pv-${primevueEntry}`;
+            }
+            if (id.includes('/@primevue/') || id.includes('/primeicons/')) return 'primevue-shared';
+            if (id.includes('/quill/')) return 'editor';
+            if (id.includes('/axios/') || id.includes('/qs/') || id.includes('/date-fns-tz/')) return 'network-utils';
+            if (id.includes('/lodash/')) return 'lodash';
+            return 'vendor';
           }
         }
       }
     },
-    chunkSizeWarningLimit: 1000,
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true
+    esbuild: {
+      drop: isBuild ? ['console', 'debugger'] : [],
+    },
+    server: {
+      host: "0.0.0.0",
+      https: true,
+    },
+    resolve: {
+      alias: {
+        '@': '/src',
+        '~': '/public'
       }
-    }
-  },
-  server: {
-    host: "0.0.0.0",
-    https: true,
-  },
-  resolve: { 
-    alias: { 
-      '@': '/src',
-      '~': '/public'
-    }
-  },
+    },
+  };
 });
-

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:analyze": "vite build --mode analyze",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -16,7 +17,6 @@
     "bootstrap-icons": "^1.11.3",
     "cross-spawn": "^7.0.6",
     "date-fns-tz": "^3.2.0",
-    "epic-spinners": "^2.0.0",
     "lodash": "^4.17.21",
     "pinia": "^2.2.2",
     "primeicons": "^7.0.0",
