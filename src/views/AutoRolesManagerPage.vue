@@ -8,7 +8,9 @@
                 v-if="!loading"
                 :value="autoRoles" 
                 :paginator="true" 
-                :rows="10"
+                :rows="rowsPerPage"
+                :first="first"
+                @page="onPage"
                 :rowsPerPageOptions="[5, 10, 15]"
                 paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                 currentPageReportTemplate="{first} - {last} из {totalRecords}"
@@ -270,6 +272,14 @@ import { ref, onMounted, computed } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import axiosInstance from '@/utils/axios.js';
 import { usePermissionStore } from '@/stores/permissions.js';
+import { buildTableStateKey, readTableState, getNumberOrDefault } from '@/utils/tableState.js';
+import { useTableStatePersistence } from '@/composables/useTableStatePersistence.js';
+
+const AUTOROLES_TABLE_STATE_KEY = buildTableStateKey('autoroles');
+const AUTOROLES_TABLE_STATE_LEGACY_KEY = 'lcs.autoroles.table-state';
+const savedState = readTableState(AUTOROLES_TABLE_STATE_KEY, {
+    legacyKeys: [AUTOROLES_TABLE_STATE_LEGACY_KEY]
+});
 
 const toast = useToast();
 const permissionStore = usePermissionStore();
@@ -281,6 +291,8 @@ const availableRoles = ref([]);
 const loading = ref(false);
 const creating = ref(false);
 const deleting = ref(false);
+const rowsPerPage = ref(getNumberOrDefault(savedState?.rowsPerPage, 10, { allowZero: true }));
+const first = ref(getNumberOrDefault(savedState?.first, 0, { allowZero: true }));
 
 // Dialog states
 const showCreateDialog = ref(false);
@@ -305,6 +317,11 @@ const isSystemRoleSelected = computed(() => {
     if (!selectedRole.value) return false;
     return selectedRole.value.type === 'System';
 });
+
+const onPage = (event) => {
+    first.value = event.first;
+    rowsPerPage.value = event.rows;
+};
 
 // Methods
 const loadAutoRoles = async () => {
@@ -478,6 +495,15 @@ onMounted(async () => {
         loadSystemTypes(),
         loadAvailableRoles()
     ]);
+});
+
+useTableStatePersistence({
+    key: AUTOROLES_TABLE_STATE_KEY,
+    collectState: () => ({
+        rowsPerPage: rowsPerPage.value,
+        first: first.value
+    }),
+    watchTargets: [[rowsPerPage, first]]
 });
 </script>
 

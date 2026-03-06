@@ -312,8 +312,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
+import { buildTableStateKey, readTableState, writeTableState, getNumberOrDefault } from '@/utils/tableState.js';
+import { useTableStatePersistence } from '@/composables/useTableStatePersistence.js';
 
 const toast = useToast();
 
@@ -392,6 +394,10 @@ const props = defineProps({
     quickSearchField: {
         type: String,
         default: false
+    },
+    stateKey: {
+        type: String,
+        default: ''
     }
 });
 
@@ -419,6 +425,27 @@ const selectedColumns = ref(props.defaultColumns.length ? props.defaultColumns :
 const selectedColumnsComputed = computed(() => 
     props.columns.filter(c => selectedColumns.value.includes(c.field))
 );
+
+const effectiveStateKey = computed(() => {
+    if (props.stateKey) return props.stateKey;
+    const normalizedTitle = String(props.title || 'table')
+        .toLowerCase()
+        .replace(/\s+/g, '-');
+    return buildTableStateKey(`generic.${normalizedTitle}`);
+});
+
+const readSavedState = () => {
+    return readTableState(effectiveStateKey.value);
+};
+
+const saveState = () => {
+    writeTableState(effectiveStateKey.value, {
+        pagination: { ...pagination.value },
+        filters: { ...filters.value },
+        selectedColumns: [...selectedColumns.value],
+        quickSearch: quickSearch.value
+    });
+};
 
 // Активные фильтры для отображения
 const activeFilters = computed(() => {
@@ -551,7 +578,7 @@ const onRowsChange = () => {
 
 const onColumnsToggle = (val) => {
     selectedColumns.value = val.map(col => col.field);
-    localStorage.setItem(`${props.title}_columns`, JSON.stringify(selectedColumns.value));
+    saveState();
 };
 
 const clearFilter = (key) => {
@@ -616,16 +643,46 @@ const exportData = async () => {
 
 // Восстановление сохраненных колонок
 onMounted(async () => {
-    const savedColumns = localStorage.getItem(`${props.title}_columns`);
-    if (savedColumns) {
-        try {
-            selectedColumns.value = JSON.parse(savedColumns);
-        } catch (e) {
-            console.error('Ошибка при восстановлении колонок:', e);
+    const savedState = readSavedState();
+    if (savedState) {
+        if (savedState.pagination) {
+            pagination.value.page = getNumberOrDefault(savedState.pagination.page, 0, { allowZero: true });
+            pagination.value.pageSize = getNumberOrDefault(savedState.pagination.pageSize, pagination.value.pageSize);
+        }
+
+        if (savedState.filters && typeof savedState.filters === 'object') {
+            filters.value = {
+                ...filters.value,
+                ...savedState.filters
+            };
+        }
+
+        if (Array.isArray(savedState.selectedColumns) && savedState.selectedColumns.length) {
+            selectedColumns.value = savedState.selectedColumns;
+        }
+
+        if (typeof savedState.quickSearch === 'string') {
+            quickSearch.value = savedState.quickSearch;
         }
     }
     
     await fetchData();
+});
+
+useTableStatePersistence({
+    key: effectiveStateKey.value,
+    collectState: () => ({
+        pagination: { ...pagination.value },
+        filters: { ...filters.value },
+        selectedColumns: [...selectedColumns.value],
+        quickSearch: quickSearch.value
+    }),
+    watchTargets: [
+        pagination,
+        selectedColumns,
+        quickSearch,
+        filters
+    ]
 });
 
 // Экспортируем методы для доступа из родительского компонента

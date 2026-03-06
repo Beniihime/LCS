@@ -140,15 +140,23 @@ import axiosInstance from "@/utils/axios";
 import DeleteResponsibleGroup from "@/components/ResponsibleTicketStudentGroup/DeleteResponsibleGroup.vue";
 import AddResponsibleGroup from "@/components/ResponsibleTicketStudentGroup/AddResponsibleGroup.vue";
 import { FilterMatchMode } from '@primevue/core/api';
+import { buildTableStateKey, readTableState, getNumberOrDefault } from '@/utils/tableState.js';
+import { useTableStatePersistence } from '@/composables/useTableStatePersistence.js';
+
+const RESPONSIBLES_TABLE_STATE_KEY = buildTableStateKey('responsibles');
+const RESPONSIBLES_TABLE_STATE_LEGACY_KEY = 'lcs.responsibles.table-state';
+const savedState = readTableState(RESPONSIBLES_TABLE_STATE_KEY, {
+    legacyKeys: [RESPONSIBLES_TABLE_STATE_LEGACY_KEY]
+});
 
 const loading = ref(true);
 const groupList = ref([]);
-const first = ref(0);
-const rowsPerPage = ref(5);
+const first = ref(getNumberOrDefault(savedState?.first, 0, { allowZero: true }));
+const rowsPerPage = ref(getNumberOrDefault(savedState?.rowsPerPage, 5, { allowZero: true }));
 
 const filters = ref({
-    groupName: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    responsible: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    groupName: { value: savedState?.filters?.groupName ?? null, matchMode: FilterMatchMode.CONTAINS },
+    responsible: { value: savedState?.filters?.responsible ?? null, matchMode: FilterMatchMode.CONTAINS },
 });
 
 const rowsPerPageOptions = [
@@ -159,6 +167,7 @@ const rowsPerPageOptions = [
 
 const onPageChange = (event) => {
     first.value = event.first;
+    rowsPerPage.value = event.rows;
 }
 
 onMounted(() => {
@@ -188,6 +197,22 @@ const loadGroups = async () => {
         loading.value = false;
     }
 }
+
+useTableStatePersistence({
+    key: RESPONSIBLES_TABLE_STATE_KEY,
+    collectState: () => ({
+        first: first.value,
+        rowsPerPage: rowsPerPage.value,
+        filters: {
+            groupName: filters.value.groupName?.value ?? null,
+            responsible: filters.value.responsible?.value ?? null,
+        }
+    }),
+    watchTargets: [
+        [first, rowsPerPage],
+        filters
+    ]
+});
 </script>
 
 <style scoped>

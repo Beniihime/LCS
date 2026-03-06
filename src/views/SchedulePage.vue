@@ -87,7 +87,14 @@ import {
     saveSelectedScheduleCategory,
     scheduleTypeToCategory
 } from '@/utils/scheduleStorage.js';
+import { buildTableStateKey, readTableState, getNumberOrDefault } from '@/utils/tableState.js';
+import { useTableStatePersistence } from '@/composables/useTableStatePersistence.js';
 
+const SCHEDULE_TABLE_STATE_KEY = buildTableStateKey('schedule');
+const SCHEDULE_TABLE_STATE_LEGACY_KEY = 'lcs.schedule.table-state';
+const savedState = readTableState(SCHEDULE_TABLE_STATE_KEY, {
+    legacyKeys: [SCHEDULE_TABLE_STATE_LEGACY_KEY]
+});
 
 const filteredSchedule = ref([]);
 const years = ref([]);
@@ -98,8 +105,8 @@ const searchQuery = ref("");
 const loading = ref(false);
 const router = useRouter();
 
-const currentPage = ref(0);
-const rowsPerPage = ref(10); // Количество карточек на странице (по умолчанию)
+const currentPage = ref(getNumberOrDefault(savedState?.currentPage, 0, { allowZero: true }));
+const rowsPerPage = ref(getNumberOrDefault(savedState?.rowsPerPage, 10, { allowZero: true })); // Количество карточек на странице (по умолчанию)
 
 const groupsStore = useGroupsStore();
 
@@ -241,6 +248,15 @@ watch(selectedYear, () => {
 watch(selectedCategory, (newCategory) => {
     saveSelectedScheduleCategory(newCategory);
 })
+
+useTableStatePersistence({
+    key: SCHEDULE_TABLE_STATE_KEY,
+    collectState: () => ({
+        currentPage: currentPage.value,
+        rowsPerPage: rowsPerPage.value
+    }),
+    watchTargets: [[currentPage, rowsPerPage]]
+});
 
 onMounted(() => {
     const savedCategory = getSavedScheduleCategory();

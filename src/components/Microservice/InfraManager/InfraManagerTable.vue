@@ -14,11 +14,15 @@
                     filterDisplay="row"
                     paginator
                     :rows="rowsPerPage"
+                    :first="firstRowIndex"
                     :totalRecords="totalRecords"
+                    :sortField="sortField"
+                    :sortOrder="sortOrder"
                     scrollable
                     removableSort
                     stripedRows                    
                     @page="onPage"
+                    @sort="onSort"
                     :rowClass="rowClass"
                     @row-click="(event) => openCallDetails(event.data.id)"
                 >
@@ -279,15 +283,31 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch, reactive } from 'vue';
+import { ref, onMounted, nextTick, watch, reactive, computed } from 'vue';
 import axiosInstance from '@/utils/axios.js';
 import { useRoute, useRouter } from 'vue-router';
 import { debounce } from 'lodash';
 import qs from 'qs';
 import { getInfraStatusIcon, getInfraStatusSeverity } from '@/utils/infraStatus.js';
 import { formatDateOmskFromUtcString } from '@/utils/date.js';
+import {
+    buildTableStateKey,
+    readTableState,
+    getNumberOrDefault,
+    getStringOrEmpty,
+    getArrayOrDefault,
+    getQueryArray
+} from '@/utils/tableState.js';
+import { useTableStatePersistence } from '@/composables/useTableStatePersistence.js';
 
 import InfraManagerCalls from '@/components/InfraManager/InfraManagerCalls.vue';
+
+const INFRA_TABLE_STATE_KEY = buildTableStateKey('infra-manager');
+const INFRA_TABLE_STATE_LEGACY_KEY = 'lcs.infra-manager.table-state';
+const defaultEntityStates = ['Инициирована', 'Открыта', 'Зарегистрирована', 'Ожидает'];
+const savedState = readTableState(INFRA_TABLE_STATE_KEY, {
+    legacyKeys: [INFRA_TABLE_STATE_LEGACY_KEY]
+});
 
 const loading = ref(true);
 
@@ -300,11 +320,14 @@ const hideScrollHint = () => {
 const selectedUser = ref(null);
 const userSuggestions = ref([]);
 const calls = ref([]);  // Все загруженные заявки
-const currentPage = ref(1);  // Текущая страница
-const rowsPerPage = ref(10);  // Количество строк на странице
+const currentPage = ref(getNumberOrDefault(savedState?.currentPage, 1));  // Текущая страница
+const rowsPerPage = ref(getNumberOrDefault(savedState?.rowsPerPage, 10));  // Количество строк на странице
 const totalRecords = ref(0);  // Общее количество заявок
 const totalPages = ref(0);
 const loadedPages = ref(10);
+const sortField = ref(typeof savedState?.sortField === 'string' ? savedState.sortField : null);
+const sortOrder = ref(savedState?.sortOrder === 1 || savedState?.sortOrder === -1 ? savedState.sortOrder : null);
+const firstRowIndex = computed(() => (currentPage.value - 1) * rowsPerPage.value);
 
 const route = useRoute();
 const router = useRouter();
@@ -391,9 +414,15 @@ const loadMorePages = async () => {
     }
 };
 
+const ensureCurrentPageLoaded = async () => {
+    while ((currentPage.value >= loadedPages.value - 1 || currentPage.value === loadedPages.value)
+        && calls.value.length !== totalRecords.value) {
+        await loadMorePages();
+    }
+};
+
 const resetPagination = async () => {
     currentPage.value = 1;
-    console.log(1)
     loadedPages.value = 10;
     calls.value = [];
     await fetchCalls();
@@ -408,6 +437,11 @@ const onPage = async (event) => {
     if ((currentPage.value >= loadedPages.value - 1 && calls.value.length != totalRecords.value) || (currentPage.value === loadedPages.value && calls.value.length != totalRecords.value)) {
         await loadMorePages();
     }
+};
+
+const onSort = (event) => {
+    sortField.value = event.sortField || null;
+    sortOrder.value = typeof event.sortOrder === 'number' ? event.sortOrder : null;
 };
 
 const fetchFilterOptions = async () => {
@@ -427,11 +461,11 @@ const fetchFilterOptions = async () => {
 };
 
 const filters = reactive({
-    number: route.query.number || '',
-    callSummaryName: route.query.callSummaryName || '',
-    serviceName: route.query.serviceName ? route.query.serviceName.split(',') : [],
-    priorityId: route.query.priorityId || '',
-    entityStateNames: route.query.entityStateNames || ['Инициирована', 'Открыта', 'Зарегистрирована', 'Ожидает']
+    number: getStringOrEmpty(route.query.number ?? savedState?.filters?.number),
+    callSummaryName: getStringOrEmpty(route.query.callSummaryName ?? savedState?.filters?.callSummaryName),
+    serviceName: getQueryArray(route.query.serviceName, getArrayOrDefault(savedState?.filters?.serviceName, [])),
+    priorityId: getStringOrEmpty(route.query.priorityId ?? savedState?.filters?.priorityId),
+    entityStateNames: getQueryArray(route.query.entityStateNames, getArrayOrDefault(savedState?.filters?.entityStateNames, defaultEntityStates))
 });
 
 const debouncedUpdateQuery = debounce((key, value) => {
@@ -451,14 +485,16 @@ const debouncedUpdateQuery = debounce((key, value) => {
 }, 750);
 
 const clearFilter = (key, filterCallback) => {
-    filters[key] = '';
+    filters[key] = Array.isArray(filters[key]) ? [] : '';
+    currentPage.value = 1;
     filterCallback();
-    debouncedUpdateQuery(key, '');
+    debouncedUpdateQuery(key, filters[key]);
 }
 
 // Обновление query при входе
 const handleFilterInput = (key, value) => {
     filters[key] = value;
+    currentPage.value = 1;
     debouncedUpdateQuery(key, value);
 }
 
@@ -469,6 +505,21 @@ watch (
     },
     { immediate: true }
 );
+
+useTableStatePersistence({
+    key: INFRA_TABLE_STATE_KEY,
+    collectState: () => ({
+        rowsPerPage: rowsPerPage.value,
+        currentPage: currentPage.value,
+        sortField: sortField.value,
+        sortOrder: sortOrder.value,
+        filters: { ...filters }
+    }),
+    watchTargets: [
+        [rowsPerPage, currentPage, sortField, sortOrder],
+        filters
+    ]
+});
 
 const goBack = () => {
     router.back();
@@ -499,6 +550,7 @@ onMounted(async () => {
     }
 
     await fetchFilterOptions();
+    await ensureCurrentPageLoaded();
     setTimeout(() => {
         hideScrollHint();
     }, 8000);

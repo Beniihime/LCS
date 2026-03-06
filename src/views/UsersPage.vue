@@ -11,6 +11,7 @@
                     scrollable
                     stripedRows
                     :rows="rowsPerPage"
+                    :first="firstRowIndex"
                     :rowClass="rowClass"
                     @row-click="(event) => navigateToProfile(event.data.id, event.data.roles[0]?.id)"
                     :totalRecords="totalRecords"
@@ -219,6 +220,15 @@ import { debounce } from 'lodash';
 import CreateUser from '@/components/Users/CreateUser.vue';
 import GetOtpButton from '@/components/Users/GetOtpButton.vue';
 import { usePermissionStore } from '@/stores/permissions.js';
+import { buildTableStateKey, readTableState, getNumberOrDefault } from '@/utils/tableState.js';
+import { useTableStatePersistence } from '@/composables/useTableStatePersistence.js';
+
+const USERS_TABLE_STATE_KEY = buildTableStateKey('users');
+const USERS_TABLE_STATE_LEGACY_KEY = 'lcs.users.table-state';
+const defaultColumns = ['lastName', 'firstName', 'middleName', 'roleIds'];
+const savedState = readTableState(USERS_TABLE_STATE_KEY, {
+    legacyKeys: [USERS_TABLE_STATE_LEGACY_KEY]
+});
 
 const router = useRouter();
 
@@ -236,12 +246,12 @@ const permissionStore = usePermissionStore();
 const hasPermission = (type, action) => permissionStore.hasPermission(type, action);
 
 const filters = ref({
-    firstName: null,
-    lastName: null,
-    middleName: null,
-    email: null,
-    roleIds: [],
-    isBlocked: null,
+    firstName: savedState?.filters?.firstName ?? null,
+    lastName: savedState?.filters?.lastName ?? null,
+    middleName: savedState?.filters?.middleName ?? null,
+    email: savedState?.filters?.email ?? null,
+    roleIds: Array.isArray(savedState?.filters?.roleIds) ? savedState.filters.roleIds : [],
+    isBlocked: savedState?.filters?.isBlocked ?? null,
 });
 
 const columns = ref([
@@ -252,9 +262,11 @@ const columns = ref([
     { field: 'roleIds', header: 'Роли', placeholder: 'Выберите роли', style: 'min-width: 280px;' },
     { field: 'isBlocked', header: 'Статус', placeholder: 'Выберите статус', style: 'min-width: 120px;' }
 ]);
-const defaultColumns = ['lastName', 'firstName', 'middleName', 'roleIds'];
-
-const selectedColumnFields = ref(defaultColumns);
+const selectedColumnFields = ref(
+    Array.isArray(savedState?.selectedColumnFields) && savedState.selectedColumnFields.length
+        ? savedState.selectedColumnFields
+        : defaultColumns
+);
 const selectedColumns = computed(() => 
     columns.value.filter(c => selectedColumnFields.value.includes(c.field))
 );
@@ -265,8 +277,9 @@ const ordinaryColumns = computed(() =>
     columns.value.filter(c => selectedColumnFields.value.includes(c.field) && !['roleIds','isBlocked'].includes(c.field))
 );
 
-const currentPage = ref(1);
-const rowsPerPage = ref(10);
+const currentPage = ref(getNumberOrDefault(savedState?.currentPage, 1));
+const rowsPerPage = ref(getNumberOrDefault(savedState?.rowsPerPage, 10));
+const firstRowIndex = computed(() => (currentPage.value - 1) * rowsPerPage.value);
 
 const onFilter = (field, value) => {
     filters.value[field] = value;
@@ -371,6 +384,20 @@ const fetchCustomers = async () => {
 onMounted(async () => {
     await fetchCustomers();
     await fetchRoles();
+});
+
+useTableStatePersistence({
+    key: USERS_TABLE_STATE_KEY,
+    collectState: () => ({
+        rowsPerPage: rowsPerPage.value,
+        currentPage: currentPage.value,
+        selectedColumnFields: selectedColumnFields.value,
+        filters: { ...filters.value }
+    }),
+    watchTargets: [
+        [rowsPerPage, currentPage, selectedColumnFields],
+        filters
+    ]
 });
 
 const fetchRoles = async () => {

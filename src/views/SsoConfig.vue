@@ -95,15 +95,23 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import axiosInstance from "@/utils/axios";
+import { buildTableStateKey, readTableState, getNumberOrDefault } from '@/utils/tableState.js';
+import { useTableStatePersistence } from '@/composables/useTableStatePersistence.js';
 
 import DeleteSsoConfig from "@/components/Sso/DeleteSsoConfig.vue";
 import AddSsoConfig from "@/components/Sso/AddSsoConfig.vue";
 
+const SSO_TABLE_STATE_KEY = buildTableStateKey('sso-config');
+const SSO_TABLE_STATE_LEGACY_KEY = 'lcs.sso.table-state';
+const savedState = readTableState(SSO_TABLE_STATE_KEY, {
+    legacyKeys: [SSO_TABLE_STATE_LEGACY_KEY]
+});
+
 const loading = ref(true);
 
 const ssoList = ref([]);
-const first = ref(0);
-const rowsPerPage = ref(5);
+const first = ref(getNumberOrDefault(savedState?.first, 0, { allowZero: true }));
+const rowsPerPage = ref(getNumberOrDefault(savedState?.rowsPerPage, 5, { allowZero: true }));
 
 const paginatedList = computed(() => {
     const start = first.value;
@@ -119,6 +127,7 @@ const rowsPerPageOptions = [
 
 const onPageChange = (event) => {
     first.value = event.first;
+    rowsPerPage.value = event.rows;
 }
 
 onMounted(() => {
@@ -138,6 +147,15 @@ const loadConfigs = async () => {
     }
     
 }
+
+useTableStatePersistence({
+    key: SSO_TABLE_STATE_KEY,
+    collectState: () => ({
+        first: first.value,
+        rowsPerPage: rowsPerPage.value
+    }),
+    watchTargets: [[first, rowsPerPage]]
+});
 
 </script>
 

@@ -12,6 +12,7 @@
                     scrollable
                     stripedRows
                     :rows="rowsPerPage"
+                    :first="firstRowIndex"
                     :rowClass="rowClass"
                     @row-click="(event) => openTicketModal(event.data.id)"
                     :totalRecords="totalRecords"
@@ -257,6 +258,14 @@ import { usePermissionStore } from '@/stores/permissions';
 import { mockTickets } from '@/mocks/tickets.js';
 import { USE_MOCK_DATA } from '@/mocks/config.js';
 import { formatDateRuLongWithTime as formatDate } from '@/utils/date.js';
+import { buildTableStateKey, readTableState, getNumberOrDefault } from '@/utils/tableState.js';
+import { useTableStatePersistence } from '@/composables/useTableStatePersistence.js';
+
+const TICKETS_TABLE_STATE_KEY = buildTableStateKey('tickets');
+const TICKETS_TABLE_STATE_LEGACY_KEY = 'lcs.tickets.table-state';
+const savedState = readTableState(TICKETS_TABLE_STATE_KEY, {
+    legacyKeys: [TICKETS_TABLE_STATE_LEGACY_KEY]
+});
 
 const permissionStore = usePermissionStore();
 
@@ -278,7 +287,7 @@ const getUserId = () => {
     return localStorage.getItem('userId');
 };
 
-const onlyMyTickets = ref(true);
+const onlyMyTickets = ref(savedState?.onlyMyTickets ?? true);
 
 const canReadTickets = computed(() => {
     return permissionStore.hasPermission('Tickets', 'Read');
@@ -342,7 +351,11 @@ const columns = ref([
 
 const defaultColumns = ['number', 'requesterName', 'requestType', 'status', 'priority', 'createdAt'];
 
-const selectedColumnFields = ref(defaultColumns);
+const selectedColumnFields = ref(
+    Array.isArray(savedState?.selectedColumnFields) && savedState.selectedColumnFields.length
+        ? savedState.selectedColumnFields
+        : defaultColumns
+);
 const selectedColumns = computed(() => 
     columns.value.filter(c => selectedColumnFields.value.includes(c.field))
 );
@@ -358,8 +371,9 @@ const ordinaryColumns = computed(() =>
     )
 );
 
-const currentPage = ref(1);
-const rowsPerPage = ref(10);
+const currentPage = ref(getNumberOrDefault(savedState?.currentPage, 1));
+const rowsPerPage = ref(getNumberOrDefault(savedState?.rowsPerPage, 10));
+const firstRowIndex = computed(() => (currentPage.value - 1) * rowsPerPage.value);
 
 // Маппинг статусов (английский → русский)
 const statusMap = {
@@ -540,7 +554,28 @@ const fetchTickets = async () => {
 };
 
 onMounted(async () => {
+    if (savedState?.filters && typeof savedState.filters === 'object') {
+        filters.value = {
+            ...filters.value,
+            ...savedState.filters
+        };
+    }
     await fetchTickets();
+});
+
+useTableStatePersistence({
+    key: TICKETS_TABLE_STATE_KEY,
+    collectState: () => ({
+        rowsPerPage: rowsPerPage.value,
+        currentPage: currentPage.value,
+        selectedColumnFields: selectedColumnFields.value,
+        onlyMyTickets: onlyMyTickets.value,
+        filters: { ...filters.value }
+    }),
+    watchTargets: [
+        [rowsPerPage, currentPage, selectedColumnFields, onlyMyTickets],
+        filters
+    ]
 });
 </script>
 

@@ -15,11 +15,15 @@
                     filterDisplay="row"
                     paginator
                     :rows="rowsPerPage"
+                    :first="firstRowIndex"
                     :totalRecords="totalRecords"
+                    :sortField="sortField"
+                    :sortOrder="sortOrder"
                     scrollable
                     removableSort
                     stripedRows
                     @page="onPage"
+                    @sort="onSort"
                     :rowClass="rowClass"
                     @row-click="(event) => openCallDetails(event.data.id)"
                 >
@@ -169,18 +173,37 @@ import qs from 'qs';
 import axiosInstance from '@/utils/axios.js';
 import { getInfraStatusIcon, getInfraStatusSeverity } from '@/utils/infraStatus.js';
 import { formatDateOmskFromUtcString } from '@/utils/date.js';
+import {
+    buildTableStateKey,
+    readTableState,
+    getNumberOrDefault,
+    getStringOrEmpty,
+    getArrayOrDefault,
+    getQueryArray
+} from '@/utils/tableState.js';
+import { useTableStatePersistence } from '@/composables/useTableStatePersistence.js';
 
 import InfraManagerCallsMe from '@/components/InfraManager/InfraManagerCallsMe.vue';
 import CreateRequest from '@/components/InfraManager/CreateRequest.vue';
 
+const REQUESTS_TABLE_STATE_KEY = buildTableStateKey('requests');
+const REQUESTS_TABLE_STATE_LEGACY_KEY = 'lcs.requests.table-state';
+const defaultEntityStates = ['Инициирована', 'Открыта', 'Зарегистрирована', 'Ожидает'];
+const defaultColumns = ['number', 'entityStateName', 'priorityName', 'callSummaryName', 'clientFullName', 'executorFullName'];
+const savedState = readTableState(REQUESTS_TABLE_STATE_KEY, {
+    legacyKeys: [REQUESTS_TABLE_STATE_LEGACY_KEY]
+});
+
 const loading = ref(true);
 
 const calls = ref([]);  // Все загруженные заявки
-const currentPage = ref(1);  // Текущая страница
-const rowsPerPage = ref(10);  // Количество строк на странице
+const currentPage = ref(getNumberOrDefault(savedState?.currentPage, 1));  // Текущая страница
+const rowsPerPage = ref(getNumberOrDefault(savedState?.rowsPerPage, 10));  // Количество строк на странице
 const totalRecords = ref(0);  // Общее количество заявок
 const totalPages = ref(0);
 const loadedPages = ref(10);
+const sortField = ref(typeof savedState?.sortField === 'string' ? savedState.sortField : null);
+const sortOrder = ref(savedState?.sortOrder === 1 || savedState?.sortOrder === -1 ? savedState.sortOrder : null);
 
 const route = useRoute();
 const router = useRouter();
@@ -215,8 +238,11 @@ const columns = ref([
     { field: 'utcDateClosed', header: 'Дата закрытия' }
 ]);
 
-const defaultColumns = ['number', 'entityStateName', 'priorityName', 'callSummaryName', 'clientFullName', 'executorFullName'];
-const selectedColumnFields = ref(defaultColumns);
+const selectedColumnFields = ref(
+    Array.isArray(savedState?.selectedColumnFields) && savedState.selectedColumnFields.length
+        ? savedState.selectedColumnFields
+        : defaultColumns
+);
 
 const selectedColumns = computed(() => 
     columns.value.filter(c => selectedColumnFields.value.includes(c.field))
@@ -225,6 +251,8 @@ const selectedColumns = computed(() =>
 const onToggle = (val) => {
     selectedColumnFields.value = val.map(col => col.field);
 };
+
+const firstRowIndex = computed(() => (currentPage.value - 1) * rowsPerPage.value);
 
 const getStatusSeverity = getInfraStatusSeverity;
 const getStatusIcon = getInfraStatusIcon;
@@ -309,6 +337,13 @@ const loadMorePages = async () => {
     }
 }
 
+const ensureCurrentPageLoaded = async () => {
+    while ((currentPage.value >= loadedPages.value - 1 || currentPage.value === loadedPages.value)
+        && calls.value.length !== totalRecords.value) {
+        await loadMorePages();
+    }
+};
+
 // При изменении страницы
 const onPage = async (event) => {
     currentPage.value = event.page + 1;
@@ -319,6 +354,11 @@ const onPage = async (event) => {
             (currentPage.value === loadedPages.value && calls.value.length != totalRecords.value)) {
         await loadMorePages();
     }
+};
+
+const onSort = (event) => {
+    sortField.value = event.sortField || null;
+    sortOrder.value = typeof event.sortOrder === 'number' ? event.sortOrder : null;
 };
 
 const fetchFilterOptions = async () => {
@@ -342,11 +382,11 @@ const fetchFilterOptions = async () => {
 };
 
 const filters = reactive({
-    number: route.query.number || '',
-    callSummaryName: route.query.callSummaryName || '',
-    serviceName: route.query.serviceName ? route.query.serviceName.split(',') : [],
-    priorityId: route.query.priorityId || '',
-    entityStateNames: route.query.entityStateNames || ['Инициирована', 'Открыта', 'Зарегистрирована', 'Ожидает']
+    number: getStringOrEmpty(route.query.number ?? savedState?.filters?.number),
+    callSummaryName: getStringOrEmpty(route.query.callSummaryName ?? savedState?.filters?.callSummaryName),
+    serviceName: getQueryArray(route.query.serviceName, getArrayOrDefault(savedState?.filters?.serviceName, [])),
+    priorityId: getStringOrEmpty(route.query.priorityId ?? savedState?.filters?.priorityId),
+    entityStateNames: getQueryArray(route.query.entityStateNames, getArrayOrDefault(savedState?.filters?.entityStateNames, defaultEntityStates))
 });
 
 const debouncedUpdateQuery = debounce((key, value) => {
@@ -366,13 +406,15 @@ const debouncedUpdateQuery = debounce((key, value) => {
 }, 750);
 
 const clearFilter = (key) => {
-    filters[key] = '';
-    debouncedUpdateQuery(key, '');
+    filters[key] = Array.isArray(filters[key]) ? [] : '';
+    currentPage.value = 1;
+    debouncedUpdateQuery(key, filters[key]);
 }
 
 // Обновление query при входе
 const handleFilterInput = (key, value) => {
     filters[key] = value;
+    currentPage.value = 1;
     debouncedUpdateQuery(key, value);
 }
 
@@ -383,6 +425,22 @@ watch (
     },
     { immediate: true }
 );
+
+useTableStatePersistence({
+    key: REQUESTS_TABLE_STATE_KEY,
+    collectState: () => ({
+        rowsPerPage: rowsPerPage.value,
+        currentPage: currentPage.value,
+        sortField: sortField.value,
+        sortOrder: sortOrder.value,
+        selectedColumnFields: selectedColumnFields.value,
+        filters: { ...filters }
+    }),
+    watchTargets: [
+        [rowsPerPage, currentPage, sortField, sortOrder, selectedColumnFields],
+        filters
+    ]
+});
 
 const callDetailsRef = ref(null); // Ссылка на дочерний компонент InfraManagerCalls
 const createRequestRef = ref(null);
@@ -423,6 +481,7 @@ watch(
 
 onMounted(async () => {
     await fetchFilterOptions();
+    await ensureCurrentPageLoaded();
     setTimeout(() => {
         hideScrollHint();
     }, 8000);
