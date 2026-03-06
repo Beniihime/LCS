@@ -1,7 +1,7 @@
 <script setup>
-import { useNotificationStore } from '@/stores/notifications';
+import { useNotificationStore } from '@/stores/notifications.js';
 import { onMounted } from 'vue';
-import formatDate from '@/utils/formatDate.js';  // Функция для форматирования даты
+import { formatDateRuLongWithTime as formatDate } from '@/utils/date.js';  // Функция для форматирования даты
 
 const notificationStore = useNotificationStore();
 
@@ -13,7 +13,7 @@ onMounted(() => {
 <template>
     <main>
         <div class="content-wrap">
-            <h2>Ваши уведомления</h2>
+            <h2>Уведомления</h2>
             <div class="notifications-list">
                 <div v-for="notification in notificationStore.notifications" 
                      :key="notification.id" 
@@ -41,14 +41,16 @@ main {
 }
 .content-wrap {
     flex-grow: 1;
-    padding: 20px;
+    padding: 20px 8rem;
     color: var(--p-text-color);
+    transition: all 0.5s;
 }
 
 h2 {
     margin-bottom: 20px;
     font-size: 2rem;
     color: var(--p-text-color);
+    transition: all 0.5s;
 }
 
 /* Оформление карточек уведомлений */
@@ -59,15 +61,10 @@ h2 {
 }
 
 .notification-card {
-    background-color: var(--p-grey-4);
-    border-radius: 10px;
+    background-color: var(--p-grey-7);
+    border-radius: 12px;
     padding: 15px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-}
-
-.notification-card:hover {
-    transform: scale(1.01);
+    transition: all 0.5s;
 }
 
 .notification-header {
@@ -85,11 +82,13 @@ h2 {
 .notification-timestamp {
     font-size: 0.9rem;
     color: var(--p-grey-1);
+    transition: all 0.5s;
 }
 
 .notification-detail {
     font-size: 1rem;
     color: var(--p-text-color);
+    transition: all 0.5s;
 }
 
 .notification-detail p {

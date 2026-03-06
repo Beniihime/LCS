@@ -9,63 +9,65 @@
                     <div class="brand">
                         <h2>Вход в ЛКС</h2>
                     </div>
+
+                    <Button 
+                        class="sso-button my-2"
+                        icon="pi pi-users"
+                        label="Система единого входа"
+                        outlined
+                        @click="ssoLogin"
+                        :loading="ssoLoading"
+                    />
                     <form @submit.prevent="auth">
                         <InputGroup class="my-2">
                             <InputGroupAddon>
-                                <i class="pi pi-user"></i>
+                                <i class="pi pi-at"></i>
                             </InputGroupAddon>
-                            <InputText placeholder="Логин" v-model="login" required />
+                            <InputText placeholder="Email" id="email" name="email" v-model="email" required/>
                         </InputGroup>
                         <InputGroup class="my-2">
                             <InputGroupAddon>
                                 <i class="pi pi-key"></i>
                             </InputGroupAddon>
-                            <Password v-model="password" toggleMask :feedback="false" placeholder="Пароль" required />
+                            <Password v-model="password" id="password" name="password" toggleMask :feedback="false" placeholder="Пароль" required />
                         </InputGroup>
                         <div>
                             <Button label="Забыли пароль?" text class="forgot-password" />
                         </div>
                         <Button class="but my-2 mb-0" type="submit" label="Войти" />
+                        <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
                     </form>
                 </div>
                 
             </div>
         </div>
-        <WelcomeLogin v-if="isLoading" :isLoading="isLoading"/>
+        <WelcomeLogin v-if="isLoading" :isLoading="isLoading" @videoEnded="handleVideoEnded" />
     </main>
 </template>
 
 <script setup>
 import { ref } from 'vue';
 import { useToast } from 'primevue/usetoast';
-import { useRouter } from 'vue-router';
-
-import Button from 'primevue/button';
-import InputGroup from 'primevue/inputgroup';
-import InputText from 'primevue/inputtext';
-import InputGroupAddon from 'primevue/inputgroupaddon';
-import Password from 'primevue/password';
-
-import { scheduleTokenRefresh } from '@/utils/TokenService.js';
+import { startTokenWorker } from "@/utils/TokenService";
 import axiosInstance from '@/utils/axios.js';
 
-import ThemeSwitcher from '@/components/ThemeSwitcher.vue';
-import WelcomeLogin from '@/components/WelcomeLogin.vue';
+import ThemeSwitcher from '@/components/Utils/ThemeSwitcher.vue';
+import WelcomeLogin from '@/components/Utils/WelcomeLogin.vue';
 
-const login = ref('');
+const email = ref('');
 const password = ref('');
 const errorMessage = ref('');
-const router = useRouter();
 const toast = useToast();
 
 const isLoading = ref(false);
+const ssoLoading = ref(false);
 
 const auth = async () => {
-    isLoading.value = true;
+    errorMessage.value = '';
 
     try {
         const response = await axiosInstance.post('/api/auth/login', {
-            login: login.value,
+            email: email.value,
             password: password.value
         }, {
             headers: {
@@ -74,21 +76,65 @@ const auth = async () => {
             }
         });
 
+        // Пытаемся получить время жизни accessToken с сервера, иначе считаем сами
+        let accessTokenExpired;
+        if (response.data.accessTokenExpiresIn) {
+            accessTokenExpired = Math.floor(Date.now() / 1000) + response.data.accessTokenExpiresIn;
+        } else if (response.data.accessTokenExpired) {
+            accessTokenExpired = response.data.accessTokenExpired;
+        } else {
+            accessTokenExpired = Math.floor(Date.now() / 1000) + 15 * 60; // Запасной вариант (15 мин)
+        }
+        
         localStorage.setItem('accessToken', response.data.accessToken);
         localStorage.setItem('refreshToken', response.data.refreshTokenValue);
         localStorage.setItem('userId', response.data.userId);
+        localStorage.setItem('refreshTokenExpired', response.data.refreshTokenExpired);
+        localStorage.setItem('accessTokenExpired', accessTokenExpired);
 
-        scheduleTokenRefresh(response.data.refreshTokenExpired);
+        startTokenWorker();
 
-        setTimeout(() => {
-            isLoading.value = false; // Отключаем экран
-            router.push({ name: 'HomePage', query: { message: 'success', summary: 'Успешно', detail: 'Вы вошли в личный кабинет' } });
-        }, 1500); // Удерживаем экран на 1.5 секунды перед переходом
+        isLoading.value = true;
 
     } catch (error) {
-        errorMessage.value = 'Login failed: ' + (error.response ? error.response.data.message : error.message);
-        toast.add({ severity: 'error', summary: 'Ошибка', detail: errorMessage.value, life: 3000 });
+        errorMessage.value = error.response?.data?.message || 'Неверный логин или пароль';
+        // toast.add({ severity: 'error', summary: 'Ошибка', detail: errorMessage.value, life: 3000 });
     }
+};
+
+const ssoLogin = async () => {
+    ssoLoading.value = true;
+    errorMessage.value ='';
+
+    try {
+        const response = await axiosInstance.get('/api/auth/sso/redirection', {
+            headers: {
+                'accept': 'text/plain'
+            }
+        });
+
+        if (response.data) {
+            window.location.href = response.data;
+        } else {
+            throw new Error('Не удалось получить URL для SSO авторизации');
+        }
+
+    } catch (error) {
+        console.error('SSO login error:', error);
+        errorMessage.value = 'Ошибка при подключении к системе единого входа';
+        toast.add({ 
+            severity: 'error', 
+            summary: 'Ошибка SSO', 
+            detail: 'Не удалось подключиться к системе единого входа', 
+            life: 5000 
+        });
+    } finally {
+        ssoLoading.value = false;
+    }
+};
+
+const handleVideoEnded = () => {
+    isLoading.value = false; // Сброс флага загрузки при окончании видео
 };
 </script>
 
@@ -156,8 +202,24 @@ const auth = async () => {
     width: 100%;
     height: 50px;
     font-size: 1.25rem;
-    border-radius: 10px;
+    border-radius: 12px;
 }
+
+.sso-button {
+    width: 100%;
+    height: 50px;
+    font-size: 1.1rem;
+    border-radius: 12px;
+    color: var(--p-blue-400);
+    border-color: var(--p-blue-400);
+    background: transparent;
+}
+
+.sso-button:hover {
+    background: var(--p-blue-400) !important;
+    color: white !important;
+}
+
 main {
     margin: 0;
     padding: 0;
@@ -170,6 +232,13 @@ main {
   width: 100vw;
   position: relative;
   overflow: hidden;
+}
+.error-message {
+    color: var(--p-red-500);
+    font-size: 14px;
+    margin-top: 8px;
+    margin-bottom: 0;
+    text-align: center;
 }
 
 .login-page::before, .login-page::after {
@@ -207,7 +276,7 @@ main {
 .login-container {
     background: var(--p-bg-color-1);
     padding: 28px 40px;
-    border-radius: 18px;
+    border-radius: 12px;
     transition: background 0.5s ease;
     z-index: 1;
 }
@@ -236,6 +305,7 @@ form {
 .brand h2 {
     color: var(--p-text-color);
     font-weight: 800;
+    transition: all 0.5s;
 }
 
 .forgot-password {
@@ -254,6 +324,9 @@ form {
     }
     .forgot-password {
         font-size: 16px;
+    }
+    .sso-button {
+        font-size: 1rem;
     }
 }
 </style>

@@ -1,61 +1,26 @@
 <template>
-    <WelcomeScreen :visible="loading" />
     <main>
         <div class="content-wrapper">
-            <h1 class="mb-4">Настройки ролей</h1>
             <div class="statistics">
-                <h2 class="statistics-title">Статистика ролей</h2>
-                <div class="stat-cards row row-cols-4 g-3">
-                    <div class="col">
+                <div class="rows gap-3">
+                    <div class="col" v-for="i in 4" :key="i">
                         <div class="stat-card">
-                            <div class="row `align-items-center">
-                                <div class="col-auto">
-                                    <i class="bi bi-people-fill"></i>
+                            <Transition name="content-fade" mode="out-in">
+                                <div key="rbac-stat-skeleton" v-if="loading">
+                                    <Skeleton width="100%" height="80px" />
                                 </div>
-                                <div class="col">
-                                    <span class="stat-label">Всего ролей</span>
+                                <div key="rbac-stat-content" v-else>
+                                    <div class="row align-items-center">
+                                        <div class="col-auto pe-0">
+                                            <i :class="statisticsIcons[i - 1]"></i>
+                                        </div>
+                                        <div class="col">
+                                            <span class="stat-label">{{ statisticsLabels[i - 1] }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="stat-number">{{ statisticsCounts[i - 1] }}</div>
                                 </div>
-                            </div>
-                            <span class="stat-number">{{ roles.length }}</span>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="stat-card">
-                            <div class="row align-items-center">
-                                <div class="col-auto">
-                                    <i class="bi bi-person-fill"></i>
-                                </div>
-                                <div class="col">
-                                    <span class="stat-label">Пользовательские роли</span>
-                                </div>
-                            </div>
-                            <span class="stat-number">{{ customRolesCount }}</span>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="stat-card">
-                            <div class="row align-items-center">
-                                <div class="col-auto">
-                                    <i class="bi bi-person-fill-gear"></i>
-                                </div>
-                                <div class="col">
-                                    <span class="stat-label">Системные роли</span>
-                                </div>
-                            </div>
-                            <span class="stat-number">{{ systemRolesCount }}</span>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="stat-card">
-                            <div class="row align-items-center">
-                                <div class="col-auto">
-                                    <i class="bi bi-person"></i>
-                                </div>
-                                <div class="col">
-                                    <span class="stat-label">Пользователи без роли</span>
-                                </div>
-                            </div>
-                            <span class="stat-number">{{ noRoleUsersCount }}</span>
+                            </Transition>
                         </div>
                     </div>
                 </div>
@@ -65,49 +30,59 @@
                     <div class="col">
                         <IconField class="searchBar">
                             <InputIcon class="pi pi-search" />
-                            <InputText placeholder="Поиск" class="search" v-model="searchQuery"/>
+                            <InputText id="search" name="search" placeholder="Поиск..." class="search" v-model="searchQuery3" />
                         </IconField>
                     </div>
                     <div class="col-auto">
-                         <CreateRole :refreshRoles="fetchRoles" v-if="hasPermission('Rbac', 'Create')"/>
+                        <CreateRole :refreshRoles="fetchRoles" v-if="hasPermission('Rbac', 'Create')"/>
                     </div>
                 </div>
             </div>
             <Divider class="my-4"/>
             <div class="roles-cards">
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                <div class="row g-3">
                     <div class="col" v-for="role in filteredRoles" :key="role.id">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <UpdateRole :id="role.id" :refreshRoles="fetchRoles" :roles="roles" v-if="role.id !== userRole.id && role.id !== 1 && hasPermission('Rbac', 'Update')" />
-                                <h5 class="card-title">{{ role.title }}</h5>
-                                <p class="card-text">{{ role.description }}</p>
-                                <p class="card-text"><span class="muted">Приоритет: {{ role.priority }}</span></p>
-                                <div class="mt-auto row row-cols-2 justify-content-between align-items-center">
-                                    <div class="col-auto">
-                                        <UserCount 
-                                            :roleId="role.id" 
-                                            :userCount="role.userCount" 
-                                            :roleType="role.type" 
-                                            :roleTitle="role.title"
+                        <div class="card">
+                            <div class="card-body d-flex flex-column">
+                                <Transition name="content-fade" mode="out-in">
+                                    <Skeleton key="rbac-card-skeleton" v-if="loading" width="100%" height="200px"/>
+                                    <div key="rbac-card-content" v-else>
+                                        <UpdateRole 
+                                            :id="role.id" 
+                                            :refreshRoles="fetchRoles" 
+                                            :roles="roles" 
+                                            v-if="role.id !== userRole.id && role.id !== 1 && hasPermission('Rbac', 'Update')" 
                                         />
-                                    </div>
-                                    <div class="col-auto">
-                                        <div class="card-text m-0" v-if="role.id === userRole.id">Это вы</div>
-                                        <div v-else class="d-flex justify-content-between">
-                                            <Button 
-                                                v-if="role.type === 'Custom' && hasPermission('Rbac', 'Delete')"
-                                                label="Удалить" 
-                                                class="delete-btn me-3"
-                                                severity="danger" 
-                                                @click="confirm1(role)" 
-                                            />
-                                            <router-link to="/role-permissions" v-if="hasPermission('Rbac', 'Update')">
-                                                <Button label="Полномочия" class="perm-btn" @click.prevent="navigateToPermissions(role)"/>
-                                            </router-link>
+                                        <h5 class="card-title">{{ role.title }}</h5>
+                                        <p class="card-text" v-tooltip="{ value: `${role.description}`, showDelay: 1000, hideDelay: 300 }">{{ role.description }}</p>
+                                        <p class="card-text"><span class="muted">Приоритет: {{ role.priority }}</span></p>
+                                        <div class="mt-auto row row-cols-2 justify-content-between align-items-center">
+                                            <div class="col-auto">
+                                                <UserCount 
+                                                    :roleId="role.id" 
+                                                    :userCount="role.userCount" 
+                                                    :roleType="role.type" 
+                                                    :roleTitle="role.title"
+                                                />
+                                            </div>
+                                            <div class="col-auto">
+                                                <div class="card-text m-0" v-if="role.id === userRole.id">Это вы</div>
+                                                <div v-else class="d-flex justify-content-between">
+                                                    <Button 
+                                                        v-if="role.type === 'Custom' && hasPermission('Rbac', 'Delete')"
+                                                        label="Удалить" 
+                                                        class="delete-btn me-3"
+                                                        severity="danger" 
+                                                        @click="confirm1(role)" 
+                                                    />
+                                                    <router-link to="/role-permissions" v-if="hasPermission('Rbac', 'Update')">
+                                                        <Button label="Полномочия" class="perm-btn" @click.prevent="navigateToPermissions(role)"/>
+                                                    </router-link>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                </Transition>
                             </div>
                         </div>
                     </div>
@@ -124,7 +99,6 @@ import { useToast } from 'primevue/usetoast';
 
 import qs from 'qs';
 import axiosInstance from '@/utils/axios.js';
-import WelcomeScreen from '@/components/WelcomeScreen.vue';
 import UpdateRole from '@/components/Rbac/UpdateRole.vue';
 import CreateRole from '@/components/Rbac/CreateRole.vue';
 import UserCount from '@/components/Rbac/UserCount.vue';
@@ -132,21 +106,37 @@ import UserCount from '@/components/Rbac/UserCount.vue';
 import { useRoleStore } from '@/stores/roleStore';
 import { usePermissionStore } from '@/stores/permissions.js';
 
-import Button from 'primevue/button';
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
-import InputText from 'primevue/inputtext';
 import { useConfirm } from "primevue/useconfirm";
-import Divider from 'primevue/divider';
+
+const statisticsLabels = [
+    'Всего ролей',
+    'Пользовательские роли',
+    'Системные роли',
+    'Пользователи без роли',
+];
+
+const statisticsCounts = computed(() => [
+    roles.value.length,
+    customRolesCount.value,
+    systemRolesCount.value,
+    noRoleUsersCount.value,
+]);
+
+const statisticsIcons = [
+    'bi bi-people-fill',
+    'bi bi-person-fill',
+    'bi bi-person-fill-gear',
+    'bi bi-person',
+];
 
 const loading = ref(true);
 const roles = ref([]);
 const users = ref([]);
-const searchQuery = ref('');
+const searchQuery3 = ref('');
 const userRole = ref({id: null, title: '', type: '' });
 
 const filteredRoles = computed(() => {
-    return roles.value.filter(role => role.title.toLowerCase().startsWith(searchQuery.value.toLowerCase()));
+    return roles.value.filter(role => role.title.toLowerCase().startsWith(searchQuery3.value.toLowerCase()));
 });
 
 const permissionStore = usePermissionStore();
@@ -164,7 +154,7 @@ const fetchRoles = async () => {
             userCount: countUsersWithRole(role.id)
         }));
     } catch (error) {
-        console.error('Ошибка при получении ролей: ', error);
+        console.debug('Ошибка при получении ролей: ', error);
     }
 
     loading.value = false;
@@ -173,24 +163,19 @@ const fetchRoles = async () => {
 const fetchUsers = async () => {
     let page = 1;
     let pageSize = 500;
-    const params = {
-        page,
-        pageSize
-    }
     try {
-        const response = await axiosInstance.get('/api/users', {
-            params,
-            paramsSerializer: params => {
-                return qs.stringify(params, { arrayFormat: 'repeat' });
-            }
-        });
+        const payload = {
+            page: page,
+            pageSize: pageSize,
+        };
+        const response = await axiosInstance.post('/api/users/list', payload);
 
         const userResponse = await axiosInstance.get('/api/users/me/info');
         userRole.value = userResponse.data.roles[0] || {};
         
-        users.value = response.data.users;
+        users.value = response.data.entities;
     } catch (error) {
-        console.error('Ошибка при получении пользователей: ', error);
+        console.debug('Ошибка при получении пользователей: ', error);
     }
 };
 
@@ -276,42 +261,70 @@ p {
 .roles-cards {
     width: 100%;
 }
+.roles-cards .row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(clamp(240px, 45vw, 320px), 1fr));
+    gap: 1rem;
+}
+.role-action-buttons {
+    align-items: stretch;
+}
+.role-action-primary {
+    flex: 1.75;
+}
+.role-action-secondary {
+    flex: 1;
+}
+.statistics .rows {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(clamp(200px, 45vw, 300px), 1fr));
+    gap: 1rem;
+}
 .card {
-    border-radius: 18px;
-    transition: all 0.5s ease;
-    background-color: var(--p-bg-color-2);
+    border: none;
+    border-radius: 12px;
+    transition: all 0.5s;
+    background-color: var(--p-grey-7);
     color: var(--p-text-color);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     height: 100%;
 }
 .card:hover {
-    transform: scale(1.02);
+    filter: drop-shadow(0 0 0.5rem rgba(0, 0, 0, 0.2));
 }
 .card-body {
-    padding: 28px;
+    padding: 14px;
     display: flex;
     flex-direction: column;
     flex-grow: 1;
 }
 .card-title {
-    font-size: 1.5rem;
-    margin-bottom: 10px;
+    font-size: 1.15rem;
+    margin-bottom: 8px;
     font-family: 'SF Pro Rounded', sans-serif;
     color: var(--p-text-color);
 }
 .card-text {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-family: 'SF Pro Rounded', sans-serif;
     color: var(--p-grey-1);
-    margin-top: 5px;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 400px;
+}
+p {
+    margin: 0;
 }
 .edit-btn, .delete-btn, .perm-btn {
     width: 100%;
     border-radius: 12px;
+    padding: 5px;
     color: white;
+    font-size: 0.9rem;
 }
 .perm-btn {
     color: white;
@@ -321,8 +334,10 @@ p {
 }
 .muted {
     color: var(--p-grey-2);
+    font-size: 0.8rem;
 }
 main {
+    position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -333,7 +348,7 @@ main {
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    padding: 20px;
+    padding: 20px 6rem;
     overflow: hidden;
     color: var(--p-text-color);
 }
@@ -344,45 +359,46 @@ main {
     font-size: 1rem;
 }
 .search {
-    border-radius: 12pt;
-    font-size: 16pt;
-    transition: all 0.5s ease;
+    border-radius: 12px;
+    transition: all 0.5s;
     width: 100%; 
 }
-.statistics {
-    background: var(--p-bg-color-2);
-    padding: 20px;
-    border-radius: 18px;
-    border: 1px solid var(--p-grey-4);
-    transition: all 0.5s ease;
-}
 .statistics-title {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     margin-bottom: 20px;
     color: var(--p-text-color);
     text-align: center;
 }
 .stat-card {
-    background: var(--p-bg-color-1);
-    padding: 20px;
-    border-radius: 18px;
+    background-color: var(--p-grey-7);
+    padding: 15px;
+    border-radius: 12px;
     color: var(--p-text-color);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transition: all 0.5s ease;
+    transition: all 0.5s;
 }
 .stat-card:hover {
-    scale: 1.02;
+    filter: drop-shadow(0 0 0.75rem rgba(0, 0, 0, 0.3));
 }
 .stat-number {
-    font-size: 3rem;
+    font-size: 2rem;
     font-weight: bold;
 }
 .stat-label {
-    font-size: 1.4rem;
+    font-size: 1.1rem;
     opacity: 0.8;
 }
 .bi {
     font-size: larger;
 } 
+
+@media (max-width: 640px) {
+    .roles-cards .row {
+        grid-template-columns: 1fr;
+    }
+
+    .statistics .row {
+        grid-template-columns: 1fr;
+    }
+}
 
 </style>

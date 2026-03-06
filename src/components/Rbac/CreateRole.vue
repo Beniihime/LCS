@@ -2,29 +2,25 @@
     <div class="d-flex justify-content-center">
         <Button icon="pi pi-plus" label="Создать роль" class="create-btn" @click="openDialog"/>
         <Dialog v-model:visible="visible" modal header="Создание новой роли" :style="{ 'max-width': '30rem' }">
-            <div class="row row-cols-1 my-4">
-                <div class="col mb-4">
-                    <FloatLabel>
-                        <InputText v-model="newRole.title" class="form-input"/>
-                        <label>Название</label>
-                    </FloatLabel>
+            <div class="row row-cols-1 mt-1 mb-3">
+                <div class="col mb-2">
+                    <label for="newRole" class="ms-2">Название</label>
+                    <InputText id="newRole" name="newRole" v-model="newRole.title" class="form-input" placeholder="Введите название..." />
                 </div>
-                <div class="col mb-4">
-                    <FloatLabel>
-                        <Textarea v-model="newRole.description" rows="5" class="w-100"/>
-                        <label>Описание</label>
-                    </FloatLabel>
+                <div class="col mb-2">
+                    <label class="ms-2">Описание</label>
+                    <Textarea v-model="newRole.description" rows="3" class="w-100" placeholder="Введите описание..." />
                 </div>
                 <div class="col">
-                    <FloatLabel>
-                        <Select v-model="newRole.priority" :options="priorities" optionValue="value" optionLabel="label" class="form-input"/>
-                        <label>Приоритет</label>
-                    </FloatLabel>
+                    <label class="ms-2">Приоритет</label>
+                    <Select v-model="newRole.priority" :options="priorities" optionValue="value" optionLabel="label" class="form-input" placeholder="Выберите приоритет..." />
                 </div>
             </div>
-            <Divider class="my-4 py-1"/>
+
+            <Divider class="my-3 py-1"/>
+
             <div class="text-center">
-                <Button label="Создать" class="save-btn w-100 mb-3" @click="createRole" />
+                <Button label="Создать" class="save-btn w-100 mb-2" @click="createRole" />
             </div>
         </Dialog>
     </div>
@@ -34,14 +30,6 @@
 import { ref, onMounted } from "vue";
 import axiosInstance from '@/utils/axios.js';
 import { useToast } from 'primevue/usetoast';
-
-import Button from 'primevue/button';
-import Dialog from 'primevue/dialog';
-import InputText from 'primevue/inputtext';
-import Divider from 'primevue/divider';
-import FloatLabel from 'primevue/floatlabel';
-import Textarea from 'primevue/textarea';
-import Select from 'primevue/select';
 
 const visible = ref(false);
 const newRole = ref({
@@ -68,7 +56,7 @@ const fetchPriorities = async () => {
         const response = await axiosInstance.get('/api/rbac/roles/priorities');
         priorities.value = response.data.map(value => ({ label: value, value }));
     } catch (error) {
-        console.error('Ошибка при получении приоритетов: ', error);
+        console.debug('Ошибка при получении приоритетов: ', error);
     }
 };
 
@@ -77,7 +65,7 @@ const fetchUserPriority = async () => {
         const response = await axiosInstance.get('/api/users/me/info');
         userPriority.value = Math.max(...response.data.roles.map(role => role.priority));
     } catch (error) {
-        console.error('Ошибка при получении данных пользователя: ', error);
+        console.debug('Ошибка при получении данных пользователя: ', error);
     }
 };
 
@@ -97,7 +85,7 @@ const createRole = async () => {
 
         toast.add({ severity: 'success', summary: 'Успешно', detail: 'Роль создана', life: 3000 });
     } catch (error) {
-        console.error('Ошибка при создании роли: ', error);
+        console.debug('Ошибка при создании роли: ', error);
     }
 };
 
@@ -113,17 +101,14 @@ label {
     font-size: 16px;
 }
 .create-btn {
-    border-radius: 12pt;
-    font-size: 14pt;
-    transition: all 0.5s ease-out;
+    border-radius: 12px;
+    transition: all 0.5s;
 }
 .form-input {
-    font-size: 16px;
     width: 100%;
 }
 .save-btn {
-    border-radius: 12pt;
-    font-size: 14pt;
-    transition: all 0.5s ease-out;
+    border-radius: 12px;
+    transition: all 0.5s;
 }
 </style>

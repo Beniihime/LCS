@@ -2,27 +2,23 @@
     <div class="d-flex justify-content-center">
         <Button v-tooltip.left="{ value: 'Изменение роли', showDelay: 300, hideDelay: 300 }" icon="pi pi-cog" class="edit-btn" @click="openDialog(id)"/>
         <Dialog v-model:visible="visible" modal header="Изменение роли" :style="{ 'max-width': '30rem' }">
-            <div class="row row-cols-1 my-4">
-                <div class="col mb-4">
-                    <FloatLabel>
-                        <InputText v-model="currentRole.title" class="form-input"/>
-                        <label>Название</label>
-                    </FloatLabel>
-                </div>
-                <div class="col mb-4">
-                    <FloatLabel>
-                        <Textarea v-model="currentRole.description" rows="5" class="w-100"/>
-                        <label>Описание</label>
-                    </FloatLabel>
+            <div class="row row-cols-1 mt-1 mb-3">
+                <div class="col">
+                    <label class="ms-2" for="currentRole">Название</label>
+                    <InputText id="currentRole" name="currentRole" v-model="currentRole.title" class="form-input" placeholder="Введите название..." />
                 </div>
                 <div class="col">
-                    <FloatLabel>
-                        <Select v-model="currentRole.priority" :options="priorities" optionValue="value" optionLabel="label" class="form-input" />
-                        <label>Приоритет</label>
-                    </FloatLabel>
+                    <label class="ms-2">Описание</label>
+                    <Textarea v-model="currentRole.description" rows="5" class="w-100" placeholder="Введите описание..." />
+                </div>
+                <div class="col">
+                    <label class="ms-2">Приоритет</label>
+                    <Select v-model="currentRole.priority" :options="priorities" optionValue="value" optionLabel="label" class="form-input" />
                 </div>
             </div>
-            <Divider class="my-4 py-1"/>
+
+            <Divider class="my-3 py-1"/>
+
             <div class="text-center">
                 <Button label="Сохранить" class="save-btn w-100 mb-3" @click="updateRole"/>
             </div>
@@ -34,14 +30,6 @@
 import { ref, onMounted } from "vue";
 import axiosInstance from '@/utils/axios.js';
 import { useToast } from 'primevue/usetoast';
-
-import Button from 'primevue/button';
-import Dialog from 'primevue/dialog';
-import InputText from 'primevue/inputtext';
-import Divider from 'primevue/divider';
-import FloatLabel from 'primevue/floatlabel';
-import Textarea from 'primevue/textarea';
-import Select from 'primevue/select';
 
 const visible = ref(false);
 const currentRole = ref({
@@ -71,7 +59,7 @@ const openDialog = (id) => {
         currentRole.value = { ...role };
         visible.value = true;
     }
-    console.log(role);
+    console.debug(role);
 };
 
 const fetchPriorities = async () => {
@@ -79,7 +67,7 @@ const fetchPriorities = async () => {
         const response = await axiosInstance.get('/api/rbac/roles/priorities');
         priorities.value = response.data.map(value => ({ label: value, value }));
     } catch (error) {
-        console.error('Ошибка при получении приоритетов: ', error);
+        console.debug('Ошибка при получении приоритетов: ', error);
     }
 };
 
@@ -96,7 +84,7 @@ const updateRole = async () => {
 
         toast.add({ severity: 'success', summary: 'Успешно', detail: 'Роль обновлена', life: 3000 });
     } catch (error) {
-        console.error('Ошибка при обновлении роли: ', error);
+        console.debug('Ошибка при обновлении роли: ', error);
         toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Не удалось обновить роль', life: 3000 });
     }
 }
@@ -112,23 +100,20 @@ label {
     font-size: 16px;
 }
 .form-input {
-    font-size: 16px;
     width: 100%;
 }
 .edit-btn {
     margin-top: 10px;
-    border-radius: 12px;
+    border-radius: 8px;
     color: white;
     position: absolute;
-    top: 10px;
-    right: 20px;
-    border-radius: 10px;
-    width: 40px;
-    height: 40px;
+    top: 0px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
 }
 .save-btn {
-    border-radius: 12pt;
-    font-size: 14pt;
-    transition: all 0.5s ease-out;
+    border-radius: 12px;
+    transition: all 0.5s;
 }
 </style>

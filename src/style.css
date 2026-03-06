@@ -1,38 +1,67 @@
 @font-face {
   font-family: "SF Pro Rounded";
-  src: url('@/assets/fonts/SFProRoundedRegular.woff')format("woff"),
-       url('@/assets/fonts/SFProRoundedRegular.woff2')format("woff2");
+  src: url("/src/assets/font/SF-Pro-Rounded.woff2")format("woff2"),
+  url("/src/assets/font/SF-Pro-Rounded.woff")format("woff");
+  font-weight: 400;
+  font-display: swap;
 }
 
-nav.p-datatable-paginator-bottom {
-  border: 0;
+* {
+  box-sizing: border-box;
+}
+
+.p-datatable-paginator-bottom {
+  border: 0 !important;
 }
 
 div.p-datatable-header {
-  border-radius: 18px 18px 0 0;
+  border-radius: 12px 12px 0 0;
   border: 2px solid var(--p-grey-4);
   border-bottom: 0;
   background-color: var(--p-bg-color-2);
 }
-
+.p-message {
+  background: none !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
 div.p-paginator {
   background-color: var(--p-bg-color-2);
-  border-radius: 0 0 18px 18px;
-  border-inline: 2px solid var(--p-grey-4);
-  border-bottom: 2px solid var(--p-grey-4);
+  border-radius: 0 0 12px 12px;
+  border: 2px solid var(--p-grey-4);
+  border-top: 0;
 }
 
-table.p-datatable-table {
+.paginatorSchedule > div.p-paginator {
+  background-color: transparent;
+  border-radius: 0;
+  border: 0;
+  margin-top: 20px;
+}
+
+.p-datatable {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--p-bg-color-1);
+  border-radius: 12px;
+}
+
+.p-datatable-table-container {
   border: 2px solid var(--p-grey-4);
+  height: 100%;
 }
 
 div.p-selectbutton button.p-togglebutton {
-  font-size: 14pt;
+  font-size: 14px;
   width: 100%;
   background-color: var(--p-grey-4);
   border: none;
 }
-
+.p-tree {
+  transition: all 0.5s;
+}
 textarea.p-textarea {
   background-color: var(--p-inputtext-background);
 }
@@ -46,63 +75,221 @@ div.p-datatable-footer {
   border: none;
 }
 
-th.p-datatable-header-cell {
+thead.p-datatable-thead {
   background-color: transparent;
-  border-bottom: 4px solid var(--p-grey-4);
+  border-bottom: 2px solid var(--p-grey-4);
 }
 
 #app {
-  background-color: var(--p-bg-color-1);
-  transition: all 0.5s ease;
-}
-.logout-button:hover {
-  svg.logout path {
-    stroke: var(--p-blue-500);
-  }
+  background: var(--p-bg-color-1);
+  background-repeat: no-repeat;
+  background-size: cover;
+  transition: all 0.5s;
+  height: 100%;
 }
 
+.logout-button:hover {
+  svg.logout path {
+    stroke: var(--p-red-500);
+  }
+}
+.removed-row {
+  background-color: rgba(255, 0, 0, 0.2) !important;
+}
+.highlighted-row {
+  background-color: rgba(255, 215, 0, 0.5); /* Желтый цвет выделения */
+  animation: fadeOut 5s forwards; /* Анимация для плавного исчезновения */
+}
+
+@keyframes fadeOut {
+  0% {
+      background-color: rgba(255, 215, 0, 0.5);
+  }
+  100% {
+      background-color: transparent;
+  }
+}
+.not-allowed {
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+.pointer {
+  cursor: pointer !important;
+}
 body {
   font-family: 'SF Pro Rounded' !important;
   font-weight: 400 !important;
-  font-size: 16pt !important;
+  font-size: 1rem !important;
 }
 
 svg.logout path {
   stroke: var(--p-text-color);
-  transition: all 0.3s ease;
+  transition: all 0.5s;
 }
 
 svg.lcs {
   fill: var(--p-text-color);
+  transition: all 0.5s;
 }
 
 .p-password-input {
   width: 100%;
+  font-size: 16px !important;
+}
+
+.p-select-option {
+  white-space: unset !important;
+}
+
+.p-autocomplete-input {
+  width: 100%;
+}
+
+.p-treeselect-label {
+  white-space: wrap !important;
 }
 
 .p-dialog-title {
   font-size: 26px !important;
 }
+
+/* Keep all dialogs inside viewport when browser zoom changes effective viewport size */
+.p-dialog {
+  min-width: 0 !important;
+  max-width: calc(100vw - 2rem) !important;
+  max-height: calc(100dvh - 2rem) !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.p-dialog-content {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.p-dialog-header,
+.p-dialog-footer {
+  flex-shrink: 0 !important;
+}
 .p-inputgroupaddon {
   transition-duration: 0.5s !important;
-  transition-timing-function: ease !important;
+}
+
+.p-divider {
+  transition: all 0.5s;
+}
+.p-menu {
+  transition: all 0.5s;
+}
+
+/* Global skeleton opacity transition for all PrimeVue Skeleton components */
+.p-skeleton {
+  background: var(--p-grey-5) !important;
+  opacity: 1;
+  transition: opacity 0.25s ease;
+}
+
+/* Shared cross-fade for skeleton/content swaps */
+.content-fade-enter-active,
+.content-fade-leave-active {
+  transition: opacity 0.22s ease;
+}
+
+.content-fade-enter-from,
+.content-fade-leave-to {
+  opacity: 0;
+}
+
+/* Убираем стрелку у popover */
+.p-popover::before, .p-popover::after {
+  display: none !important;
+}
+
+.p-tooltip-arrow {
+  display: none !important;
+}
+
+/* .p-datatable-tbody > tr:not(.p-datatable-row-group-header):not(.p-datatable-row-expansion):hover {
+  background-color: var(--p-blue-500-low-op) ;
+} */
+
+.p-datatable-tbody > tr:hover,
+.p-datatable-tbody > tr:hover > td.p-datatable-frozen-column
+{
+    background: var(--p-blue-500-low-op) !important;
+    transition: all 0.5s !important;
+}
+.p-datatable-tbody > tr > td.p-datatable-frozen-column {
+    transition: all 0.5s !important;
+    background: inherit !important;
+}
+
+/* .p-datatable-tbody > tr {
+  background-color: var(--p-bg-color-2) !important;
+} */
+
+.faq-danger-item > div > a > span{
+  color: var(--p-red-500) !important;
+}
+
+.p-menu-submenu-label {
+  display: none !important;
+}
+
+.ql-editor {
+    white-space: wrap !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    font-size: 16px !important;
+}
+
+.ql-container {
+    font-family: inherit !important;
+}
+
+.ql-editor p {
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+}
+
+.ql-editor .ql-better-line-breaks {
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+}
+
+.ql-editor.ql-blank::before {
+    color: var(--p-grey-2) !important;
 }
 
 :root {
+  --p-bg-color-0: rgba(255, 255, 255, 0.5);
   --p-bg-color-1: rgba(255,255,255,1.0);
   --p-bg-color-2: rgba(242,242,247,1.0);
   --p-bg-color-3: rgba(255,255,255,1.0);
   --p-text-color: rgba(0,0,0,1.0);
 
+  --bs-gutter-x: 0 !important;
+
+  --p-color-trans: #FFFFFF;
+
   --p-red-500: rgb(255, 101, 93) !important;
   --p-red-400: rgb(235, 66, 57) !important;
 
-  --p-blue-500: rgba(43,164,230,1.0) !important;
-  --p-blue-400: rgb(13, 124, 184) !important;
-  --p-blue-500-low-op: rgba(100,179,221,0.2) !important;
+  --p-blue-100: rgba(138, 190, 250, 0.4) !important;
+  --p-blue-200: rgba(138, 190, 250) !important;
+  --p-blue-500: rgb(68, 143, 255) !important;
+  --p-blue-500-rgb: 68, 143, 255 !important;
+  --p-blue-400: rgb(86, 118, 221) !important;
+  /* --p-color-icon-menu: 86, 118, 221; */
+  --p-blue-500-low-op: rgb(202, 218, 253) !important;
 
-  --p-separator-opaque: rgba(198, 198, 200, 0.30);
+  --p-separator-opaque: rgba(198, 198, 200, 0.30) !important;
   --p-inputtext-background: var(--p-bg-color-3) !important;
+  --p-treeselect-background: var(--p-bg-color-3) !important;
   --p-multiselect-background: var(--p-bg-color-3) !important;
   --p-select-background: var(--p-bg-color-3) !important;
   --p-divider-border-color: rgba(198, 198, 200, 0.30) !important;
@@ -111,33 +298,69 @@ svg.lcs {
   --p-inputgroup-addon-background: var(--p-bg-color-3) !important;
   --p-button-primary-background: var(--p-blue-500) !important;
   --p-togglebutton-hover-background: var(--p-grey-4) !important;
-  --p-datatable-header-cell-selected-color: var(--p-blue-500) !important;
+  --p-inputchips-background: var(--p-bg-color-3) !important;
+  /* --p-datatable-header-cell-selected-color: var(--p-blue-500) !important; */
 
   --p-transition-duration: 0.5s !important;
-  --p-transition-timing-function: ease !important;
+  --p-datatable-transition-duration: 0.5s !important;
   --p-transition-property: all !important;
-  --p-tooltip-gutter: 0rem !important;
+  --p-tooltip-gutter: 0.5rem !important;
   --p-tooltip-background: var(--p-blue-500) !important;
 
+  --p-tree-background: var(--p-bg-color-3) !important;
+
+  --p-avatar-lg-height: 110px !important;
+  --p-avatar-lg-width: 110px !important;
+
+  --p-avatar-xl-width: 50px !important;
+  --p-avatar-xl-height: 50px !important;
+  --p-avatar-border-radius: 18px !important;
+  --p-avatar-xl-font-size: 1.5rem !important;
+
+  --p-dialog-color: #4d6280 !important;
+
+  --p-dialog-background: var(--p-bg-color-1) !important;
+
+  --p-popover-content-padding: 15px 8px !important;
+  --p-popover-border-radius: 12px !important;
+
+  --p-checkbox-background: var(--p-bg-color-3) !important;
+
+  --p-floatlabel-on-active-background: var(--p-color-trans) !important; 
+  --p-floatlabel-active-color: var(--p-text-color) !important;
+
+  --p-tabs-tablist-background: var(--p-bg-color-1) !important;
+  --p-tabs-tabpanel-background: var(--p-bg-color-1) !important;
+  --p-tabs-tab-active-color: var(--p-text-color) !important;
+  --p-tabs-tab-active-border-color: var(--p-text-color) !important;
+  --p-tabs-active-bar-background: var(--p-text-color) !important;
+ 
   --p-grey-1: #8E8E93;
   --p-grey-2: #AEAEB2;
   --p-grey-3: #C7C7CC;
-  --p-grey-4: #D1D1D6;
+  --p-grey-4: #E5E5EA;
   --p-grey-5: #E5E5EA;
   --p-grey-6: #F2F2F7;
+  --p-grey-7: #f8f8f8;
 
 }
 
 .p-dark {
-  --p-bg-color-1: #1C1C1E;
+  --p-bg-color-0: rgba(28, 28, 30, 0.6);
+  --p-bg-color-1: #1c1c1eff;
   --p-bg-color-2: #2C2C2E;
   --p-bg-color-3: #3A3A3C;
   --p-text-color: #FFFFFF;
+
+  --p-dialog-color: #FFFFFF !important;
+
+  --p-color-trans: var(--p-bg-color-3);
 
   --p-separator-opaque: #38383A;
   --p-divider-border-color: #38383A !important;
   --p-button-primary-background: var(--p-blue-700) !important;
   --p-datatable-header-cell-selected-color: var(--p-blue-700) !important;
+  --p-tree-background: var(--p-bg-color-1) !important;
 
   --p-grey-1: #8E8E93;
   --p-grey-2: #636366;
@@ -145,6 +368,12 @@ svg.lcs {
   --p-grey-4: #3A3A3C;
   --p-grey-5: #2C2C2E;
   --p-grey-6: #1C1C1E;
+  --p-grey-7: #2C2C2E;
 
   --p-red: #FF453A;
+  --p-blue-500: rgb(68, 143, 255) !important;
+  --p-blue-500-low-op: rgb(68, 68, 68) !important;
+  --p-blue-100: rgba(72, 149, 238, 0.4) !important;
+
+  --p-color-icon-menu: 255, 255, 255 !important;
 }

@@ -1,57 +1,105 @@
 import axios from "axios";
 import router from "../router";
+import {
+    refreshTokenThroughWorker,
+    getAccessToken,
+    markSessionExpired,
+} from "@/utils/TokenService";
+import { getBaseUrl } from './baseUrl';
+import { isSessionExpiredFlag } from "./TokenService";
 
 const axiosInstance = axios.create({
-    baseURL: 'https://development.sibadi.org',
+    baseURL: getBaseUrl(),
     headers: {
-        'Content-Type': 'application/json',
-        'accept': 'application/json'
-    }
+        "Content-Type": "application/json",
+        accept: "application/json",
+    },
 });
 
 axiosInstance.interceptors.request.use(
-    config => {
-        const token = localStorage.getItem('accessToken');
+    (config) => {
+        const token = getAccessToken();
+
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+
         return config;
     },
-    error => Promise.reject(error)
+    (error) => Promise.reject(error)
 );
 
+let isRefreshing = false;
+let refreshQueue = [];
+
+function enqueueRequest(cb) {
+    refreshQueue.push(cb);
+}
+
+function resolveQueue(token) {
+    refreshQueue.forEach((cb) => cb(token));
+    refreshQueue = [];
+}
+
+function clearAuthStorage() {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("accessTokenExpired");
+    localStorage.removeItem("refreshTokenExpired");
+}
+
 axiosInstance.interceptors.response.use(
-    response => response,
-    async error => {
+    (response) => response,
+    async (error) => {
         const originalRequest = error.config;
 
-        if (error.response.status === 401 && !originalRequest._retry) {
+        if (
+            error.response?.status === 401 &&
+            !originalRequest._retry &&
+            !isSessionExpiredFlag()
+        ) {
             originalRequest._retry = true;
 
-            try {
-                const refreshToken = localStorage.getItem('refreshToken');
-                const userId = localStorage.getItem('userId');
-
-                if (refreshToken && userId) {
-                    const response = await axiosInstance.post('/api/auth/refresh-token', null, {
-                        params: {
-                            value: refreshToken,
-                            userId: userId
+            if (isRefreshing) {
+                return new Promise((resolve, reject) => {
+                    enqueueRequest((token) => {
+                        if (!token) {
+                            reject(error);
+                            return;
                         }
+
+                        originalRequest.headers.Authorization = `Bearer ${token}`;
+                        resolve(axiosInstance(originalRequest));
                     });
+                });
+            }
 
-                    localStorage.setItem('accessToken', response.data.accessToken);
-                    localStorage.setItem('refreshToken', response.data.refreshTokenValue);
+            isRefreshing = true;
 
-                    originalRequest.headers['Authorization'] = `Bearer ${response.data.accessToken}`;
-                    return axiosInstance(originalRequest);
-                }
+            try {
+                console.debug("[Axios] 401 received → refreshing token");
+                const newAccessToken = await refreshTokenThroughWorker();
+
+                if (!newAccessToken) throw new Error("No token");
+
+                resolveQueue(newAccessToken);
+
+                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+                return axiosInstance(originalRequest);
             } catch (refreshError) {
-                console.error('Ошибка при обновлении токена: ', refreshError);
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('refreshToken');
-                localStorage.removeItem('userId');
-                router.push('/auth');
+                console.error("[Axios] Token refresh failed", refreshError);
+                markSessionExpired();
+                clearAuthStorage();
+                resolveQueue(null);
+                isRefreshing = false;
+                if (router.currentRoute.value.path !== "/auth") {
+                    router.replace("/auth");
+                }
+
+                return Promise.reject(refreshError);
+            } finally {
+                isRefreshing = false;
             }
         }
 

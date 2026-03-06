@@ -2,26 +2,38 @@ import { createApp } from 'vue'
 import './style.css'
 import App from './App.vue'
 import ToastService from 'primevue/toastservice';
-// import Toast from 'primevue/toast';
-import axios from 'axios';
-import "bootstrap/dist/css/bootstrap.min.css"
-import "bootstrap";
-import "bootstrap-icons/font/bootstrap-icons.css"
-import 'primeicons/primeicons.css'
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap-icons/font/bootstrap-icons.css";
+import "quill/dist/quill.core.css";
+import "quill/dist/quill.snow.css";
+import 'primeicons/primeicons.css';
 import PrimeVue from 'primevue/config';
 import ConfirmationService from 'primevue/confirmationservice';
 import router from './router';
 import Noir from './presets/Noir.js';
-import Tooltip from 'primevue/tooltip';
+// import { Form } from '@primevue/forms';
+
 import AppState from './plugins/appState.js';
-import { createPinia } from 'pinia'
+import { createPinia } from 'pinia';
 
-
-axios.defaults.baseURL = 'https://development.sibadi.org';
-
+import Tooltip from 'primevue/tooltip';
+import { getCurrentSeason } from '@/utils/seasons.js';
+import { applySeasonPrimaryTheme } from '@/utils/seasonTheme.js';
 
 const app = createApp(App);
-const pinia = createPinia()
+const pinia = createPinia();
+
+import { startTokenWorker } from "@/utils/TokenService.js";
+
+if (localStorage.getItem("refreshToken") && localStorage.getItem("userId")) {
+    startTokenWorker();
+}
+
+const seasonOverride = localStorage.getItem('seasonOverride');
+const initialSeason = ['winter', 'spring', 'summer', 'autumn'].includes(seasonOverride)
+    ? seasonOverride
+    : getCurrentSeason();
+applySeasonPrimaryTheme(initialSeason);
 
 app.use(PrimeVue, {
     theme: {
@@ -32,14 +44,26 @@ app.use(PrimeVue, {
             cssLayer: false,
         },
         ripple: true,
+    },
+    locale: {
+        firstDayOfWeek: 1,
+        dayNames: ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"],
+        dayNamesShort: ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"],
+        dayNamesMin: ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"],
+        monthNames: ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
+        monthNamesShort: ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"],
+        today: "Сегодня",
+        clear: "Очистить",
+        dateFormat: "dd.mm.yy",
+        weekHeader: "Нед"
     }
 });
 app.use(AppState);
 app.use(ToastService);
-// app.component('Toast', Toast);
 app.use(ConfirmationService);
 app.directive('tooltip', Tooltip);
 
 app.use(pinia)
 app.use(router);
+
 app.mount('#app');

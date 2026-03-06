@@ -1,11 +1,11 @@
 <template>
     <p class="card-text my-0" @click="showUsersWithRole">
-        <div style="cursor: pointer;" class="d-flex align-items-center counter">
+        <span style="cursor: pointer;" class="d-flex align-items-center counter">
             <span class="count me-2">
                 {{ userCount || 0 }}
             </span>
             <i class="pi pi-user"></i>
-        </div>
+        </span>
     </p>
     <div class="d-flex justify-content-center">
         <Dialog header="Пользователи с ролью" v-model:visible="visible" @hide="visible = false" modal style="width: 50vw">
@@ -34,10 +34,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import axiosInstance from '@/utils/axios.js';
-import qs from 'qs';
-
-import Dialog from 'primevue/dialog';
-import Chip from 'primevue/chip';
 
 const props = defineProps({
     roleId: {
@@ -63,23 +59,18 @@ const users = ref([]);
 const selectedRoleUsers = ref([]);
 
 const fetchUsers = async () => {
-    let page = 1;
-    let pageSize = 500;
-    const params = {
-        page,
-        pageSize
-    };
     try {
-        const response = await axiosInstance.get('/api/users', {
-            params,
-            paramsSerializer: params => {
-                return qs.stringify(params, { arrayFormat: 'repeat' });
-            }
-        });
+        const payload = {
+            page: 1,
+            pageSize: 500,
+            isBlocked: false
+        };
+        
+        const response = await axiosInstance.post('/api/users/list', payload);
 
-        users.value = response.data.users;
+        users.value = response.data.entities;
     } catch (error) {
-        console.error('Ошибка при получении пользователей: ', error);
+        console.debug('Ошибка при получении пользователей: ', error);
     }
 };
 
@@ -95,7 +86,7 @@ onMounted(async () => {
 
 <style scoped>
 .pi {
-    font-size: 20pt;
+    font-size: 1rem;
 }
 .counter {
     color: var(--p-grey-1);
@@ -105,22 +96,21 @@ onMounted(async () => {
     color: var(--p-text-color);
 }
 .count {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
 }
 .card-text {
-    font-size: 1.2rem;
     font-family: 'SF Pro Rounded', sans-serif;
     color: var(--p-grey-1);
     margin-top: 5px;
 }
 .user {
-    background-color: var(--p-grey-4);
+    background-color: var(--p-grey-7);
     padding: 20px;
-    border-radius: 18px;
+    border-radius: 12px;
     margin-bottom: 10px;
 }
 .roleType {
-    background-color: #007bff;
+    background-color: var(--p-blue-500);
     border-radius: 50%;
     font-size: 20px;
     color: white;
@@ -131,13 +121,12 @@ onMounted(async () => {
     align-items: center;
 }
 .custom-role-type {
-    background-color: #6c2bb4;
+    background-color: var(--p-purple-500);
 }
 .role-label {
     display: inline-block;
     padding: 4px 8px;
     border-radius: 12px;
-    font-size: 1rem;
     font-weight: 500;
 }
 </style>
