@@ -20,7 +20,6 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
     (config) => {
-        config.baseURL = getBaseUrl();
         const token = getAccessToken();
 
         if (token) {

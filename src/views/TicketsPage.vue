@@ -255,7 +255,7 @@ import { debounce } from 'lodash';
 import TicketDetailsModal from '@/components/Tickets/TicketDetails.vue';
 import { usePermissionStore } from '@/stores/permissions';
 import { mockTickets } from '@/mocks/tickets.js';
-import { getUseMockData } from '@/mocks/config.js';
+import { USE_MOCK_DATA } from '@/mocks/config.js';
 import { formatDateRuLongWithTime as formatDate } from '@/utils/date.js';
 import { getSessionUserId } from '@/utils/TokenService';
 import { getCurrentUser } from '@/utils/currentUser.js';
@@ -266,6 +266,7 @@ const tickets = ref([]);
 const totalRecords = ref(0);
 const loading = ref(true);
 const isFirstLoadDone = ref(false);
+const useMockData = ref(USE_MOCK_DATA);
 const specialFeaturesPanel = ref(null);
 const autoAssignLoading = ref(false);
 
@@ -519,7 +520,7 @@ const onPage = async (event) => {
 const fetchTickets = async () => {
     try {
         loading.value = true;
-        if (getUseMockData()) {
+        if (useMockData.value) {
             tickets.value = enrichTicketsWithFio(mockTickets.tickets);
             totalRecords.value = mockTickets.totalCount || 0;
             return;

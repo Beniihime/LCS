@@ -1,14 +1,7 @@
-import { getApiBaseUrlOverride } from "@/mocks/config";
-
 export const getBaseUrl = () => {
-    const override = getApiBaseUrlOverride();
-    if (override) {
-        return override.endsWith("/") ? override.slice(0, -1) : override;
-    }
-
     const hostname = window.location.hostname;
     
-    if (hostname === 'localhost') {
+    if (hostname === '192.168.0.12' || hostname === 'localhost' || hostname === '192.168.0.35') {
         return 'https://development.sibadi.org';
     }
     

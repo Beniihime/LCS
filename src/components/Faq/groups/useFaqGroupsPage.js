@@ -84,8 +84,8 @@ const findGroupById = (list, groupId) => {
 };
 
 const faqWriteEndpoint = (path) => {
-    if (!getUseSuFaqEndpoints()) return `/api/faq/${path}`;
-    return `/api/faq/${getFaqAdminSegment()}/${path}`;
+    if (!USE_SU_FAQ_ENDPOINTS) return `/api/faq/${path}`;
+    return `/api/faq/${FAQ_ADMIN_SEGMENT}/${path}`;
 };
 
 export const useFaqGroupsPage = () => {
