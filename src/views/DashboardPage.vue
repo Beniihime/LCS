@@ -144,6 +144,7 @@ import {
 
 const DASHBOARD_SCHEDULE_TYPE_KEY = 'dashboardScheduleType';
 const firstName = localStorage.getItem('firstName');
+const userId = localStorage.getItem('userId');
 const roleTitle = ref('');
 const isBlocked = ref(false);
 const infraStatusText = ref('—');
@@ -353,7 +354,6 @@ h3 {
     padding: 10px 2rem;
     gap: 24px;
     isolation: isolate;
-    overflow: hidden;
 }
 .dashboard::before {
     content: "";
