@@ -1,7 +1,8 @@
 import { createMemoryHistory, createRouter, createWebHistory } from "vue-router";
 import { isAuthenticated } from "@/utils/auth";
 import { usePermissionStore } from '@/stores/permissions.js';
-import { ensureAuthSession, isSessionExpiredFlag } from "@/utils/TokenService";
+import { isSessionExpiredFlag } from "@/utils/TokenService";
+import { isHiddenAdminUnlocked } from "@/mocks/config";
 
 const routes = [
     { 
@@ -293,11 +294,6 @@ router.beforeEach(async (to, from) => {
     document.title = `${title} - LCS`;
 
     const permissionStore = usePermissionStore();
-    const requiresAuthRoute = to.matched.some(record => record.meta.requiresAuth);
-
-    if ((requiresAuthRoute || to.path === "/auth") && !isAuthenticated() && !isSessionExpiredFlag()) {
-        await ensureAuthSession();
-    }
 
      // Если пользователь авторизован, загружаем полномочия
     if (isAuthenticated() && !permissionStore.isLoaded && !isSessionExpiredFlag()) {
@@ -334,7 +330,7 @@ router.beforeEach(async (to, from) => {
     }
 
     // Проверка авторизации
-    if (requiresAuthRoute) {
+    if (to.matched.some(record => record.meta.requiresAuth)) {
         if (!isAuthenticated() || isSessionExpiredFlag()) {
             return {
                 path: '/auth',

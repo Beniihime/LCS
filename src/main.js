@@ -23,6 +23,12 @@ import { applySeasonPrimaryTheme } from '@/utils/seasonTheme.js';
 const app = createApp(App);
 const pinia = createPinia();
 
+import { startTokenWorker } from "@/utils/TokenService.js";
+
+if (localStorage.getItem("refreshToken") && localStorage.getItem("userId")) {
+    startTokenWorker();
+}
+
 const seasonOverride = localStorage.getItem('seasonOverride');
 const initialSeason = ['winter', 'spring', 'summer', 'autumn'].includes(seasonOverride)
     ? seasonOverride

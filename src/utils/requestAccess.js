@@ -1,5 +1,4 @@
 import axiosInstance from '@/utils/axios.js';
-import { getSessionUserId } from '@/utils/TokenService';
 
 const INFRA_MANAGER_SYSTEM_TYPE = 0;
 
@@ -13,7 +12,7 @@ function persist(result) {
 }
 
 export async function getRequestAccess(force = false) {
-    const currentUserId = getSessionUserId();
+    const currentUserId = localStorage.getItem('userId') || null;
 
     if (!force) {
         if (inflightPromise) return inflightPromise;

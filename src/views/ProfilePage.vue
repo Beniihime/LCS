@@ -381,7 +381,6 @@ import { ref, onMounted, watch, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import axiosInstance from '@/utils/axios.js';
 import { usePermissionStore } from '@/stores/permissions.js';
-import { getSessionUserId } from '@/utils/TokenService.js';
 
 import UpdateUser from '@/components/Users/UpdateUser.vue';
 import InfraManagerCallsMe from '@/components/InfraManager/InfraManagerCallsMe.vue';
@@ -390,12 +389,13 @@ import MePermissionsPage from '@/views/MePermissionsPage.vue';
 
 import GetOtpButton from '@/components/Users/GetOtpButton.vue';
 
+const currentUserId = localStorage.getItem('userId');
 const permissionStore = usePermissionStore();
 
 const hasPermission = (type, action) => permissionStore.hasPermission(type, action);
 
 const isCurrentUser = computed(() => {
-    return String(getSessionUserId() || '') === String(userId.value || '');
+    return currentUserId === userId.value;
 });
 
 const route = useRoute();

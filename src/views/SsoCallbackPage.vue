@@ -60,7 +60,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
-import { saveAuthData, startTokenWorker } from "@/utils/TokenService";
+import { startTokenWorker } from "@/utils/TokenService";
 import axiosInstance from '@/utils/axios.js';
 
 import ThemeSwitcher from '@/components/Utils/ThemeSwitcher.vue';
@@ -104,14 +104,20 @@ const verifySSO = async (code, state) => {
             }
         });
 
-        saveAuthData({
-            accessToken: response.data.accessToken,
-            userId: response.data.userId,
-            refreshTokenValue: response.data.refreshTokenValue,
-            refreshTokenExpired: response.data.refreshTokenExpired,
-            accessTokenExpired: response.data.accessTokenExpired,
-            accessTokenExpiresIn: response.data.accessTokenExpiresIn,
-        });
+        let accessTokenExpired;
+        if (response.data.accessTokenExpiresIn) {
+            accessTokenExpired = Math.floor(Date.now() / 1000) + response.data.accessTokenExpiresIn;
+        } else if (response.data.accessTokenExpired) {
+            accessTokenExpired = response.data.accessTokenExpired;
+        } else {
+            accessTokenExpired = Math.floor(Date.now() / 1000) + 15 * 60;
+        }
+        
+        localStorage.setItem('accessToken', response.data.accessToken);
+        localStorage.setItem('refreshToken', response.data.refreshTokenValue);
+        localStorage.setItem('userId', response.data.userId);
+        localStorage.setItem('refreshTokenExpired', response.data.refreshTokenExpired);
+        localStorage.setItem('accessTokenExpired', accessTokenExpired);
 
         startTokenWorker();
 

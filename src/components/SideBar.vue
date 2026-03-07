@@ -222,7 +222,7 @@ import ThemeSwitcher from './Utils/ThemeSwitcher.vue';
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 import { useRouter } from 'vue-router';
-import { clearAuthData } from '@/utils/TokenService.js';
+import { stopTokenWorker } from '@/utils/TokenService.js';
 import { getRequestAccess, resetRequestAccessCache } from '@/utils/requestAccess.js';
 import { getCurrentUser, resetCurrentUserCache } from '@/utils/currentUser.js';
 
@@ -435,9 +435,12 @@ const confirmLogout = () => {
 };
 
 const logout = async () => {
-    clearAuthData();
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userId');
     await permissionStore.clearPermissions();
     await permissionStore.$reset();
+    stopTokenWorker();
     resetRequestAccessCache();
     resetCurrentUserCache();
     

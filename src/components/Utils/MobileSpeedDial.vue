@@ -18,7 +18,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { usePermissionStore } from '@/stores/permissions.js';
 import { useRouter } from 'vue-router';
-import { clearAuthData } from '@/utils/TokenService.js';
+import { stopTokenWorker } from '@/utils/TokenService.js';
 import { resetRequestAccessCache } from '@/utils/requestAccess.js';
 import { resetCurrentUserCache } from '@/utils/currentUser.js';
 
@@ -39,9 +39,12 @@ const items = [
 ];
 
 const logout = async () => {
-    clearAuthData();
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userId');
     await permissionStore.clearPermissions();
     await permissionStore.$reset();
+    stopTokenWorker();
     resetRequestAccessCache();
     resetCurrentUserCache();
     
