@@ -4,6 +4,7 @@ import { useToast } from 'primevue/usetoast';
 import axiosInstance from '@/utils/axios.js';
 import { formatDateRuLongWithTime as formatDate } from '@/utils/date.js';
 import { attachPlainTextPasteToQuill, sanitizeFaqTextHtml } from '@/utils/faqHtml.js';
+import { getSessionUserId } from '@/utils/TokenService';
 import { FAQ_ADMIN_SEGMENT, USE_SU_FAQ_ENDPOINTS } from '@/mocks/config.js';
 
 const SAVE_DELAY_MS = 350;
@@ -94,7 +95,7 @@ export const useFaqArticlePage = () => {
         { label: 'Изображение', value: 'Image' },
     ];
 
-    const currentUserId = ref(localStorage.getItem('userId') || '');
+    const currentUserId = ref(getSessionUserId() || '');
     const isAuthor = computed(() => {
         if (!article.value) return false;
         return String(article.value.authorId || '') === String(currentUserId.value || '');

@@ -48,7 +48,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useToast } from 'primevue/usetoast';
-import { startTokenWorker } from "@/utils/TokenService";
+import { saveAuthData, startTokenWorker } from "@/utils/TokenService";
 import axiosInstance from '@/utils/axios.js';
 
 import ThemeSwitcher from '@/components/Utils/ThemeSwitcher.vue';
@@ -76,21 +76,14 @@ const auth = async () => {
             }
         });
 
-        // Пытаемся получить время жизни accessToken с сервера, иначе считаем сами
-        let accessTokenExpired;
-        if (response.data.accessTokenExpiresIn) {
-            accessTokenExpired = Math.floor(Date.now() / 1000) + response.data.accessTokenExpiresIn;
-        } else if (response.data.accessTokenExpired) {
-            accessTokenExpired = response.data.accessTokenExpired;
-        } else {
-            accessTokenExpired = Math.floor(Date.now() / 1000) + 15 * 60; // Запасной вариант (15 мин)
-        }
-        
-        localStorage.setItem('accessToken', response.data.accessToken);
-        localStorage.setItem('refreshToken', response.data.refreshTokenValue);
-        localStorage.setItem('userId', response.data.userId);
-        localStorage.setItem('refreshTokenExpired', response.data.refreshTokenExpired);
-        localStorage.setItem('accessTokenExpired', accessTokenExpired);
+        saveAuthData({
+            accessToken: response.data.accessToken,
+            userId: response.data.userId,
+            refreshTokenValue: response.data.refreshTokenValue,
+            refreshTokenExpired: response.data.refreshTokenExpired,
+            accessTokenExpired: response.data.accessTokenExpired,
+            accessTokenExpiresIn: response.data.accessTokenExpiresIn,
+        });
 
         startTokenWorker();
 
@@ -330,4 +323,3 @@ form {
     }
 }
 </style>
-

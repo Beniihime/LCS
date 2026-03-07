@@ -257,6 +257,8 @@ import { usePermissionStore } from '@/stores/permissions';
 import { mockTickets } from '@/mocks/tickets.js';
 import { USE_MOCK_DATA } from '@/mocks/config.js';
 import { formatDateRuLongWithTime as formatDate } from '@/utils/date.js';
+import { getSessionUserId } from '@/utils/TokenService';
+import { getCurrentUser } from '@/utils/currentUser.js';
 
 const permissionStore = usePermissionStore();
 
@@ -273,9 +275,16 @@ const autoAssignLoading = ref(false);
 const ticketModalVisible = ref(false);
 const selectedTicketId = ref(null);
 
-// Получаем userId из localStorage
-const getUserId = () => {
-    return localStorage.getItem('userId');
+const resolveUserId = async () => {
+    const sessionUserId = getSessionUserId();
+    if (sessionUserId) return sessionUserId;
+
+    try {
+        const me = await getCurrentUser();
+        return me?.id || null;
+    } catch {
+        return null;
+    }
 };
 
 const onlyMyTickets = ref(true);
@@ -516,7 +525,7 @@ const fetchTickets = async () => {
             totalRecords.value = mockTickets.totalCount || 0;
             return;
         }
-        const userId = getUserId();
+        const userId = await resolveUserId();
         
         const payload = {
             page: currentPage.value,

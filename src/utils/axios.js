@@ -4,12 +4,14 @@ import {
     refreshTokenThroughWorker,
     getAccessToken,
     markSessionExpired,
+    clearAuthData,
 } from "@/utils/TokenService";
 import { getBaseUrl } from './baseUrl';
 import { isSessionExpiredFlag } from "./TokenService";
 
 const axiosInstance = axios.create({
     baseURL: getBaseUrl(),
+    withCredentials: true,
     headers: {
         "Content-Type": "application/json",
         accept: "application/json",
@@ -39,14 +41,6 @@ function enqueueRequest(cb) {
 function resolveQueue(token) {
     refreshQueue.forEach((cb) => cb(token));
     refreshQueue = [];
-}
-
-function clearAuthStorage() {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("accessTokenExpired");
-    localStorage.removeItem("refreshTokenExpired");
 }
 
 axiosInstance.interceptors.response.use(
@@ -90,7 +84,7 @@ axiosInstance.interceptors.response.use(
             } catch (refreshError) {
                 console.error("[Axios] Token refresh failed", refreshError);
                 markSessionExpired();
-                clearAuthStorage();
+                clearAuthData();
                 resolveQueue(null);
                 isRefreshing = false;
                 if (router.currentRoute.value.path !== "/auth") {
