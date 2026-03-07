@@ -469,6 +469,7 @@ import { ref, computed, watch } from 'vue';
 import axiosInstance from '@/utils/axios';
 import { smartTableParser, extractPointsAndFormula, normalizeText, extractAdditionalPoints } from '@/utils/universalParser';
 import { formatDateRuShort as formatDate } from '@/utils/date.js';
+import { getSessionUserId } from '@/utils/TokenService';
 import DeleteEmployeeValue from "@/components/Microservice/Rating/Methods/DeleteEmployeeValue.vue";
 
 const props = defineProps({
@@ -930,7 +931,7 @@ const submitEvaluation = async () => {
             jobPosition: jobPositionToSubmit,
             department: (selectedJobPosition.value.department?.name).toString(),
             comment: comment.value && comment.value !== '<p><br></p>' ? comment.value : '',
-            pasAuthorUserId: localStorage.getItem('userId')
+            pasAuthorUserId: getSessionUserId()
         });
 
         window.dispatchEvent(new CustomEvent('toast', {

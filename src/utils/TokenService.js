@@ -1,16 +1,53 @@
 import TokenWorker from "@/workers/tokenWorker?worker";
-import { getBaseUrl } from './baseUrl';
+import { getBaseUrl } from "./baseUrl";
 
 let tokenWorker = null;
 let refreshPromise = null;
-
-const ACCESS_TOKEN_KEY = "accessToken";
-const REFRESH_TOKEN_KEY = "refreshToken";
-const USER_ID_KEY = "userId";
-const ACCESS_EXPIRED_KEY = "accessTokenExpired";
-const REFRESH_EXPIRED_KEY = "refreshTokenExpired";
+let bootstrapPromise = null;
 
 let isSessionExpired = false;
+const REFRESH_TOKEN_KEY = "refreshToken";
+const USER_ID_KEY = "userId";
+const REFRESH_TOKEN_EXPIRED_KEY = "refreshTokenExpired";
+
+const authSession = {
+    accessToken: null,
+    accessTokenExpired: 0,
+    refreshToken: null,
+    refreshTokenExpired: 0,
+    userId: null,
+};
+
+function nowSec() {
+    return Math.floor(Date.now() / 1000);
+}
+
+function resolveAccessTokenExpired(data = {}) {
+    if (Number.isFinite(Number(data.accessTokenExpired))) {
+        return Number(data.accessTokenExpired);
+    }
+
+    const expiresIn = Number(data.accessTokenExpiresIn);
+    if (Number.isFinite(expiresIn) && expiresIn > 0) {
+        return nowSec() + expiresIn;
+    }
+
+    return nowSec() + 15 * 60;
+}
+
+function hydrateRefreshSessionFromStorage() {
+    if (!authSession.refreshToken) {
+        authSession.refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+    }
+
+    if (!authSession.userId) {
+        authSession.userId = localStorage.getItem(USER_ID_KEY);
+    }
+
+    if (!authSession.refreshTokenExpired) {
+        authSession.refreshTokenExpired = Number(localStorage.getItem(REFRESH_TOKEN_EXPIRED_KEY)) || 0;
+    }
+}
 
 export function markSessionExpired() {
     isSessionExpired = true;
@@ -24,64 +61,93 @@ export function resetSessionFlags() {
     isSessionExpired = false;
 }
 
-function nowSec() {
-    return Math.floor(Date.now() / 1000);
-}
-
 export function saveAuthData({
     accessToken,
-    refreshToken,
     userId,
-    accessTokenExpired,
+    refreshToken,
+    refreshTokenValue,
     refreshTokenExpired,
+    accessTokenExpired,
+    accessTokenExpiresIn,
 }) {
+    if (!accessToken) return;
+
     resetSessionFlags();
 
-    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-    localStorage.setItem(USER_ID_KEY, userId);
-    localStorage.setItem(ACCESS_EXPIRED_KEY, String(accessTokenExpired));
-    localStorage.setItem(REFRESH_EXPIRED_KEY, String(refreshTokenExpired));
+    authSession.accessToken = accessToken;
+    authSession.userId = userId ?? authSession.userId;
+    authSession.refreshToken = refreshTokenValue ?? refreshToken ?? authSession.refreshToken;
+    authSession.refreshTokenExpired = Number(refreshTokenExpired) || authSession.refreshTokenExpired;
+    authSession.accessTokenExpired = resolveAccessTokenExpired({
+        accessTokenExpired,
+        accessTokenExpiresIn,
+    });
+
+    if (authSession.refreshToken) {
+        localStorage.setItem(REFRESH_TOKEN_KEY, authSession.refreshToken);
+    }
+    if (authSession.userId) {
+        localStorage.setItem(USER_ID_KEY, String(authSession.userId));
+    }
+    if (authSession.refreshTokenExpired) {
+        localStorage.setItem(REFRESH_TOKEN_EXPIRED_KEY, String(authSession.refreshTokenExpired));
+    }
 
     tokenWorker?.postMessage({
         action: "updateToken",
-        accessToken,
-        refreshToken,
-        userId,
-        accessTokenExpired,
-        refreshTokenExpired,
+        userId: authSession.userId,
+        refreshToken: authSession.refreshToken,
+        accessTokenExpired: authSession.accessTokenExpired,
         apiBase: getBaseUrl(),
     });
 }
 
-export function clearAuthData() {
-    localStorage.clear();
+export function clearAuthData({ redirectToAuth = false } = {}) {
+    authSession.accessToken = null;
+    authSession.accessTokenExpired = 0;
+    authSession.refreshToken = null;
+    authSession.refreshTokenExpired = 0;
+    authSession.userId = null;
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    localStorage.removeItem(USER_ID_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_EXPIRED_KEY);
+
     stopTokenWorker();
     markSessionExpired();
-    window.location.href = "/auth";
+
+    if (redirectToAuth && typeof window !== "undefined") {
+        window.location.href = "/auth";
+    }
+}
+
+export function setSessionUserId(userId) {
+    authSession.userId = userId || null;
+    if (authSession.userId) {
+        localStorage.setItem(USER_ID_KEY, String(authSession.userId));
+    }
+}
+
+export function getSessionUserId() {
+    hydrateRefreshSessionFromStorage();
+    return authSession.userId;
 }
 
 export function startTokenWorker() {
+    hydrateRefreshSessionFromStorage();
+
     if (tokenWorker) return;
+    if (!authSession.accessToken || !authSession.accessTokenExpired) return;
+    if (!authSession.refreshToken || !authSession.userId) return;
 
-    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-    const userId = localStorage.getItem(USER_ID_KEY);
-
-    if (!refreshToken || !userId) return;
     resetSessionFlags();
 
     tokenWorker = new TokenWorker();
 
     tokenWorker.postMessage({
         action: "start",
-        refreshToken,
-        userId,
-        refreshTokenExpired: Number(
-            localStorage.getItem(REFRESH_EXPIRED_KEY)
-        ),
-        accessTokenExpired: Number(
-            localStorage.getItem(ACCESS_EXPIRED_KEY)
-        ),
+        userId: authSession.userId,
+        refreshToken: authSession.refreshToken,
+        accessTokenExpired: authSession.accessTokenExpired,
         apiBase: getBaseUrl(),
     });
 
@@ -99,13 +165,7 @@ export function startTokenWorker() {
 
         if (action === "refreshFailed") {
             console.error("[TokenService] refreshFailed:", event.data);
-
-            if (
-                event.data.reason === "invalid_refresh" ||
-                event.data.reason === "refresh_expired"
-            ) {
-                clearAuthData();
-            }
+            clearAuthData({ redirectToAuth: true });
 
             refreshPromise?.reject(new Error("Refresh failed"));
             refreshPromise = null;
@@ -122,7 +182,7 @@ export function startTokenWorker() {
 
     tokenWorker.onerror = (err) => {
         console.error("[TokenService] Worker crashed:", err);
-        clearAuthData();
+        clearAuthData({ redirectToAuth: true });
     };
 }
 
@@ -134,8 +194,8 @@ export function stopTokenWorker() {
 }
 
 export function getAccessToken() {
-    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
-    const expired = Number(localStorage.getItem(ACCESS_EXPIRED_KEY));
+    const token = authSession.accessToken;
+    const expired = Number(authSession.accessTokenExpired);
 
     if (!token || !expired) return null;
     if (nowSec() >= expired - 60) return null;
@@ -143,7 +203,13 @@ export function getAccessToken() {
     return token;
 }
 
+export function isAuthenticated() {
+    return !!getAccessToken() && !isSessionExpiredFlag();
+}
+
 export function refreshTokenThroughWorker() {
+    hydrateRefreshSessionFromStorage();
+
     if (refreshPromise) return refreshPromise.promise;
 
     refreshPromise = {};
@@ -152,13 +218,10 @@ export function refreshTokenThroughWorker() {
         refreshPromise.reject = reject;
     });
 
-    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-    const userId = localStorage.getItem(USER_ID_KEY);
-
-    if (!refreshToken || !userId) {
+    if (!authSession.refreshToken || !authSession.userId) {
         refreshPromise.reject(new Error("No refresh token"));
         refreshPromise = null;
-        return Promise.reject();
+        return Promise.reject(new Error("No refresh token"));
     }
 
     const tempWorker = new TokenWorker();
@@ -172,7 +235,7 @@ export function refreshTokenThroughWorker() {
     tempWorker.onmessage = (event) => {
         clearTimeout(timeout);
 
-        if (event.data.action === "updateToken") {
+        if (event.data.action === "updateToken" && event.data.accessToken) {
             saveAuthData(event.data);
             refreshPromise.resolve(event.data.accessToken);
         } else {
@@ -192,10 +255,35 @@ export function refreshTokenThroughWorker() {
 
     tempWorker.postMessage({
         action: "refreshOnce",
-        refreshToken,
-        userId,
+        refreshToken: authSession.refreshToken,
+        userId: authSession.userId,
         apiBase: getBaseUrl(),
     });
 
     return refreshPromise.promise;
+}
+
+export async function ensureAuthSession() {
+    hydrateRefreshSessionFromStorage();
+
+    if (isAuthenticated()) return true;
+    if (isSessionExpiredFlag()) return false;
+    if (!authSession.refreshToken || !authSession.userId) return false;
+
+    if (!bootstrapPromise) {
+        bootstrapPromise = refreshTokenThroughWorker()
+            .then(() => {
+                startTokenWorker();
+                return true;
+            })
+            .catch(() => {
+                markSessionExpired();
+                return false;
+            })
+            .finally(() => {
+                bootstrapPromise = null;
+            });
+    }
+
+    return bootstrapPromise;
 }

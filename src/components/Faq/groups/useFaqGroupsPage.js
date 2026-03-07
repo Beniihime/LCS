@@ -2,7 +2,8 @@ import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import axiosInstance from '@/utils/axios.js';
-import { getFaqAdminSegment, getUseSuFaqEndpoints } from '@/mocks/config.js';
+import { getSessionUserId } from '@/utils/TokenService';
+import { FAQ_ADMIN_SEGMENT, USE_SU_FAQ_ENDPOINTS } from '@/mocks/config.js';
 
 const ROOT_PARENT_ID = '00000000-0000-0000-0000-000000000000';
 
@@ -91,7 +92,7 @@ export const useFaqGroupsPage = () => {
     const router = useRouter();
     const toast = useToast();
 
-    const currentUserId = ref(localStorage.getItem('userId') || '');
+    const currentUserId = ref(getSessionUserId() || '');
     const items = ref([]);
     const loadingRoot = ref(false);
     const loadingGroupId = ref('');
