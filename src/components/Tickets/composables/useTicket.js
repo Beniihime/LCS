@@ -1,13 +1,11 @@
 import { ref } from 'vue';
 import { mockTicketDetails } from '@/mocks/tickets.js';
-import { USE_MOCK_DATA } from '@/mocks/config.js';
+import { getUseMockData } from '@/mocks/config.js';
 
 export const useTicket = (axiosInstance) => {
     const selectedTicket = ref(null);
     const loading = ref(false);
     const error = ref(false);
-    const useMockData = ref(USE_MOCK_DATA);
-
     // Загрузка данных тикета
     const loadTicket = async (ticketId) => {
         if (!ticketId) return;
@@ -16,7 +14,7 @@ export const useTicket = (axiosInstance) => {
         error.value = false;
         
         try {
-            if (useMockData.value) {
+            if (getUseMockData()) {
                 selectedTicket.value = mockTicketDetails;
                 return;
             }
@@ -41,7 +39,6 @@ export const useTicket = (axiosInstance) => {
         selectedTicket,
         loading,
         error,
-        useMockData,
         loadTicket,
         resetTicket
     };

@@ -37,8 +37,8 @@ const createTempBlockId = () => `tmp-${Date.now()}-${Math.random().toString(36).
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const faqWriteEndpoint = (path) => {
-    if (!USE_SU_FAQ_ENDPOINTS) return `/api/faq/${path}`;
-    return `/api/faq/${FAQ_ADMIN_SEGMENT}/${path}`;
+    if (!getUseSuFaqEndpoints()) return `/api/faq/${path}`;
+    return `/api/faq/${getFaqAdminSegment()}/${path}`;
 };
 
 export const useFaqArticlePage = () => {
