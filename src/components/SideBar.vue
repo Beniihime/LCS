@@ -165,7 +165,7 @@
                     />
                 </div>
 
-                <ThemeSwitcher :isSideBarCollapse="collapsed" />
+                <AccentColorEditor :isSideBarCollapse="collapsed" :season="currentSeason" />
 
                 <router-link 
                     class="profile" 
@@ -192,11 +192,11 @@
                     </div>
                 </router-link>
 
-                <div class="row mt-2">
+                <div class="row">
                     <div class="col">
                         <button @click="confirmLogout()" class="logout-button" v-tooltip.right="collapsed ? 'Выйти' : ''">
                             <div class="logout-content" :class="{ 'collapsed': collapsed }">
-                                <LogoutSvg class="logout-icon"/>
+                                <i class="pi pi-sign-out"></i>
                                 <p v-if="!collapsed" class="logout-text">Выйти из аккаунта</p>
                             </div>
                         </button>
@@ -209,7 +209,6 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
-import LogoutSvg from '@/assets/logout.svg';
 import axiosInstance from '@/utils/axios.js';
 
 import Lcs from '@/assets/logo/lcs.svg';
@@ -217,7 +216,7 @@ import Lcs from '@/assets/logo/lcs.svg';
 import { useNotificationStore } from '@/stores/notifications.js';
 import { usePermissionStore } from '@/stores/permissions.js';
 
-import ThemeSwitcher from './Utils/ThemeSwitcher.vue';
+import AccentColorEditor from './Utils/AccentColorEditor.vue';
 
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
@@ -232,7 +231,7 @@ import {
     getSeasonName, 
     getSeasonIcon,
 } from '@/utils/seasons.js';
-import { applySeasonPrimaryTheme } from '@/utils/seasonTheme.js';
+import { syncPrimaryTheme } from '@/utils/accentTheme.js';
 
 const props = defineProps({
     collapsed: {
@@ -382,7 +381,7 @@ const loadSeasonPreference = () => {
 };
 
 watch(currentSeason, (season) => {
-    applySeasonPrimaryTheme(season);
+    syncPrimaryTheme(season);
 });
 
 // Проверка изменения месяца
@@ -446,7 +445,7 @@ const logout = async () => {
 
 onMounted(async () => {
     loadSeasonPreference();
-    applySeasonPrimaryTheme(currentSeason.value);
+    syncPrimaryTheme(currentSeason.value);
     lastCheckedMonth = new Date().getMonth();
 
     try {
@@ -806,10 +805,14 @@ const checkIsMobile = () => {
 
 .menu-item.active-link {
     background: var(--p-blue-500-low-op);
-    color: rgb(var(--p-color-icon-menu));
+    color: var(--p-primary-500);
     box-shadow: 
         0 4px 12px rgba(var(--p-blue-500-rgb), 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.p-dark .menu-item.active-link {
+    color: var(--p-primary-300);
 }
 
 /* ============ ИКОНКИ МЕНЮ ============ */
@@ -927,6 +930,10 @@ const checkIsMobile = () => {
 .rectangle.collapsed .profile-content {
     justify-content: center;
     gap: 0;
+}
+
+.rectangle.collapsed .profile {
+    padding: 0.25rem 0.5rem;
 }
 
 .avatar-wrapper {
