@@ -224,6 +224,7 @@ import { useRouter } from 'vue-router';
 import { clearAuthData } from '@/utils/TokenService.js';
 import { getRequestAccess, resetRequestAccessCache } from '@/utils/requestAccess.js';
 import { getCurrentUser, resetCurrentUserCache } from '@/utils/currentUser.js';
+import { runLogoutClipTransition } from '@/composables/logoutTransition';
 
 // Импортируем утилиты для сезонов
 import { 
@@ -439,8 +440,8 @@ const logout = async () => {
     await permissionStore.$reset();
     resetRequestAccessCache();
     resetCurrentUserCache();
-    
-    router.push('/auth');
+
+    await runLogoutClipTransition(() => router.push('/auth'));
 };
 
 onMounted(async () => {

@@ -21,6 +21,7 @@ import { useRouter } from 'vue-router';
 import { clearAuthData } from '@/utils/TokenService.js';
 import { resetRequestAccessCache } from '@/utils/requestAccess.js';
 import { resetCurrentUserCache } from '@/utils/currentUser.js';
+import { runLogoutClipTransition } from '@/composables/logoutTransition';
 
 const permissionStore = usePermissionStore();
 const isMobile = ref(false);
@@ -44,8 +45,8 @@ const logout = async () => {
     await permissionStore.$reset();
     resetRequestAccessCache();
     resetCurrentUserCache();
-    
-    router.push('/auth');
+
+    await runLogoutClipTransition(() => router.push('/auth'));
 };
   
 // Функция для проверки мобильного устройства
