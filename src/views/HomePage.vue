@@ -25,7 +25,6 @@ import { useToast } from 'primevue/usetoast';
 import SideBar from '@/components/SideBar.vue';
 import MobileSpeedDial from '@/components/Utils/MobileSpeedDial.vue';
 import { isAuthenticated } from '@/utils/auth';
-import { useRoute } from 'vue-router';
 
 const SIDEBAR_EXPANDED_STORAGE_KEY = 'sidebarExpanded';
 
@@ -37,17 +36,8 @@ const getSavedSidebarState = () => {
 
 const isExpanded = ref(getSavedSidebarState());
 const toast = useToast();
-const route = useRoute();
 
 computed(() => isAuthenticated());
-
-const showMessage = (message, summary, detail) => {
-if (message === 'success') {
-  toast.add({ severity: 'success', summary, detail, life: 3000 });
-} else if (message === 'error') {
-  toast.add({ severity: 'error', summary, detail, life: 3000 });
-}
-};
 
 const toggleSidebar = () => {
   isExpanded.value = !isExpanded.value;
@@ -55,13 +45,6 @@ const toggleSidebar = () => {
 
 watch(isExpanded, (value) => {
   localStorage.setItem(SIDEBAR_EXPANDED_STORAGE_KEY, String(value));
-});
-
-onMounted(() => {
-const query = route.query;
-if (query.message) {
-  showMessage(query.message, query.summary, query.detail);
-}
 });
 </script>
 
