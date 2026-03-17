@@ -18,7 +18,7 @@
             </div>
             <div class="faq-row-right">
                 <Button
-                    v-if="canManageItem"
+                    v-if="canManageItem && item.type === 'group'"
                     class="group-actions-btn"
                     type="button"
                     icon="pi pi-ellipsis-h"
