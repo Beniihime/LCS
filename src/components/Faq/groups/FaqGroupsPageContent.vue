@@ -40,6 +40,7 @@
                             :item="item"
                             :loading-group-id="loadingGroupId"
                             :current-user-id="currentUserId"
+                            :can-manage-any-faq="canManageAnyFaq"
                             @toggle-group="handleGroupToggle"
                             @open-article="openArticle"
                             @group-action="handleGroupAction"
@@ -85,6 +86,7 @@ import { useFaqGroupsPage } from '@/components/Faq/groups/useFaqGroupsPage.js';
 const {
     ROOT_PARENT_ID,
     currentUserId,
+    canManageAnyFaq,
     items,
     loadingRoot,
     loadingGroupId,

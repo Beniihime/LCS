@@ -4,8 +4,9 @@ import { useToast } from 'primevue/usetoast';
 import axiosInstance from '@/utils/axios.js';
 import { formatDateRuLongWithTime as formatDate } from '@/utils/date.js';
 import { attachPlainTextPasteToQuill, sanitizeFaqTextHtml } from '@/utils/faqHtml.js';
+import { buildFaqEndpoint, hasFaqSuPermission } from '@/utils/faqEndpoints.js';
 import { getSessionUserId } from '@/utils/TokenService';
-import { FAQ_ADMIN_SEGMENT, USE_SU_FAQ_ENDPOINTS } from '@/mocks/config.js';
+import { usePermissionStore } from '@/stores/permissions.js';
 
 const SAVE_DELAY_MS = 350;
 
@@ -36,15 +37,11 @@ const isTempBlockId = (id) => String(id || '').startsWith('tmp-');
 const createTempBlockId = () => `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const faqWriteEndpoint = (path) => {
-    if (!USE_SU_FAQ_ENDPOINTS) return `/api/faq/${path}`;
-    return `/api/faq/${FAQ_ADMIN_SEGMENT}/${path}`;
-};
-
 export const useFaqArticlePage = () => {
     const route = useRoute();
     const router = useRouter();
     const toast = useToast();
+    const permissionStore = usePermissionStore();
 
     const article = ref(null);
     const loading = ref(false);
@@ -100,7 +97,8 @@ export const useFaqArticlePage = () => {
         if (!article.value) return false;
         return String(article.value.authorId || '') === String(currentUserId.value || '');
     });
-    const canEdit = computed(() => isAuthor.value);
+    const canEdit = computed(() => isAuthor.value || hasFaqSuPermission(permissionStore));
+    const faqEndpoint = (path) => buildFaqEndpoint(path, permissionStore);
 
     const sortedBlocks = computed(() => {
         if (!article.value?.blocks?.length) return [];
@@ -268,7 +266,7 @@ export const useFaqArticlePage = () => {
                 };
 
                 if (orig.question !== curr.question || orig.order !== curr.order) {
-                    requests.push(axiosInstance.put(faqWriteEndpoint(`articles/${article.value.id}`), {
+                    requests.push(axiosInstance.put(faqEndpoint(`articles/${article.value.id}`), {
                         groupId: article.value.groupId,
                         authorId: article.value.authorId,
                         question: article.value.question || '',
@@ -279,7 +277,7 @@ export const useFaqArticlePage = () => {
 
             // ─── Deletions ────────────────────────────────────────────
             pendingDeletedBlockIds.value.forEach((blockId) => {
-                requests.push(axiosInstance.delete(faqWriteEndpoint(`article-blocks/${blockId}`), {
+                requests.push(axiosInstance.delete(faqEndpoint(`article-blocks/${blockId}`), {
                     params: { articleId: article.value.id },
                 }));
             });
@@ -296,7 +294,7 @@ export const useFaqArticlePage = () => {
                 };
 
                 if (pendingCreatedBlockIds.value.has(block.id)) {
-                    requests.push(axiosInstance.post(faqWriteEndpoint('addarticleblock'), {
+                    requests.push(axiosInstance.post(faqEndpoint('addarticleblock'), {
                         ...payloadBase,
                         type: isText ? 'Text' : 'Image',
                     }));
@@ -345,7 +343,7 @@ export const useFaqArticlePage = () => {
 
     function createPutRequest(id, payloadBase, isText) {
         return axiosInstance.put(
-            faqWriteEndpoint(`article-blocks/${id}`),
+            faqEndpoint(`article-blocks/${id}`),
             {
                 ...payloadBase,
                 contentTypes: isText ? 'Text' : 'Image',
@@ -379,7 +377,7 @@ export const useFaqArticlePage = () => {
         if (!article.value?.id) return;
         actionLoading.value = true;
         try {
-            await axiosInstance.delete(faqWriteEndpoint(`articles/${article.value.id}`));
+            await axiosInstance.delete(faqEndpoint(`articles/${article.value.id}`));
             toast.add({ severity: 'success', summary: 'FAQ', detail: 'Статья удалена', life: 2200 });
             deleteArticleDialog.value = false;
             router.push('/faq');

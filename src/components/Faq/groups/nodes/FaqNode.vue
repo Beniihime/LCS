@@ -4,7 +4,7 @@
             class="faq-row"
             :class="[
                 item.type === 'group' ? 'is-group' : 'is-article',
-                { 'has-actions': isAuthor },
+                { 'has-actions': canManageItem },
             ]"
             @click="onRowClick"
         >
@@ -18,7 +18,7 @@
             </div>
             <div class="faq-row-right">
                 <Button
-                    v-if="isAuthor"
+                    v-if="canManageItem"
                     class="group-actions-btn"
                     type="button"
                     icon="pi pi-ellipsis-h"
@@ -29,7 +29,7 @@
                     text
                 />
                 <Menu
-                    v-if="isAuthor"
+                    v-if="canManageItem"
                     ref="menuRef"
                     :model="menuItems"
                     :popup="true"
@@ -50,6 +50,7 @@
                     :item="child"
                     :loading-group-id="loadingGroupId"
                     :current-user-id="currentUserId"
+                    :can-manage-any-faq="canManageAnyFaq"
                     @toggle-group="$emit('toggle-group', $event)"
                     @open-article="$emit('open-article', $event)"
                     @group-action="$emit('group-action', $event)"
@@ -83,6 +84,10 @@ const props = defineProps({
         type: String,
         default: '',
     },
+    canManageAnyFaq: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const emit = defineEmits(['toggle-group', 'open-article', 'group-action']);
@@ -92,6 +97,7 @@ const isAuthor = computed(() => {
     if (props.item.type !== 'group') return false;
     return String(props.item.authorId || '') === String(props.currentUserId || '');
 });
+const canManageItem = computed(() => props.canManageAnyFaq || isAuthor.value);
 
 const menuItems = computed(() => ([
     {

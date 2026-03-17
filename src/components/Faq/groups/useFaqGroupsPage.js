@@ -1,9 +1,10 @@
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import axiosInstance from '@/utils/axios.js';
 import { getSessionUserId } from '@/utils/TokenService';
-import { FAQ_ADMIN_SEGMENT, USE_SU_FAQ_ENDPOINTS } from '@/mocks/config.js';
+import { buildFaqEndpoint, hasFaqSuPermission } from '@/utils/faqEndpoints.js';
+import { usePermissionStore } from '@/stores/permissions.js';
 
 const ROOT_PARENT_ID = '00000000-0000-0000-0000-000000000000';
 
@@ -83,16 +84,14 @@ const findGroupById = (list, groupId) => {
     return null;
 };
 
-const faqWriteEndpoint = (path) => {
-    if (!USE_SU_FAQ_ENDPOINTS) return `/api/faq/${path}`;
-    return `/api/faq/${FAQ_ADMIN_SEGMENT}/${path}`;
-};
-
 export const useFaqGroupsPage = () => {
     const router = useRouter();
     const toast = useToast();
+    const permissionStore = usePermissionStore();
 
     const currentUserId = ref(getSessionUserId() || '');
+    const canManageAnyFaq = computed(() => hasFaqSuPermission(permissionStore));
+    const faqEndpoint = (path) => buildFaqEndpoint(path, permissionStore);
     const items = ref([]);
     const loadingRoot = ref(false);
     const loadingGroupId = ref('');
@@ -317,7 +316,7 @@ export const useFaqGroupsPage = () => {
                 }
             } else {
                 const payloadOrder = Number.isFinite(Number(groupDialog.value.order)) ? Number(groupDialog.value.order) : 0;
-                await axiosInstance.put(faqWriteEndpoint(`groups/${groupDialog.value.groupId}`), {
+                await axiosInstance.put(faqEndpoint(`groups/${groupDialog.value.groupId}`), {
                     parentId: groupDialog.value.parentId,
                     authorId: groupDialog.value.authorId,
                     title: payloadTitle,
@@ -343,7 +342,7 @@ export const useFaqGroupsPage = () => {
         actionLoading.value = true;
         error.value = '';
         try {
-            await axiosInstance.delete(faqWriteEndpoint(`groups/${deleteDialog.value.group.id}`));
+            await axiosInstance.delete(faqEndpoint(`groups/${deleteDialog.value.group.id}`));
             items.value = removeGroupById(items.value, deleteDialog.value.group.id);
             closeDeleteDialog();
         } catch (actionError) {
@@ -413,6 +412,7 @@ export const useFaqGroupsPage = () => {
     return {
         ROOT_PARENT_ID,
         currentUserId,
+        canManageAnyFaq,
         items,
         loadingRoot,
         loadingGroupId,
