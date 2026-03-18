@@ -15,10 +15,16 @@
                 ></i>
                 <i v-else class="pi pi-question-circle faq-dot"></i>
                 <span class="faq-row-title">{{ item.title }}</span>
+                <i
+                    v-if="canManageItem"
+                    :class="['pi', item.isVisible ? 'pi-eye' : 'pi-eye-slash', 'faq-visibility-icon', { 'is-hidden': !item.isVisible }]"
+                    :title="item.isVisible ? 'Видимо' : 'Скрыто'"
+                    aria-hidden="true"
+                ></i>
             </div>
             <div class="faq-row-right">
                 <Button
-                    v-if="canManageItem && item.type === 'group'"
+                    v-if="canManageItem"
                     class="group-actions-btn"
                     type="button"
                     icon="pi pi-ellipsis-h"
@@ -94,7 +100,6 @@ const emit = defineEmits(['toggle-group', 'open-article', 'group-action']);
 const menuRef = ref(null);
 
 const isAuthor = computed(() => {
-    if (props.item.type !== 'group') return false;
     return String(props.item.authorId || '') === String(props.currentUserId || '');
 });
 const canManageItem = computed(() => props.canManageAnyFaq || isAuthor.value);
@@ -105,22 +110,34 @@ const menuItems = computed(() => ([
             {
                 label: 'Создать подгруппу',
                 icon: 'pi pi-folder-plus',
+                visible: props.item.type === 'group',
                 command: () => emit('group-action', { action: 'create-subgroup', group: props.item }),
             },
             {
                 label: 'Создать статью',
                 icon: 'pi pi-folder-plus',
+                visible: props.item.type === 'group',
                 command: () => emit('group-action', { action: 'create-article', group: props.item }),
+            },
+            {
+                label: props.item.isVisible ? 'Скрыть' : 'Сделать видимым',
+                icon: props.item.isVisible ? 'pi pi-eye-slash' : 'pi pi-eye',
+                command: () => emit('group-action', {
+                    action: props.item.type === 'group' ? 'toggle-group-visibility' : 'toggle-article-visibility',
+                    group: props.item,
+                }),
             },
             {
                 label: 'Изменить группу',
                 icon: 'pi pi-pen-to-square',
+                visible: props.item.type === 'group',
                 command: () => emit('group-action', { action: 'edit-group', group: props.item }),
             },
             {
                 label: 'Удалить группу',
                 icon: 'pi pi-trash',
                 class: 'faq-danger-item',
+                visible: props.item.type === 'group',
                 command: () => emit('group-action', { action: 'delete-group', group: props.item }),
             },
         ],
@@ -217,6 +234,16 @@ const onRowClick = () => {
     overflow: hidden;
     text-overflow: ellipsis;
     letter-spacing: 0.01em;
+}
+
+.faq-visibility-icon {
+    font-size: 0.95rem;
+    color: var(--p-blue-500);
+    flex-shrink: 0;
+}
+
+.faq-visibility-icon.is-hidden {
+    color: var(--p-orange-500);
 }
 
 .faq-arrow {

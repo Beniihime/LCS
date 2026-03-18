@@ -9,6 +9,12 @@
                 <div class="article-head-center">
                     <div class="article-title-row">
                         <h2 class="article-title">{{ article?.question || 'Статья' }}</h2>
+                        <i
+                            v-if="canEdit && article"
+                            :class="['pi', article.isVisible ? 'pi-eye' : 'pi-eye-slash', 'article-visibility-icon', { 'is-hidden': !article.isVisible }]"
+                            :title="article.isVisible ? 'Статья видима' : 'Статья скрыта'"
+                            aria-hidden="true"
+                        ></i>
                         <Button
                             v-if="editMode"
                             icon="pi pi-pencil"
@@ -299,6 +305,16 @@ main {
     display: flex;
     align-items: center;
     gap: 0.35rem;
+}
+
+.article-visibility-icon {
+    font-size: 1rem;
+    color: var(--p-blue-500);
+    flex-shrink: 0;
+}
+
+.article-visibility-icon.is-hidden {
+    color: var(--p-orange-500);
 }
 
 .title-edit-btn {

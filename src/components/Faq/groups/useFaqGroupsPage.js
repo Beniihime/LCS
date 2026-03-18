@@ -38,6 +38,7 @@ const mapGroupToItem = (group) => ({
     parentId: group.parentId || null,
     authorId: group.authorId || null,
     order: typeof group.order === 'number' ? group.order : 0,
+    isVisible: typeof group.isVisible === 'boolean' ? group.isVisible : true,
     expanded: false,
     loaded: false,
     children: [],
@@ -48,6 +49,11 @@ const mapArticleToItem = (article) => ({
     id: article.id,
     type: 'article',
     title: article.question || article.title || 'Без названия',
+    question: article.question || article.title || 'Без названия',
+    groupId: article.groupId || null,
+    authorId: article.authorId || null,
+    order: typeof article.order === 'number' ? article.order : 0,
+    isVisible: typeof article.isVisible === 'boolean' ? article.isVisible : true,
 });
 
 const updateGroupById = (list, groupId, updater) => {
@@ -84,6 +90,18 @@ const findGroupById = (list, groupId) => {
     return null;
 };
 
+const updateArticleById = (list, articleId, updater) => {
+    return list.map((item) => {
+        if (item.type === 'article' && item.id === articleId) {
+            return updater(item);
+        }
+        if (item.type === 'group' && item.children?.length) {
+            return { ...item, children: updateArticleById(item.children, articleId, updater) };
+        }
+        return item;
+    });
+};
+
 export const useFaqGroupsPage = () => {
     const router = useRouter();
     const toast = useToast();
@@ -106,6 +124,7 @@ export const useFaqGroupsPage = () => {
         authorId: '',
         title: '',
         order: 0,
+        isVisible: true,
     });
 
     const deleteDialog = ref({
@@ -133,7 +152,7 @@ export const useFaqGroupsPage = () => {
     };
 
     const fetchSubGroups = async (groupId) => {
-        return await axiosInstance.get('/api/faq/groups/', {
+        return await axiosInstance.get(faqEndpoint('groups'), {
             params: { parentId: groupId },
         });
     };
@@ -145,7 +164,7 @@ export const useFaqGroupsPage = () => {
         try {
             const [subGroupsResponse, articlesResponse] = await Promise.allSettled([
                 fetchSubGroups(groupId),
-                axiosInstance.get(`/api/faq/groups/${groupId}/articles`),
+                axiosInstance.get(faqEndpoint(`groups/${groupId}/articles`)),
             ]);
 
             const subGroupsErrorStatus = subGroupsResponse.status === 'rejected'
@@ -226,6 +245,7 @@ export const useFaqGroupsPage = () => {
             authorId: '',
             title: '',
             order: 0,
+            isVisible: true,
         };
     };
 
@@ -238,6 +258,7 @@ export const useFaqGroupsPage = () => {
             authorId: '',
             title: '',
             order: 0,
+            isVisible: true,
         };
     };
 
@@ -252,6 +273,7 @@ export const useFaqGroupsPage = () => {
             authorId: target.authorId,
             title: target.title || '',
             order: typeof target.order === 'number' ? target.order : 0,
+            isVisible: typeof target.isVisible === 'boolean' ? target.isVisible : true,
         };
     };
 
@@ -321,11 +343,13 @@ export const useFaqGroupsPage = () => {
                     authorId: groupDialog.value.authorId,
                     title: payloadTitle,
                     order: payloadOrder,
+                    isVisible: Boolean(groupDialog.value.isVisible),
                 });
                 items.value = updateGroupById(items.value, groupDialog.value.groupId, (item) => ({
                     ...item,
                     title: payloadTitle,
                     order: payloadOrder,
+                    isVisible: Boolean(groupDialog.value.isVisible),
                 }));
             }
             closeGroupDialog();
@@ -379,6 +403,69 @@ export const useFaqGroupsPage = () => {
 
         if (action === 'delete-group') {
             openDeleteDialog(group);
+            return;
+        }
+
+        if (action === 'toggle-group-visibility') {
+            actionLoading.value = true;
+            error.value = '';
+            try {
+                const nextVisible = !Boolean(group.isVisible);
+                await axiosInstance.put(faqEndpoint(`groups/${group.id}`), {
+                    parentId: group.parentId,
+                    authorId: group.authorId,
+                    title: group.title,
+                    order: typeof group.order === 'number' ? group.order : 0,
+                    isVisible: nextVisible,
+                });
+                items.value = updateGroupById(items.value, group.id, (item) => ({
+                    ...item,
+                    isVisible: nextVisible,
+                }));
+                toast.add({
+                    severity: 'success',
+                    summary: 'FAQ',
+                    detail: nextVisible ? 'Группа теперь видима' : 'Группа скрыта',
+                    life: 2200,
+                });
+            } catch (actionError) {
+                console.debug('Ошибка при изменении видимости группы:', actionError);
+                error.value = 'Не удалось изменить видимость группы.';
+            } finally {
+                actionLoading.value = false;
+            }
+            return;
+        }
+
+        if (action === 'toggle-article-visibility') {
+            actionLoading.value = true;
+            error.value = '';
+            try {
+                const nextVisible = !Boolean(group.isVisible);
+                await axiosInstance.put(faqEndpoint(`articles/${group.id}`), {
+                    groupId: group.groupId,
+                    authorId: group.authorId,
+                    question: group.question || group.title,
+                    order: typeof group.order === 'number' ? group.order : 0,
+                    isVisible: nextVisible,
+                });
+                items.value = updateArticleById(items.value, group.id, (item) => ({
+                    ...item,
+                    isVisible: nextVisible,
+                }));
+                toast.add({
+                    severity: 'success',
+                    summary: 'FAQ',
+                    detail: nextVisible ? 'Статья теперь видима' : 'Статья скрыта',
+                    life: 2200,
+                });
+            } catch (actionError) {
+                console.debug('Ошибка при изменении видимости статьи:', actionError);
+                error.value = 'Не удалось изменить видимость статьи.';
+            } finally {
+                actionLoading.value = false;
+            }
+            return;
         }
     };
 
@@ -386,7 +473,7 @@ export const useFaqGroupsPage = () => {
         loadingRoot.value = true;
         error.value = '';
         try {
-            const response = await axiosInstance.get('/api/faq/groups');
+            const response = await axiosInstance.get(faqEndpoint('groups'));
             items.value = normalizeGroups(response.data).map(mapGroupToItem);
         } catch (fetchError) {
             console.debug('Ошибка при загрузке корневых групп:', fetchError);

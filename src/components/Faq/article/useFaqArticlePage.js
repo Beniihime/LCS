@@ -114,6 +114,11 @@ export const useFaqArticlePage = () => {
 
     const headerMenuItems = computed(() => ([
         {
+            label: article.value?.isVisible ? 'Скрыть статью' : 'Сделать статью видимой',
+            icon: article.value?.isVisible ? 'pi pi-eye-slash' : 'pi pi-eye',
+            command: () => toggleArticleVisibility(),
+        },
+        {
             label: 'Изменить статью',
             icon: 'pi pi-pen-to-square',
             command: () => openArticleEdit(),
@@ -185,7 +190,7 @@ export const useFaqArticlePage = () => {
         loading.value = true;
         error.value = '';
         try {
-            const response = await axiosInstance.get(`/api/faq/articles/${id}`);
+            const response = await axiosInstance.get(faqEndpoint(`articles/${id}`));
             article.value = {
                 ...response.data,
                 blocks: Array.isArray(response.data.blocks)
@@ -243,6 +248,37 @@ export const useFaqArticlePage = () => {
         };
     };
 
+    const toggleArticleVisibility = async () => {
+        if (!article.value?.id) return;
+
+        actionLoading.value = true;
+        try {
+            const nextVisible = !Boolean(article.value.isVisible);
+            await axiosInstance.put(faqEndpoint(`articles/${article.value.id}`), {
+                groupId: article.value.groupId,
+                authorId: article.value.authorId,
+                question: article.value.question || '',
+                order: typeof article.value.order === 'number' ? article.value.order : 0,
+                isVisible: nextVisible,
+            });
+            article.value = {
+                ...article.value,
+                isVisible: nextVisible,
+            };
+            toast.add({
+                severity: 'success',
+                summary: 'FAQ',
+                detail: nextVisible ? 'Статья теперь видима' : 'Статья скрыта',
+                life: 2200,
+            });
+        } catch (toggleError) {
+            console.debug('Ошибка при изменении видимости статьи:', toggleError);
+            toast.add({ severity: 'error', summary: 'FAQ', detail: 'Не удалось изменить видимость статьи', life: 2800 });
+        } finally {
+            actionLoading.value = false;
+        }
+    };
+
     const submitPendingChanges = async () => {
         if (!article.value?.id) return;
 
@@ -271,6 +307,7 @@ export const useFaqArticlePage = () => {
                         authorId: article.value.authorId,
                         question: article.value.question || '',
                         order: typeof article.value.order === 'number' ? article.value.order : 0,
+                        isVisible: Boolean(article.value.isVisible),
                     }));
                 }
             }
@@ -628,6 +665,7 @@ export const useFaqArticlePage = () => {
         getDialogImagePreview,
         toggleHeaderMenu,
         openTitleEditDialog,
+        toggleArticleVisibility,
         exitEditMode,
         submitArticleUpdate,
         deleteArticle,
