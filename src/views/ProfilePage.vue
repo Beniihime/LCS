@@ -5,7 +5,6 @@
         <aside class="sidebar">
             <div class="button-group">
                 <Button label="Профиль ЛКС" unstyled icon="pi pi-user me-3" @click="setActiveProfile('user')" :class="{ 'active-link': activeProfile === 'user' }" class="menu-item w-100 mb-3"/>
-                <Button unstyled label="InfraManager" icon="pi pi-sitemap me-3" @click="setActiveProfile('infra')" :class="{ 'active-link': activeProfile === 'infra', 'disabled': !status }" class="menu-item w-100 mb-3"/>
                 <Button unstyled label="Полномочия" icon="pi pi-lock me-3" @click="setActiveProfile('permiss')" :class="{ 'active-link': activeProfile === 'permiss' }" class="menu-item w-100 mb-3"/>
 
                 <Divider />
@@ -27,7 +26,7 @@
                         severity="secondary"
                         outlined
                         class="w-100 mt-2"
-                        @click="showAddExternalDialog = true"
+                        @click="openAddExternalDialog"
                     />
                 </div>
             </div>
@@ -108,7 +107,16 @@
                 <div class="external-form-grid">
                     <div>
                         <label for="externalSystemType" class="mb-1 d-block">Тип системы</label>
-                        <InputText id="externalSystemType" v-model="externalForm.systemType" class="w-100" placeholder="Например: 0" />
+                        <Select
+                            id="externalSystemType"
+                            v-model="externalForm.systemType"
+                            :options="systemTypeOptions"
+                            optionLabel="label"
+                            optionValue="value"
+                            class="w-100"
+                            placeholder="Выберите систему"
+                            :loading="systemTypeOptionsLoading"
+                        />
                     </div>
                     <div>
                         <label for="externalSystemUserId" class="mb-1 d-block">ID пользователя в системе</label>
@@ -285,53 +293,6 @@
                 </div>
             </div>
             
-            <!-- Карточка профиля InfraManager -->
-            <div v-if="activeProfile === 'infra'">
-                <Transition name="content-fade" mode="out-in">
-                    <div key="profile-infra-content" class="infra-profile-card" v-if="!infraLoading">
-                        <h2>InfraManager</h2>
-                        <Divider class="my-3"/>
-                        <div class="infra-info">
-                            <div class="row mb-3">
-                                <div class="col-auto">
-                                    <i class="pi pi-user"></i>
-                                </div>
-                                <div class="col">
-                                    {{ infraFullName }}
-                                </div>
-                            </div>
-                            <div class="row mb-3">
-                                <div class="col-auto">
-                                    <i class="pi pi-envelope"></i>
-                                </div>
-                                <div class="col">
-                                    {{ infraEmail }}
-                                </div>
-                            </div>
-                            <div class="row mb-3">
-                                <div class="col-auto">
-                                    <i class="pi pi-sitemap"></i>
-                                </div>
-                                <div class="col">
-                                    {{ infraPosition }}
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-auto">
-                                    <i class="pi pi-map-marker"></i>
-                                </div>
-                                <div class="col">
-                                    {{ infraPlace }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <Skeleton key="profile-infra-skeleton" class="w-100" style="height: 250px; border-radius: 12px;" v-else/>
-                </Transition>
-            </div>
-
-            <Skeleton class="w-100" style="height: 250px; border-radius: 12px;" v-if="activeProfile === 'infra' && infraLoading"/>
-
             <div v-if="activeProfile === 'external'">
                 <div class="profile-card">
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -368,10 +329,6 @@
                     </div>
                 </div>
             </div>
-
-            
-            <!-- <InfraManagerServices v-if="infraManagerUser"/>
-            <InfraManagerCallsMe v-if="infraManagerUser"/> -->
         </div>
     </main>
 </template>
@@ -384,8 +341,6 @@ import { usePermissionStore } from '@/stores/permissions.js';
 import { getSessionUserId } from '@/utils/TokenService.js';
 
 import UpdateUser from '@/components/Users/UpdateUser.vue';
-import InfraManagerCallsMe from '@/components/InfraManager/InfraManagerCallsMe.vue';
-import InfraManagerServices from '@/components/InfraManager/InfraManagerServices.vue';
 import MePermissionsPage from '@/views/MePermissionsPage.vue';
 
 import GetOtpButton from '@/components/Users/GetOtpButton.vue';
@@ -441,13 +396,6 @@ const validateMePassword = () => {
     passwordChecks.value.number = /\d/.test(newPass.value);
 };
 
-const infraManagerUser = ref(null)
-const infraFullName = ref('');
-const infraEmail = ref('');
-const infraPosition = ref('');
-const infraPlace = ref('');
-const infraLoading = ref(false);
-
 const userId = ref(route.query.id || null);
 const currentUserRoleIds = ref([]);
 const isAdmin = computed(() => currentUserRoleIds.value.includes(1));
@@ -461,9 +409,11 @@ const showAddExternalDialog = ref(false);
 const showEditExternalDialog = ref(false);
 const showDeleteExternalDialog = ref(false);
 const externalActionLoading = ref(false);
+const systemTypeOptions = ref([]);
+const systemTypeOptionsLoading = ref(false);
 const externalForm = ref({
     userIdInOtherSystem: '',
-    systemType: '',
+    systemType: null,
     information: ''
 });
 const addInformationMode = ref('fields');
@@ -499,10 +449,6 @@ const getRoleTypeClass = (role) => {
 const setActiveProfile = async (profile) => {
     activeProfile.value = profile;
     sidebarVisible.value = false;
-
-    if (profile === 'infra') {
-        await fetchInfraManagerData();
-    }
 
     if (profile === 'external' && !externalAccounts.value.length) {
         await fetchExternalAccounts();
@@ -560,10 +506,57 @@ const parsedExternalInformationEntries = computed(() => {
 });
 
 const getSystemTypeLabel = (systemType) => {
+    const matchedSystemType = systemTypeOptions.value.find((option) => Number(option.value) === Number(systemType));
+    if (matchedSystemType?.label) return matchedSystemType.label;
+
     const map = {
         0: 'InfraManager'
     };
     return map[Number(systemType)] || `Система ${systemType}`;
+};
+
+const normalizeSystemTypeOptions = (payload) => {
+    if (!Array.isArray(payload)) return [];
+
+    return payload
+        .map((item) => {
+            if (typeof item === 'number' || typeof item === 'string') {
+                const numericValue = Number(item);
+                return {
+                    label: getSystemTypeLabel(numericValue),
+                    value: numericValue,
+                };
+            }
+
+            const value = item?.value ?? item?.id ?? item?.systemType ?? item?.type;
+            if (value === undefined || value === null || value === '') return null;
+
+            return {
+                label: item?.label || item?.title || item?.name || `Система ${value}`,
+                value: Number(value),
+            };
+        })
+        .filter(Boolean);
+};
+
+const loadSystemTypeOptions = async () => {
+    try {
+        systemTypeOptionsLoading.value = true;
+        const response = await axiosInstance.get('/api/users/get-system-types');
+        systemTypeOptions.value = normalizeSystemTypeOptions(response.data);
+    } catch (error) {
+        console.debug('Ошибка при получении типов систем: ', error);
+        systemTypeOptions.value = [];
+        window.dispatchEvent(new CustomEvent('toast', {
+            detail: {
+                severity: 'error',
+                summary: 'Внешние системы',
+                detail: 'Не удалось загрузить список систем'
+            }
+        }));
+    } finally {
+        systemTypeOptionsLoading.value = false;
+    }
 };
 
 const getInfraExternalAccount = (accounts = []) => {
@@ -619,11 +612,18 @@ const fetchExternalAccounts = async () => {
 const resetExternalForm = () => {
     externalForm.value = {
         userIdInOtherSystem: '',
-        systemType: '',
+        systemType: null,
         information: ''
     };
     addInformationMode.value = 'fields';
     addExternalFields.value = [{ key: '', value: '' }];
+};
+
+const openAddExternalDialog = async () => {
+    if (!systemTypeOptions.value.length) {
+        await loadSystemTypeOptions();
+    }
+    showAddExternalDialog.value = true;
 };
 
 const removeAddExternalField = (index) => {
@@ -705,7 +705,7 @@ const addExternalAccount = async () => {
         await axiosInstance.post('/api/users/other-accounts/add-user-account-in-other-system', {
             userId: userId.value,
             userIdInOtherSystem: externalForm.value.userIdInOtherSystem,
-            systemType: Number(externalForm.value.systemType),
+            systemType: externalForm.value.systemType,
             information: informationPayload
         });
 
@@ -895,38 +895,6 @@ const fetchUserProfile = async (id) => {
     loading.value = false;
 };
 
-const fetchInfraManagerData = async () => {
-    try {
-        infraLoading.value = true;
-        if (statusInfra) {
-            let endpoint1;
-            let endpoint2;
-            infraManagerUser.value = statusInfra;
-            if (isCurrentUser.value) {
-                endpoint1 = '/api/infra-manager/users/me'
-                endpoint2 = '/api/infra-manager/users/me/client/info' 
-            } else {
-                const infraId = infraManagerUser.value.userIdInOtherSystem || infraManagerUser.value.infraManagerUserId || infraManagerUser.value.id;
-                endpoint1 = `/api/infra-manager/users/${infraId}`
-                endpoint2 = `/api/infra-manager/users/${infraId}/client/info`
-            };
-            const [infraInfo, clientInfo] = await Promise.all([
-                axiosInstance.get(endpoint1),
-                axiosInstance.get(endpoint2),
-            ]);
-
-            infraFullName.value = infraInfo.data.fullName;
-            infraEmail.value = infraInfo.data.email;
-            infraPosition.value = infraInfo.data.positionName;
-            infraPlace.value = clientInfo.data.roomName;
-        }
-    } catch (error) {
-        console.debug('Ошибка при получении данных InfraManager:', error);
-    } finally {
-        infraLoading.value = false;
-    }
-};
-
 watch(() => route.query.id, async (newId) => {
     userId.value = newId;
     await fetchUserProfile(userId.value);
@@ -984,6 +952,7 @@ const changeMePass = async () => {
 
 onMounted(async () => {
     await fetchCurrentUserRole();
+    await loadSystemTypeOptions();
     if (!userId.value) return;
     await fetchUserProfile(userId.value);
     await fetchExternalAccounts();
@@ -1011,6 +980,7 @@ main {
     text-decoration: none;
     color: var(--p-text-color);
     border: 2px solid transparent;
+    padding: 10px 1rem;
 }
 .menu-item:hover {
     background-color: var(--p-blue-500-low-op);
@@ -1207,13 +1177,6 @@ main {
     padding: 4px 8px;
     border-radius: 999px;
     gap: 8px;
-}
-.infra-profile-card {
-    background-color: var(--p-grey-7);
-    border-radius: 12px;
-    border: 2px solid var(--p-grey-4);
-    padding: 20px;
-    transition: all 0.5s;
 }
 .profile-info-body {
     display: grid;
