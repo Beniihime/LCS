@@ -3,10 +3,14 @@ import { idoSuResource } from '@/api/ido.js';
 const TEACHER_ROLE_MATCHER = /(преподав|доцент|професс|ассистент|старш(?:ий|ая)\s+преподав|ппс)/i;
 
 export function getIdoUserRole(currentUser, permissionStore) {
+    return getIdoAvailableRoles(currentUser, permissionStore)[0] || 'employer-lks';
+}
+
+export function getIdoAvailableRoles(currentUser, permissionStore) {
     const hasSuAccess = permissionStore?.hasPermission(idoSuResource, 'Read')
         || permissionStore?.hasPermission(idoSuResource, 'Update');
 
-    if (hasSuAccess) return 'su';
+    if (hasSuAccess) return ['su'];
 
     const roles = Array.isArray(currentUser?.roles) ? currentUser.roles : [];
     const isTeacher = roles.some((role) => {
@@ -14,7 +18,7 @@ export function getIdoUserRole(currentUser, permissionStore) {
         return TEACHER_ROLE_MATCHER.test(haystack);
     });
 
-    return isTeacher ? 'teacher' : 'employer-lks';
+    return isTeacher ? ['teacher', 'employer-lks'] : ['employer-lks'];
 }
 
 export function buildTeacherLabel(teacher) {

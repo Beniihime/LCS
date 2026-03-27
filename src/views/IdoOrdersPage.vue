@@ -15,6 +15,16 @@
                                     : 'Ваши консультации и сформированные договоры.'
                             }}
                         </p>
+                        <div v-if="showRoleSwitcher" class="ido-role-switcher">
+                            <span class="ido-role-switcher-label">Показывать заказы как:</span>
+                            <SelectButton
+                                v-model="role"
+                                :options="availableRoleOptions"
+                                optionLabel="label"
+                                optionValue="value"
+                                @change="handleRoleChange"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -137,7 +147,7 @@ import { usePermissionStore } from '@/stores/permissions.js';
 import axiosInstance from '@/utils/axios.js';
 import { getCurrentUser } from '@/utils/currentUser.js';
 import { getIdoOrders, searchTeachers } from '@/api/ido.js';
-import { buildEmployerLabel, buildTeacherLabel, getIdoUserRole, isUuid } from '@/utils/ido.js';
+import { buildEmployerLabel, buildTeacherLabel, getIdoAvailableRoles, isUuid } from '@/utils/ido.js';
 import IdoOrderDetailsDialog from '@/components/Ido/IdoOrderDetailsDialog.vue';
 
 const permissionStore = usePermissionStore();
@@ -150,6 +160,7 @@ const totalRecords = ref(0);
 const rowsPerPage = ref(10);
 const currentPage = ref(1);
 const role = ref('employer-lks');
+const availableRoles = ref(['employer-lks']);
 const selectedOrderId = ref('');
 const detailsVisible = ref(false);
 const selectedTeacher = ref(null);
@@ -168,6 +179,15 @@ const formatCurrency = (value) => new Intl.NumberFormat('ru-RU', {
     currency: 'RUB',
     maximumFractionDigits: 2,
 }).format(Number(value || 0));
+
+const availableRoleOptions = computed(() => availableRoles.value.map((value) => ({
+    value,
+    label: value === 'teacher' ? 'Преподаватель' : 'Заказчик',
+})));
+
+const showRoleSwitcher = computed(() =>
+    role.value !== 'su' && availableRoleOptions.value.length > 1
+);
 
 const requestParams = computed(() => {
     const params = {
@@ -233,7 +253,15 @@ const loadEmployerLksUsersDebounced = debounce(async (query) => {
 
 const detectRole = async () => {
     const currentUser = await getCurrentUser();
-    role.value = getIdoUserRole(currentUser, permissionStore);
+    availableRoles.value = getIdoAvailableRoles(currentUser, permissionStore);
+    role.value = availableRoles.value[0] || 'employer-lks';
+};
+
+const handleRoleChange = () => {
+    currentPage.value = 1;
+    selectedOrderId.value = '';
+    detailsVisible.value = false;
+    fetchOrders();
 };
 
 const fetchOrders = async () => {
@@ -327,6 +355,63 @@ onMounted(async () => {
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
+}
+
+.ido-role-switcher {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.9rem;
+}
+
+.ido-role-switcher-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--p-text-color);
+}
+
+.ido-role-switcher-control {
+    display: inline-flex;
+    padding: 0.28rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--p-primary-500) 7%, var(--p-content-background));
+    border: 1px solid color-mix(in srgb, var(--p-primary-500) 12%, var(--p-content-border-color));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.ido-role-switcher-control :deep(.p-selectbutton) {
+    display: inline-flex;
+    gap: 0.2rem;
+    background: transparent;
+    border: 0;
+}
+
+.ido-role-switcher-control :deep(.p-togglebutton) {
+    min-height: 34px;
+    padding: 0.48rem 0.95rem;
+    border-radius: 999px;
+    border: 0;
+    background: transparent;
+    color: var(--p-text-color-secondary);
+    font-weight: 600;
+    box-shadow: none;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.ido-role-switcher-control :deep(.p-togglebutton:not(.p-togglebutton-checked):hover) {
+    background: rgba(var(--p-primary-500-rgb), 0.08);
+    color: var(--p-text-color);
+}
+
+.ido-role-switcher-control :deep(.p-togglebutton.p-togglebutton-checked) {
+    background: var(--p-primary-color);
+    color: var(--p-primary-contrast-color);
+    box-shadow: 0 8px 18px rgba(var(--p-primary-500-rgb), 0.2);
+}
+
+.ido-role-switcher-control :deep(.p-togglebutton .p-button-label) {
+    line-height: 1;
 }
 
 .ido-header-row {
