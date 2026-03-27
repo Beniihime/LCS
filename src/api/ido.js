@@ -18,6 +18,10 @@ export function createIdoOrder(payload) {
     return axiosInstance.post('/api/ido/acc/create-order', payload);
 }
 
+export function createPublicIdoOrder(payload) {
+    return axiosInstance.post('/api/ido/acc/for-all/create-order', payload);
+}
+
 export function fetchCurrentUserPhones() {
     return axiosInstance.get('/api/users/me/phones');
 }

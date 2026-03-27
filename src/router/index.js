@@ -36,6 +36,15 @@ const routes = [
             title: 'Ожидание авторизации'
         }
     },
+    {
+        path: "/consultation-request",
+        component: () => import('@/views/IdoConsultationCreatePage.vue'),
+        name: 'PublicIdoConsultationCreate',
+        meta: {
+            requiresAuth: false,
+            title: 'Подать заявку'
+        }
+    },
     { 
         path: "/", 
         component: () => import('@/views/HomePage.vue'),
@@ -154,7 +163,7 @@ const routes = [
                 name: 'IdoConsultations',
                 meta: {
                     requiresAuth: true,
-                    title: 'Дополнительные консультации'
+                    title: 'Подать заявку'
                 }
             },
             {

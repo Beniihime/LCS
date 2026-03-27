@@ -1,5 +1,5 @@
 <template>
-    <div class="ido-page">
+    <div :class="['ido-page', { 'ido-page-public': !canUseAutofill }]">
         <div class="ido-hero">
             <div class="ido-hero-copy">
                 <div class="ido-heading-row">
@@ -9,12 +9,15 @@
                     <div>
                         <h2 class="m-0">Подать заявку</h2>
                         <p class="text-color-secondary mt-2 mb-0">
-                            Заполните договор, выберите преподавателя и сразу скачайте готовый документ.
+                            {{ canUseAutofill
+                                ? 'Заполните договор, выберите преподавателя и сразу скачайте готовый документ.'
+                                : 'Заполните форму без входа в аккаунт, выберите преподавателя и сразу скачайте готовый документ.' }}
                         </p>
                     </div>
                 </div>
             </div>
             <Button
+                v-if="canUseAutofill"
                 label="Обновить автозаполнение"
                 icon="pi pi-refresh"
                 outlined
@@ -182,7 +185,8 @@
 import { computed, reactive, ref } from 'vue';
 import { debounce } from 'lodash';
 import { useToast } from 'primevue/usetoast';
-import { createIdoOrder, fetchCurrentUserPhones, getTeacherDivisions, searchTeachers } from '@/api/ido.js';
+import { createIdoOrder, createPublicIdoOrder, fetchCurrentUserPhones, getTeacherDivisions, searchTeachers } from '@/api/ido.js';
+import { isAuthenticated } from '@/utils/auth.js';
 import { getCurrentUser } from '@/utils/currentUser.js';
 import { buildTeacherLabel, downloadBase64Document, getPrimaryPhone } from '@/utils/ido.js';
 
@@ -195,6 +199,7 @@ const submitted = ref(false);
 const selectedTeacher = ref(null);
 const teacherSuggestions = ref([]);
 const divisionOptions = ref([]);
+const canUseAutofill = computed(() => isAuthenticated());
 
 const form = reactive({
     surname: '',
@@ -347,7 +352,9 @@ const submitForm = async () => {
             divisionId: form.divisionId,
         };
 
-        const response = await createIdoOrder(payload);
+        const response = canUseAutofill.value
+            ? await createIdoOrder(payload)
+            : await createPublicIdoOrder(payload);
         downloadBase64Document(response.data?.docFile, response.data?.docName);
 
         toast.add({
@@ -369,7 +376,9 @@ const submitForm = async () => {
     }
 };
 
-prefillCurrentUser();
+if (canUseAutofill.value) {
+    prefillCurrentUser();
+}
 </script>
 
 <style scoped>
@@ -386,7 +395,7 @@ prefillCurrentUser();
     justify-content: space-between;
     gap: 1rem;
     align-items: flex-start;
-    padding: 0;
+    padding: 2rem 1rem;
     margin-bottom: 0.25rem;
 }
 
@@ -428,6 +437,9 @@ prefillCurrentUser();
     border-radius: 16px;
     border: 1px solid var(--p-content-border-color);
     box-shadow: 0 10px 28px rgba(15, 23, 42, 0.04);
+}
+.ido-page-public .ido-card {
+    background: rgba(255, 255, 255, 0.9);
 }
 
 .ido-card :deep(.p-card-title),
