@@ -148,6 +148,37 @@ const routes = [
                     title: 'Показатели'
                 },
             },
+            {
+                path: "/ido/consultations",
+                component: () => import('@/views/IdoConsultationCreatePage.vue'),
+                name: 'IdoConsultations',
+                meta: {
+                    requiresAuth: true,
+                    title: 'Дополнительные консультации'
+                }
+            },
+            {
+                path: "/ido/orders",
+                component: () => import('@/views/IdoOrdersPage.vue'),
+                name: 'IdoOrders',
+                meta: {
+                    requiresAuth: true,
+                    title: 'Список консультаций'
+                }
+            },
+            {
+                path: "/ido/settings",
+                component: () => import('@/views/IdoSettingsPage.vue'),
+                name: 'IdoSettings',
+                meta: {
+                    permission: {
+                        type: 'Additional_consultation_calculator_SU',
+                        action: 'Read'
+                    },
+                    requiresAuth: true,
+                    title: 'Настройки ИДО'
+                }
+            },
             // Requests section
             {
                 path: "/requests",

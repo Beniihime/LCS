@@ -37,6 +37,13 @@
                                         :disabled="syncLoading"
                                         @click="syncPasImAccounts"
                                     />
+                                    <Button
+                                        label="Синхронизировать с 1СЗКГУ"
+                                        icon="pi pi-sync"
+                                        :loading="syncLoading"
+                                        :disabled="syncLoading"
+                                        @click="syncPasOneCzkguAccounts"
+                                    />
                                 </div>
                             </OverlayPanel>
                             <MultiSelect :modelValue="selectedColumns" :options="columns" optionLabel="header" @update:modelValue="onToggle"
@@ -309,30 +316,48 @@ const toggleSpecialUsersPanel = (event) => {
     specialUsersPanel.value?.toggle(event);
 };
 
-const syncPasImAccounts = async () => {
+const runUsersSync = async ({ endpoint, successDetail, errorDetail, errorLogLabel }) => {
     try {
         syncLoading.value = true;
-        await axiosInstance.post('/api/users/other-accounts/sync-pas-im');
+        await axiosInstance.post(endpoint);
         window.dispatchEvent(new CustomEvent('toast', {
             detail: {
                 severity: 'success',
                 summary: 'Пользователи',
-                detail: 'Синхронизация с InfraManager успешно запущена'
+                detail: successDetail
             }
         }));
         specialUsersPanel.value?.hide();
     } catch (error) {
-        console.debug('Ошибка синхронизации с InfraManager: ', error);
+        console.debug(errorLogLabel, error);
         window.dispatchEvent(new CustomEvent('toast', {
             detail: {
                 severity: 'error',
                 summary: 'Пользователи',
-                detail: 'Не удалось запустить синхронизацию с InfraManager'
+                detail: errorDetail
             }
         }));
     } finally {
         syncLoading.value = false;
     }
+};
+
+const syncPasImAccounts = async () => {
+    await runUsersSync({
+        endpoint: '/api/users/other-accounts/sync-pas-im',
+        successDetail: 'Синхронизация с InfraManager успешно запущена',
+        errorDetail: 'Не удалось запустить синхронизацию с InfraManager',
+        errorLogLabel: 'Ошибка синхронизации с InfraManager: '
+    });
+};
+
+const syncPasOneCzkguAccounts = async () => {
+    await runUsersSync({
+        endpoint: '/api/users/other-accounts/sync-pas-oneczkgu',
+        successDetail: 'Синхронизация с 1СЗКГУ успешно запущена',
+        errorDetail: 'Не удалось запустить синхронизацию с 1СЗКГУ',
+        errorLogLabel: 'Ошибка синхронизации с 1СЗКГУ: '
+    });
 };
 
 // Классы для отображения ролей в зависимости от их типа

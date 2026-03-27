@@ -101,6 +101,37 @@
                             </div>
                         </router-link>
                     </div>
+                    <div v-if="showIdoMenu" class="ido-menu-group">
+                        <button
+                            type="button"
+                            class="menu-item menu-item-button"
+                            :class="{ 'active-link': isIdoRoute, 'menu-item-open': idoMenuOpen && !collapsed }"
+                            @click="toggleIdoMenu"
+                            v-tooltip.right="collapsed ? 'ИДО' : ''"
+                        >
+                            <div class="menu-item-content">
+                                <i class="pi pi-briefcase"></i>
+                                <div v-if="!collapsed" class="menucrumb menucrumb-with-arrow">
+                                    <span>ИДО</span>
+                                    <i class="pi pi-angle-down ido-arrow" :class="{ 'ido-arrow-open': idoMenuOpen }"></i>
+                                </div>
+                            </div>
+                        </button>
+                        <Transition name="ido-submenu">
+                            <div v-if="idoMenuOpen && !collapsed" class="ido-submenu">
+                                <router-link
+                                    v-for="item in visibleIdoMenuItems"
+                                    :key="item.path"
+                                    :to="item.path"
+                                    class="ido-submenu-item"
+                                    active-class="ido-submenu-item-active"
+                                >
+                                    <i :class="item.icon"></i>
+                                    <span>{{ item.name }}</span>
+                                </router-link>
+                            </div>
+                        </Transition>
+                    </div>
                     <router-link 
                         to="/schedule" 
                         class="menu-item" 
@@ -221,10 +252,11 @@ import ThemeSwitcher from './Utils/ThemeSwitcher.vue';
 
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { clearAuthData } from '@/utils/TokenService.js';
 import { getRequestAccess, resetRequestAccessCache } from '@/utils/requestAccess.js';
 import { getCurrentUser, resetCurrentUserCache } from '@/utils/currentUser.js';
+import { idoSuResource } from '@/api/ido.js';
 
 // Импортируем утилиты для сезонов
 import { 
@@ -244,6 +276,7 @@ const props = defineProps({
 const confirm = useConfirm();
 const toast = useToast();
 const router = useRouter();
+const route = useRoute();
 
 const notificationStore = useNotificationStore();
 const permissionStore = usePermissionStore();
@@ -272,6 +305,7 @@ const initials = ref('');
 const fullName = ref('');
 const searchQuery = ref('');
 const showRequests = ref(false);
+const idoMenuOpen = ref(false);
 
 // Вычисляемые свойства для сезона
 const seasonName = computed(() => getSeasonName(currentSeason.value));
@@ -301,6 +335,16 @@ const menuItems = [
     { name: 'Справки', path: '/tickets', icon: 'pi pi-ticket' }
 ];
 
+const showIdoMenu = computed(() => true);
+const canReadIdoSettings = computed(() => hasPermission(idoSuResource, 'Read'));
+const idoMenuItems = computed(() => ([
+    { name: 'Подать заявку', path: '/ido/consultations', icon: 'pi pi-file-edit', visible: true },
+    { name: 'Список консультаций', path: '/ido/orders', icon: 'pi pi-list-check', visible: true },
+    { name: 'Настройки ИДО', path: '/ido/settings', icon: 'pi pi-sliders-h', visible: canReadIdoSettings.value }
+]));
+const visibleIdoMenuItems = computed(() => idoMenuItems.value.filter((item) => item.visible));
+const isIdoRoute = computed(() => route.path.startsWith('/ido'));
+
 const filteredMenuItems = computed(() => {
     return menuItemsAdmin.filter(item =>
         item.name.toLowerCase().startsWith(searchQuery.value.toLowerCase())
@@ -314,6 +358,15 @@ const getInitials = (firstName, lastName) => {
 };
 
 const hasPermission = (type, action) => permissionStore.hasPermission(type, action);
+
+const toggleIdoMenu = () => {
+    if (props.collapsed) {
+        router.push('/ido/consultations');
+        return;
+    }
+
+    idoMenuOpen.value = !idoMenuOpen.value;
+};
 
 const checkPermission = (path) => {
     const permissionMap = {
@@ -384,6 +437,16 @@ const loadSeasonPreference = () => {
 watch(currentSeason, (season) => {
     applySeasonPrimaryTheme(season);
 });
+
+watch(
+    () => route.path,
+    (path) => {
+        if (path.startsWith('/ido')) {
+            idoMenuOpen.value = true;
+        }
+    },
+    { immediate: true }
+);
 
 // Проверка изменения месяца
 let lastCheckedMonth = null;
@@ -784,6 +847,12 @@ const checkIsMobile = () => {
     background: transparent;
 }
 
+.menu-item-button {
+    padding: 0;
+    appearance: none;
+    cursor: pointer;
+}
+
 .menu-item-content {
     display: flex;
     align-items: center;
@@ -810,6 +879,10 @@ const checkIsMobile = () => {
     box-shadow: 
         0 4px 12px rgba(var(--p-blue-500-rgb), 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.menu-item-open {
+    border-color: rgba(var(--p-blue-500-rgb), 0.18);
 }
 
 /* ============ ИКОНКИ МЕНЮ ============ */
@@ -861,6 +934,83 @@ const checkIsMobile = () => {
     max-width: 200px;
     transform: translateX(0);
     transition-delay: 0.15s;
+}
+
+.menucrumb-with-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.ido-arrow {
+    margin-left: auto;
+    margin-right: 0 !important;
+    font-size: 0.95rem !important;
+    transition: transform 0.25s ease;
+}
+
+.ido-arrow-open {
+    transform: rotate(180deg);
+}
+
+.ido-menu-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.ido-submenu {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-left: 1.1rem;
+    padding: 0.35rem 0 0.35rem 1rem;
+    border-left: 1px solid rgba(var(--p-blue-500-rgb), 0.18);
+}
+
+.ido-submenu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 40px;
+    padding: 0.65rem 0.85rem;
+    border-radius: 12px;
+    color: var(--p-text-color);
+    text-decoration: none;
+    transition: all 0.25s ease;
+}
+
+.ido-submenu-item:hover,
+.ido-submenu-item-active {
+    background: rgba(var(--p-blue-500-rgb), 0.12);
+    color: rgb(var(--p-color-icon-menu));
+}
+
+.ido-submenu-item .pi {
+    font-size: 0.95rem;
+}
+
+.ido-submenu-enter-active,
+.ido-submenu-leave-active {
+    transition: all 0.25s ease;
+    overflow: hidden;
+}
+
+.ido-submenu-enter-from,
+.ido-submenu-leave-to {
+    opacity: 0;
+    transform: translateY(-6px);
+    max-height: 0;
+}
+
+.ido-submenu-enter-to,
+.ido-submenu-leave-from {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 240px;
 }
 
 /* ============ ЗАГОЛОВКИ РАЗДЕЛОВ ============ */

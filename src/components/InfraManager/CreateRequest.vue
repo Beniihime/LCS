@@ -49,8 +49,8 @@
                 </div>
                 <div class="row mb-4">
                     <div class="col">
-                        <label for="shortDescriprion" class="ms-2 mb-1">Тема</label>
-                        <InputText id="shortDescriprion" v-model="shortDescriprion" class="form-input" placeholder="Введите тему..."/>
+                        <label for="shortDescriprion" class="ms-2 mb-1">Аудитория</label>
+                        <InputText id="shortDescriprion" v-model="shortDescriprion" class="form-input" placeholder="Введите аудиторию..."/>
                     </div>
                 </div>
                 <div class="row mb-4">

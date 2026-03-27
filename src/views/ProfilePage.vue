@@ -294,9 +294,15 @@
             </div>
             
             <div v-if="activeProfile === 'external'">
-                <div class="profile-card">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h2 class="m-0">{{ selectedExternalAccount ? getSystemTypeLabel(selectedExternalAccount.systemType) : 'Внешние системы' }}</h2>
+                <div class="profile-card external-profile-card">
+                    <div class="external-header">
+                        <div>
+                            <div class="external-eyebrow">Внешняя система</div>
+                            <h2 class="m-0">{{ selectedExternalAccount ? getSystemTypeLabel(selectedExternalAccount.systemType) : 'Внешние системы' }}</h2>
+                            <p v-if="selectedExternalAccount" class="external-subtitle">
+                                Структурированные данные связки пользователя
+                            </p>
+                        </div>
                         <div v-if="selectedExternalAccount && isAdmin" class="d-flex gap-2">
                             <Button label="Изменить" icon="pi pi-pencil" outlined severity="secondary" @click="openEditExternalDialog" />
                             <Button label="Удалить" icon="pi pi-trash" severity="danger" outlined @click="showDeleteExternalDialog = true" />
@@ -313,15 +319,146 @@
                     </div>
 
                     <div v-else class="external-info">
-                        <div class="external-meta mb-3">
-                            <div><strong>ID связки:</strong> {{ selectedExternalAccount.id }}</div>
-                            <div><strong>User ID в системе:</strong> {{ selectedExternalAccount.userIdInOtherSystem }}</div>
+                        <div class="external-meta-grid">
+                            <div class="external-meta-card">
+                                <div class="external-meta-label">ID связки</div>
+                                <div class="external-meta-value">{{ selectedExternalAccount.id }}</div>
+                            </div>
+                            <div class="external-meta-card">
+                                <div class="external-meta-label">User ID в системе</div>
+                                <div class="external-meta-value">{{ selectedExternalAccount.userIdInOtherSystem || '-' }}</div>
+                            </div>
+                            <div class="external-meta-card">
+                                <div class="external-meta-label">Тип системы</div>
+                                <div class="external-meta-value">{{ getSystemTypeLabel(selectedExternalAccount.systemType) }}</div>
+                            </div>
                         </div>
 
-                        <div v-if="parsedExternalInformationEntries.length" class="external-info-grid">
-                            <div v-for="entry in parsedExternalInformationEntries" :key="entry.key" class="external-info-row">
-                                <div class="external-key">{{ entry.key }}</div>
-                                <div class="external-value">{{ entry.value }}</div>
+                        <template v-if="isInfraManagerAccount">
+                            <div
+                                v-for="section in infraManagerSections"
+                                :key="section.title"
+                                class="external-data-section"
+                            >
+                                <div class="external-section-header">
+                                    <div>
+                                        <div class="external-section-title">{{ section.title }}</div>
+                                        <div v-if="section.subtitle" class="external-section-subtitle">{{ section.subtitle }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="external-kv-grid">
+                                    <div v-for="field in section.fields" :key="field.label" class="external-kv-card">
+                                        <div class="external-kv-label">{{ field.label }}</div>
+                                        <div class="external-kv-value">{{ field.value }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <template v-else-if="isOneCzkguAccount">
+                            <div
+                                v-for="section in oneCzkguSummarySections"
+                                :key="section.title"
+                                class="external-data-section"
+                            >
+                                <div class="external-section-header">
+                                    <div>
+                                        <div class="external-section-title">{{ section.title }}</div>
+                                        <div v-if="section.subtitle" class="external-section-subtitle">{{ section.subtitle }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="external-kv-grid">
+                                    <div v-for="field in section.fields" :key="field.label" class="external-kv-card">
+                                        <div class="external-kv-label">{{ field.label }}</div>
+                                        <div class="external-kv-value">{{ field.value }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="external-data-section">
+                                <div class="external-section-header">
+                                    <div>
+                                        <div class="external-section-title">Должности</div>
+                                        <div class="external-section-subtitle">Текущие назначения и условия работы</div>
+                                    </div>
+                                </div>
+
+                                <div v-if="oneCzkguJobPositions.length" class="external-job-grid">
+                                    <div v-for="job in oneCzkguJobPositions" :key="job.id" class="external-job-card">
+                                        <div class="external-job-card-header">
+                                            <div>
+                                                <div class="external-job-title">{{ job.title }}</div>
+                                                <div class="external-job-subtitle">{{ job.division }}</div>
+                                            </div>
+                                            <Tag :value="job.workFunction" severity="secondary" />
+                                        </div>
+
+                                        <div class="external-kv-grid external-kv-grid-compact">
+                                            <div v-for="field in job.fields" :key="field.label" class="external-kv-card">
+                                                <div class="external-kv-label">{{ field.label }}</div>
+                                                <div class="external-kv-value">{{ field.value }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-else class="external-empty-inline">Нет данных о должностях</div>
+                            </div>
+
+                            <div class="external-data-section">
+                                <div class="external-section-header">
+                                    <div>
+                                        <div class="external-section-title">Академическая информация</div>
+                                        <div class="external-section-subtitle">Степени и звания</div>
+                                    </div>
+                                </div>
+
+                                <div class="external-badge-row">
+                                    <div class="external-badge-group">
+                                        <div class="external-badge-label">Ученые степени</div>
+                                        <template v-if="oneCzkguAcademicDegrees.length">
+                                            <Tag v-for="degree in oneCzkguAcademicDegrees" :key="degree" :value="degree" severity="info" />
+                                        </template>
+                                        <span v-else class="external-empty-inline">Нет данных</span>
+                                    </div>
+                                    <div class="external-badge-group">
+                                        <div class="external-badge-label">Ученые звания</div>
+                                        <template v-if="oneCzkguAcademicRanks.length">
+                                            <Tag v-for="rank in oneCzkguAcademicRanks" :key="rank" :value="rank" severity="success" />
+                                        </template>
+                                        <span v-else class="external-empty-inline">Нет данных</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <div v-else-if="parsedExternalInformationRows.length" class="external-data-section">
+                            <div class="external-section-header">
+                                <div>
+                                    <div class="external-section-title">Information</div>
+                                    <div class="external-section-subtitle">Вложенные данные аккаунта</div>
+                                </div>
+                            </div>
+
+                            <div class="external-tree">
+                                <div
+                                    v-for="entry in parsedExternalInformationRows"
+                                    :key="entry.id"
+                                    class="external-tree-row"
+                                    :class="{ 'external-tree-row-group': entry.isGroup }"
+                                >
+                                    <div
+                                        class="external-tree-key"
+                                        :style="{ paddingLeft: `${1 + (entry.depth * 1.15)}rem` }"
+                                    >
+                                        <span class="external-tree-branch" :style="{ left: `${0.45 + (entry.depth * 1.15)}rem` }"></span>
+                                        {{ entry.label }}
+                                    </div>
+                                    <div class="external-tree-value" :class="{ 'external-tree-value-group': entry.isGroup }">
+                                        {{ entry.value }}
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -484,6 +621,7 @@ function onFileSelect(event) {
 let statusInfra = null;
 const status = ref(false);
 const INFRA_MANAGER_SYSTEM_TYPE = 0;
+const ONE_CZKGU_SYSTEM_TYPE = 1;
 
 const parseInformation = (information) => {
     if (!information) return null;
@@ -495,15 +633,222 @@ const parseInformation = (information) => {
     }
 };
 
-const parsedExternalInformationEntries = computed(() => {
-    const info = parseInformation(selectedExternalAccount.value?.information);
-    if (!info || typeof info !== 'object' || Array.isArray(info)) return [];
+const formatExternalInfoValue = (value) => {
+    if (value === null || value === undefined || value === '') return '-';
+    if (typeof value === 'boolean') return value ? 'true' : 'false';
+    return String(value);
+};
 
-    return Object.entries(info).map(([key, value]) => ({
-        key,
-        value: typeof value === 'object' ? JSON.stringify(value) : String(value)
+const formatExternalInfoLabel = (label) => {
+    if (!label) return '';
+
+    const arrayMatch = /^\[(\d+)\]$/.exec(label);
+    if (arrayMatch) {
+        return `Элемент ${arrayMatch[1]}`;
+    }
+
+    return String(label)
+        .replace(/_/g, ' ')
+        .replace(/([a-zа-я0-9])([A-ZА-Я])/g, '$1 $2')
+        .trim();
+};
+
+const buildExternalInformationRows = (value, depth = 0, label = '', path = 'root') => {
+    if (Array.isArray(value)) {
+        if (!value.length) {
+            return label ? [{ id: path, label, value: '[]', depth, isGroup: false }] : [];
+        }
+
+        const rows = label
+            ? [{ id: path, label: formatExternalInfoLabel(label), value: `Список (${value.length})`, depth, isGroup: true }]
+            : [];
+
+        value.forEach((item, index) => {
+            const itemLabel = `[${index + 1}]`;
+            rows.push(...buildExternalInformationRows(item, depth + (label ? 1 : 0), itemLabel, `${path}.${index}`));
+        });
+
+        return rows;
+    }
+
+    if (value && typeof value === 'object') {
+        const entries = Object.entries(value);
+        if (!entries.length) {
+            return label ? [{ id: path, label, value: '{}', depth, isGroup: false }] : [];
+        }
+
+        const rows = label
+            ? [{ id: path, label: formatExternalInfoLabel(label), value: 'Объект', depth, isGroup: true }]
+            : [];
+        const nestedDepth = depth + (label ? 1 : 0);
+
+        entries.forEach(([key, nestedValue]) => {
+            rows.push(...buildExternalInformationRows(nestedValue, nestedDepth, key, `${path}.${key}`));
+        });
+
+        return rows;
+    }
+
+    if (!label) return [];
+
+    return [{
+        id: path,
+        label: formatExternalInfoLabel(label),
+        value: formatExternalInfoValue(value),
+        depth,
+        isGroup: false
+    }];
+};
+
+const parsedExternalInformationRows = computed(() => {
+    const info = parseInformation(selectedExternalAccount.value?.information);
+    if (!info || typeof info !== 'object') return [];
+
+    return buildExternalInformationRows(info);
+});
+
+const parsedExternalInformation = computed(() => {
+    const info = parseInformation(selectedExternalAccount.value?.information);
+    return info && typeof info === 'object' ? info : null;
+});
+
+const isInfraManagerAccount = computed(() => Number(selectedExternalAccount.value?.systemType) === INFRA_MANAGER_SYSTEM_TYPE);
+const isOneCzkguAccount = computed(() => Number(selectedExternalAccount.value?.systemType) === ONE_CZKGU_SYSTEM_TYPE);
+
+const createExternalField = (label, value) => ({
+    label,
+    value: formatExternalInfoValue(value)
+});
+
+const filterExternalFields = (fields) => fields.filter(field => field.value !== '-');
+
+const infraManagerSections = computed(() => {
+    if (!isInfraManagerAccount.value || !parsedExternalInformation.value) return [];
+
+    const info = parsedExternalInformation.value;
+
+    return [
+        {
+            title: 'Основное',
+            subtitle: 'Личные и учетные данные',
+            fields: filterExternalFields([
+                createExternalField('ФИО', [info.Surname, info.Name, info.Patronymic].filter(Boolean).join(' ')),
+                createExternalField('E-mail', info.Email),
+                createExternalField('Логин', info.Login),
+                createExternalField('Внутренний телефон', info.PhoneInternal || info.Phone),
+                createExternalField('Таймзона', info.TimeZoneName)
+            ])
+        },
+        {
+            title: 'Оргструктура',
+            subtitle: 'Подразделение и подчиненность',
+            fields: filterExternalFields([
+                createExternalField('Организация', info.OrganizationName),
+                createExternalField('Подразделение', info.DivisionName),
+                createExternalField('Должность', info.PositionName),
+                createExternalField('Руководитель', info.ManagerName)
+            ])
+        },
+        {
+            title: 'Локация',
+            subtitle: 'Рабочее место пользователя',
+            fields: filterExternalFields([
+                createExternalField('Корпус', info.BuildingName),
+                createExternalField('Этаж', info.FloorName),
+                createExternalField('Кабинет', info.RoomName),
+                createExternalField('Рабочее место', info.WorkplaceName)
+            ])
+        },
+        {
+            title: 'Система',
+            subtitle: 'Служебные параметры',
+            fields: filterExternalFields([
+                createExternalField('ID в системе', info.Id),
+                createExternalField('Внутренний ID', info.IntId),
+                createExternalField('Доступ SD Web', info.SDWebAccessIsGranted),
+                createExternalField('Удален', info.IsRemoved),
+                createExternalField('Заблокирован для OSI', info.IsLockedForOSI)
+            ])
+        }
+    ].filter(section => section.fields.length);
+});
+
+const oneCzkguSummarySections = computed(() => {
+    if (!isOneCzkguAccount.value || !parsedExternalInformation.value) return [];
+
+    const info = parsedExternalInformation.value;
+
+    return [
+        {
+            title: 'Основное',
+            subtitle: 'Персональная информация',
+            fields: filterExternalFields([
+                createExternalField('ФИО', [info.Surname, info.FirstName, info.Patronymic].filter(Boolean).join(' ')),
+                createExternalField('Дата рождения', info.BirthDate),
+                createExternalField('Пол', info.Gender),
+                createExternalField('ИНН', info.Inn),
+                createExternalField('СНИЛС', info.Snils)
+            ])
+        },
+        {
+            title: 'Контакты',
+            subtitle: 'Контактные данные сотрудника',
+            fields: filterExternalFields([
+                createExternalField('E-mail', info.PersonalData?.Email || info.Email),
+                createExternalField('Мобильный телефон', info.PersonalData?.MobilePhone),
+                createExternalField('Домашний телефон', info.PersonalData?.HomePhone)
+            ])
+        },
+        {
+            title: 'Персональные данные',
+            subtitle: 'Адреса и документы',
+            fields: filterExternalFields([
+                createExternalField('Адрес регистрации', info.PersonalData?.RegisteredAddress),
+                createExternalField('Адрес проживания', info.PersonalData?.ResidentialAddress),
+                createExternalField('Документ', info.PersonalData?.IdentityDocument)
+            ])
+        }
+    ].filter(section => section.fields.length);
+});
+
+const oneCzkguJobPositions = computed(() => {
+    if (!isOneCzkguAccount.value) return [];
+
+    const positions = parsedExternalInformation.value?.JobPosition;
+    if (!Array.isArray(positions)) return [];
+
+    return positions.map((job, index) => ({
+        id: job.Id || `job-${index}`,
+        title: formatExternalInfoValue(job.Name),
+        division: formatExternalInfoValue(job.Division?.Name),
+        workFunction: formatExternalInfoValue(job.WorkFunction?.Name),
+        fields: filterExternalFields([
+            createExternalField('Тариф', job.Tariff),
+            createExternalField('Тарифная сетка', job.TariffSchedule),
+            createExternalField('Табельный номер', job.ServiceNumber),
+            createExternalField('Дата приема', job.DataAdmission),
+            createExternalField('Дата увольнения', job.DateDismissal),
+            createExternalField('Номер договора', job.CurrentPlaceOfWork?.ContrantNumber),
+            createExternalField('Дата договора', job.CurrentPlaceOfWork?.ContrantDate)
+        ])
     }));
 });
+
+const normalizeAcademicItems = (items) => {
+    if (!Array.isArray(items)) return [];
+
+    return items
+        .map((item) => {
+            if (typeof item === 'string') return item;
+            if (item?.Name) return item.Name;
+            if (item?.title) return item.title;
+            return '';
+        })
+        .filter(Boolean);
+};
+
+const oneCzkguAcademicDegrees = computed(() => normalizeAcademicItems(parsedExternalInformation.value?.AcademicDegrees));
+const oneCzkguAcademicRanks = computed(() => normalizeAcademicItems(parsedExternalInformation.value?.AcademicRanks));
 
 const getSystemTypeLabel = (systemType) => {
     const matchedSystemType = systemTypeOptions.value.find((option) => Number(option.value) === Number(systemType));
@@ -1251,42 +1596,216 @@ p {
 }
 .external-empty-page {
     color: var(--p-grey-2);
-    padding: 0.5rem 0;
+    padding: 2rem 1rem;
+    text-align: center;
+    border: 1px dashed rgba(var(--p-blue-500-rgb), 0.22);
+    border-radius: 18px;
+    background: rgba(var(--p-blue-500-rgb), 0.03);
 }
-.external-meta {
+.external-profile-card {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 1.25rem;
+}
+.external-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+.external-eyebrow {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(var(--p-blue-500-rgb), 0.85);
+    margin-bottom: 0.4rem;
+    font-weight: 700;
+}
+.external-subtitle {
+    margin: 0.45rem 0 0;
+    color: var(--p-grey-2);
+    font-size: 0.95rem;
+}
+.external-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.external-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.85rem;
+}
+.external-meta-card {
+    padding: 1rem 1.1rem;
+    border-radius: 16px;
+    border: 1px solid rgba(var(--p-blue-500-rgb), 0.16);
+    background: linear-gradient(180deg, rgba(var(--p-blue-500-rgb), 0.07), rgba(255, 255, 255, 0.02));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.external-meta-label {
+    color: var(--p-grey-2);
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.45rem;
+}
+.external-meta-value {
+    font-size: 1.05rem;
+    font-weight: 700;
     color: var(--p-text-color);
 }
-.external-info-grid {
-    border: 1px solid var(--p-grey-4);
-    border-radius: 8px;
+.external-data-section {
+    border-radius: 20px;
+    border: 1px solid rgba(var(--p-blue-500-rgb), 0.16);
+    background: linear-gradient(180deg, rgba(var(--p-blue-500-rgb), 0.05), rgba(255, 255, 255, 0.02));
     overflow: hidden;
 }
-.external-info-row {
+.external-kv-grid {
     display: grid;
-    grid-template-columns: 260px 1fr;
-    border-bottom: 1px solid var(--p-grey-4);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.85rem;
+    padding: 1rem 1.1rem 1.1rem;
 }
-.external-info-row:last-child {
-    border-bottom: none;
+.external-kv-grid-compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0;
 }
-.external-key {
-    background: var(--p-grey-6);
-    padding: 0.6rem 0.75rem;
+.external-kv-card {
+    min-height: 88px;
+    padding: 0.95rem 1rem;
+    border-radius: 16px;
+    border: 1px solid rgba(var(--p-blue-500-rgb), 0.12);
+    background: rgba(255, 255, 255, 0.04);
+}
+.external-kv-label {
+    color: var(--p-grey-2);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.45rem;
+}
+.external-kv-value {
+    color: var(--p-text-color);
+    font-size: 1rem;
     font-weight: 600;
     word-break: break-word;
 }
-.external-value {
-    padding: 0.6rem 0.75rem;
+.external-section-header {
+    padding: 1rem 1.2rem 0.9rem;
+    border-bottom: 1px solid rgba(var(--p-blue-500-rgb), 0.12);
+}
+.external-section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--p-text-color);
+}
+.external-section-subtitle {
+    color: var(--p-grey-2);
+    font-size: 0.9rem;
+    margin-top: 0.2rem;
+}
+.external-tree {
+    display: flex;
+    flex-direction: column;
+    padding: 0.35rem 0;
+}
+.external-job-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1rem 1.1rem 1.1rem;
+}
+.external-job-card {
+    border-radius: 18px;
+    border: 1px solid rgba(var(--p-blue-500-rgb), 0.14);
+    background: rgba(var(--p-blue-500-rgb), 0.04);
+    padding: 1rem;
+}
+.external-job-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.9rem;
+}
+.external-job-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--p-text-color);
+}
+.external-job-subtitle {
+    margin-top: 0.2rem;
+    color: var(--p-grey-2);
+    font-size: 0.92rem;
+}
+.external-badge-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    padding: 1rem 1.1rem 1.1rem;
+}
+.external-badge-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.95rem 1rem;
+    border-radius: 16px;
+    border: 1px solid rgba(var(--p-blue-500-rgb), 0.12);
+    background: rgba(255, 255, 255, 0.04);
+}
+.external-badge-label {
+    width: 100%;
+    color: var(--p-grey-2);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.external-empty-inline {
+    color: var(--p-grey-2);
+    font-size: 0.95rem;
+}
+.external-tree-row {
+    display: grid;
+    grid-template-columns: minmax(260px, 340px) 1fr;
+    align-items: stretch;
+    border-bottom: 1px solid rgba(var(--p-blue-500-rgb), 0.08);
+}
+.external-tree-row:last-child {
+    border-bottom: none;
+}
+.external-tree-row-group {
+    background: rgba(var(--p-blue-500-rgb), 0.045);
+}
+.external-tree-key {
+    position: relative;
+    padding: 0.9rem 1rem;
+    font-weight: 600;
     word-break: break-word;
 }
+.external-tree-branch {
+    position: absolute;
+    top: 0.8rem;
+    bottom: 0.8rem;
+    width: 2px;
+    border-radius: 999px;
+    background: rgba(var(--p-blue-500-rgb), 0.22);
+}
+.external-tree-value {
+    padding: 0.9rem 1rem;
+    word-break: break-word;
+    color: var(--p-text-color);
+}
+.external-tree-value-group {
+    font-weight: 600;
+    color: var(--p-grey-2);
+}
 .external-raw {
-    background: var(--p-grey-6);
-    border: 1px solid var(--p-grey-4);
-    border-radius: 8px;
-    padding: 0.75rem;
+    background: rgba(var(--p-blue-500-rgb), 0.04);
+    border: 1px solid rgba(var(--p-blue-500-rgb), 0.14);
+    border-radius: 18px;
+    padding: 1rem 1.1rem;
     margin: 0;
     white-space: pre-wrap;
     word-break: break-word;
@@ -1315,5 +1834,45 @@ p {
     font-weight: 600;
     color: var(--p-text-color);
     word-break: break-word;
+}
+
+@media (max-width: 960px) {
+    .external-header {
+        flex-direction: column;
+    }
+
+    .external-meta-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .external-kv-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .external-kv-grid-compact {
+        grid-template-columns: 1fr;
+    }
+
+    .external-badge-row {
+        grid-template-columns: 1fr;
+    }
+
+    .external-job-card-header {
+        flex-direction: column;
+    }
+
+    .external-tree-row {
+        grid-template-columns: 1fr;
+    }
+
+    .external-tree-key {
+        padding-bottom: 0.35rem;
+    }
+
+    .external-tree-value {
+        padding-top: 0;
+        padding-left: 1rem;
+        padding-bottom: 0.9rem;
+    }
 }
 </style>
