@@ -99,6 +99,7 @@
                     :totalRecords="totalRecords"
                     :value="orders"
                     :loading="loading"
+                    :rowsPerPageOptions="[5, 10, 15]"
                     @page="onPage"
                     @row-click="openOrder"
                 >
@@ -204,6 +205,27 @@ const requestParams = computed(() => {
     return params;
 });
 
+const resolveTotalRecords = (data) => {
+    const candidates = [
+        data?.totalCount,
+        data?.countEntities,
+        data?.countAllEntities,
+        data?.totalRecords,
+    ];
+
+    const directTotal = candidates.find((value) => Number.isFinite(Number(value)));
+    if (directTotal !== undefined) {
+        return Number(directTotal);
+    }
+
+    const pageCount = Number(data?.pageCount);
+    if (Number.isFinite(pageCount) && pageCount > 0) {
+        return pageCount * rowsPerPage.value;
+    }
+
+    return Array.isArray(data?.orderResponses) ? data.orderResponses.length : 0;
+};
+
 const loadTeachersDebounced = debounce(async (query) => {
     const normalizedQuery = query?.trim() || '';
 
@@ -270,7 +292,7 @@ const fetchOrders = async () => {
     try {
         const response = await getIdoOrders(role.value, requestParams.value);
         orders.value = response.data?.orderResponses || [];
-        totalRecords.value = (response.data?.pageCount || 0) * rowsPerPage.value;
+        totalRecords.value = resolveTotalRecords(response.data);
     } catch (error) {
         console.debug('Ошибка загрузки списка заявок ИДО:', error);
         orders.value = [];
