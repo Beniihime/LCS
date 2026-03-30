@@ -8,6 +8,56 @@
                     <p class="faq-subtitle">Выберите группу, чтобы найти ответ на свой вопрос.</p>
                 </div>
             </header>
+
+            <section class="faq-search-section">
+                <div class="faq-search-card">
+                    <div class="faq-search-input-wrap">
+                        <i class="pi pi-search faq-search-icon"></i>
+                        <InputText
+                            v-model.trim="searchQuery"
+                            class="faq-search-input"
+                            placeholder="Поиск по вопросам статьи"
+                        />
+                    </div>
+                    <small class="faq-search-hint">Поиск выполняется по названию вопроса статьи.</small>
+                </div>
+
+                <Transition name="content-fade" mode="out-in">
+                    <div v-if="hasSearchQuery" key="faq-search-results" class="faq-search-results">
+                        <div class="faq-search-results-header">
+                            <h4>Результаты поиска</h4>
+                            <Tag rounded severity="contrast">{{ searchLoading ? 'Поиск...' : `${searchResults.length}` }}</Tag>
+                        </div>
+
+                        <div v-if="searchLoading" class="faq-search-list">
+                            <div v-for="idx in 3" :key="idx" class="faq-search-item faq-search-item-skeleton">
+                                <Skeleton width="60%" height="1rem" />
+                                <Skeleton width="35%" height="0.9rem" />
+                            </div>
+                        </div>
+
+                        <div v-else-if="searchResults.length" class="faq-search-list">
+                            <button
+                                v-for="article in searchResults"
+                                :key="article.id"
+                                type="button"
+                                class="faq-search-item"
+                                @click="openArticle(article.id)"
+                            >
+                                <div class="faq-search-item-head">
+                                    <span class="faq-search-item-title">{{ article.question }}</span>
+                                    <Tag rounded severity="success">Статья</Tag>
+                                </div>
+                                <span v-if="article.path" class="faq-search-item-path">{{ article.path }}</span>
+                            </button>
+                        </div>
+
+                        <div v-else class="faq-search-empty">
+                            По вашему запросу статьи не найдены.
+                        </div>
+                    </div>
+                </Transition>
+            </section>
     
             <section class="faq-tree-section">
                 <div class="faq-tree-header">
@@ -90,6 +140,10 @@ const {
     items,
     loadingRoot,
     loadingGroupId,
+    searchQuery,
+    hasSearchQuery,
+    searchLoading,
+    searchResults,
     actionLoading,
     groupDialog,
     deleteDialog,
@@ -107,7 +161,7 @@ const {
 
 <style scoped>
 main {
-    height: 100vh;
+    height: 100%;
     padding: 10px 2rem;
 }
 .faq-page {
@@ -169,6 +223,114 @@ main {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+}
+
+.faq-search-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.faq-search-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem 1.1rem;
+}
+
+.faq-search-input-wrap {
+    position: relative;
+}
+
+.faq-search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--faq-muted);
+}
+
+.faq-search-input {
+    width: 100%;
+    padding-left: 2.75rem;
+    border-radius: 999px;
+}
+
+.faq-search-hint {
+    color: var(--faq-muted);
+}
+
+.faq-search-results {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    padding: 1rem 1.1rem;
+    border-radius: 18px;
+    background: color-mix(in srgb, var(--p-blue-500) 4%, var(--p-bg-color-1));
+    border: 1px solid color-mix(in srgb, var(--p-blue-500) 15%, var(--faq-border));
+}
+
+.faq-search-results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.faq-search-results-header h4 {
+    margin: 0;
+    color: var(--faq-text);
+}
+
+.faq-search-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.faq-search-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    width: 100%;
+    padding: 0.95rem 1rem;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--p-blue-500) 12%, var(--faq-border));
+    background: var(--p-bg-color-1);
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.faq-search-item:hover {
+    transform: translateY(-1px);
+    border-color: var(--p-blue-400);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.faq-search-item-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.faq-search-item-title {
+    color: var(--faq-text);
+    font-weight: 600;
+}
+
+.faq-search-item-path {
+    color: var(--faq-muted);
+    font-size: 0.88rem;
+}
+
+.faq-search-item-skeleton {
+    cursor: default;
+}
+
+.faq-search-empty {
+    color: var(--faq-muted);
 }
 
 .faq-tree-header {

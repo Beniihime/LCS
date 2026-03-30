@@ -1,6 +1,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
+import { debounce } from 'lodash';
 import axiosInstance from '@/utils/axios.js';
 import { getSessionUserId } from '@/utils/TokenService';
 import { buildFaqEndpoint, hasFaqSuPermission } from '@/utils/faqEndpoints.js';
@@ -113,6 +114,9 @@ export const useFaqGroupsPage = () => {
     const items = ref([]);
     const loadingRoot = ref(false);
     const loadingGroupId = ref('');
+    const searchQuery = ref('');
+    const searchLoading = ref(false);
+    const searchResults = ref([]);
     const error = ref('');
     const actionLoading = ref(false);
 
@@ -131,6 +135,37 @@ export const useFaqGroupsPage = () => {
         visible: false,
         group: null,
     });
+
+    const hasSearchQuery = computed(() => Boolean(searchQuery.value.trim()));
+
+    const searchArticles = async (partOfQuestion) => {
+        const normalizedQuery = String(partOfQuestion || '').trim();
+
+        if (!normalizedQuery) {
+            searchResults.value = [];
+            searchLoading.value = false;
+            return;
+        }
+
+        searchLoading.value = true;
+
+        try {
+            const response = await axiosInstance.get(faqEndpoint('groups/articles/by-question-part'), {
+                params: { partOfQuestion: normalizedQuery },
+            });
+            searchResults.value = normalizeArticles(response.data).map(mapArticleToItem);
+        } catch (fetchError) {
+            console.debug('Ошибка при поиске статей FAQ:', fetchError);
+            searchResults.value = [];
+            error.value = 'Не удалось выполнить поиск по статьям.';
+        } finally {
+            searchLoading.value = false;
+        }
+    };
+
+    const searchArticlesDebounced = debounce((query) => {
+        searchArticles(query);
+    }, 350);
 
     const getNextGroupOrder = (parentId) => {
         const getMaxOrder = (list) => list.reduce((max, item) => {
@@ -485,6 +520,17 @@ export const useFaqGroupsPage = () => {
 
     fetchRootGroups();
 
+    watch(searchQuery, (value) => {
+        if (!value.trim()) {
+            searchArticlesDebounced.cancel();
+            searchLoading.value = false;
+            searchResults.value = [];
+            return;
+        }
+
+        searchArticlesDebounced(value);
+    });
+
     watch(error, (message) => {
         if (!message) return;
         toast.add({
@@ -503,6 +549,10 @@ export const useFaqGroupsPage = () => {
         items,
         loadingRoot,
         loadingGroupId,
+        searchQuery,
+        hasSearchQuery,
+        searchLoading,
+        searchResults,
         error,
         actionLoading,
         groupDialog,
