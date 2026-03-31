@@ -487,6 +487,7 @@ const emit = defineEmits(['updated']);
 const visible = ref(false);
 const loading = ref(false);
 const loadingEmployees = ref(false);
+const employeesLoaded = ref(false);
 const submitting = ref(false);
 
 const activeTab = ref('0');
@@ -629,7 +630,6 @@ const canSubmit = computed(() => {
 const openDialog = async () => {
     visible.value = true;
     activeTab.value = '0';
-    await loadEmployees();
     parseScores();
 };
 
@@ -698,11 +698,14 @@ const handleKeyDown = (event) => {
 const prevCommentValue = ref('');
 
 const loadEmployees = async () => {
+    if (loadingEmployees.value || employeesLoaded.value) return;
+
     loadingEmployees.value = true;
     try {
         const response = await axiosInstance.get('/api/rating/employees');
         allEmployees.value = response.data.employees || [];
         filteredEmployees.value = allEmployees.value;
+        employeesLoaded.value = true;
     } catch (error) {
         console.error('Ошибка при загрузке сотрудников: ', error);
         allEmployees.value = [];
@@ -979,10 +982,20 @@ watch(manualPoints, (newValue) => {
     }
 });
 
+watch(activeTab, async (newValue) => {
+    if (newValue !== '1' || !visible.value) return;
+    await loadEmployees();
+});
+
 watch(visible, (newVal) => {
     if (!newVal) {
         resetForm();
         searchQueryView.value = '';
+        return;
+    }
+
+    if (activeTab.value === '1') {
+        loadEmployees();
     }
 });
 
