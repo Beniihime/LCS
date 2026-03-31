@@ -125,7 +125,7 @@
                         />
                     </div>
                     <div class="ido-field ido-field-wide">
-                        <label for="ido-topic">Тема консультации</label>
+                        <label for="ido-topic">Дисциплина</label>
                         <Textarea
                             id="ido-topic"
                             v-model.trim="form.topic"
