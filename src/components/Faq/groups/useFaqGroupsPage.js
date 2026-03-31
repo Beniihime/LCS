@@ -1,4 +1,4 @@
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import { debounce } from 'lodash';
@@ -45,12 +45,45 @@ const mapGroupToItem = (group) => ({
     children: [],
 });
 
+const buildArticlePath = (article) => {
+    const rawPath = article?.path
+        || article?.groupPath
+        || article?.groupTitle
+        || article?.group?.title
+        || '';
+
+    if (Array.isArray(rawPath)) {
+        return rawPath.filter(Boolean).join(' › ');
+    }
+
+    return String(rawPath || '')
+        .replace(/\s*(?:\/|>|→|›)\s*/g, ' › ')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+};
+
+const splitArticlePath = (path) => {
+    return String(path || '')
+        .split('›')
+        .map((segment) => segment.trim())
+        .filter(Boolean);
+};
+
+const normalizeTitle = (value) => {
+    return String(value || '')
+        .trim()
+        .replace(/\s{2,}/g, ' ')
+        .toLowerCase();
+};
+
 const mapArticleToItem = (article) => ({
     key: `article-${article.id}`,
     id: article.id,
     type: 'article',
     title: article.question || article.title || 'Без названия',
     question: article.question || article.title || 'Без названия',
+    path: buildArticlePath(article),
+    pathSegments: splitArticlePath(buildArticlePath(article)),
     groupId: article.groupId || null,
     authorId: article.authorId || null,
     order: typeof article.order === 'number' ? article.order : 0,
@@ -119,6 +152,8 @@ export const useFaqGroupsPage = () => {
     const searchResults = ref([]);
     const error = ref('');
     const actionLoading = ref(false);
+    const highlightedNodeKey = ref('');
+    let highlightedNodeTimer = null;
 
     const groupDialog = ref({
         visible: false,
@@ -265,6 +300,81 @@ export const useFaqGroupsPage = () => {
             ...group,
             expanded: !group.expanded,
         }));
+    };
+
+    const focusTreeNode = async (type, id) => {
+        if (!id) return;
+
+        const nodeKey = `${type}-${id}`;
+        highlightedNodeKey.value = nodeKey;
+        await nextTick();
+
+        const targetNode = document.getElementById(`faq-node-${nodeKey}`);
+        targetNode?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+        });
+        targetNode?.focus({ preventScroll: true });
+
+        if (highlightedNodeTimer) {
+            clearTimeout(highlightedNodeTimer);
+        }
+
+        highlightedNodeTimer = window.setTimeout(() => {
+            if (highlightedNodeKey.value === nodeKey) {
+                highlightedNodeKey.value = '';
+            }
+        }, 1800);
+    };
+
+    const findGroupByTitle = (list, title) => {
+        const normalizedTitle = normalizeTitle(title);
+
+        return list.find((item) => {
+            return item.type === 'group' && normalizeTitle(item.title) === normalizedTitle;
+        }) || null;
+    };
+
+    const focusPathSegment = async (article, segmentIndex) => {
+        const pathSegments = Array.isArray(article?.pathSegments) ? article.pathSegments : [];
+        const visibleSegments = pathSegments.slice(0, segmentIndex + 1);
+
+        if (!visibleSegments.length) return;
+
+        if (!items.value.length) {
+            await fetchRootGroups();
+        }
+
+        let currentLevel = items.value.filter((item) => item.type === 'group');
+        let targetGroup = null;
+
+        for (const segmentTitle of visibleSegments) {
+            targetGroup = findGroupByTitle(currentLevel, segmentTitle);
+
+            if (!targetGroup) {
+                toast.add({
+                    severity: 'warn',
+                    summary: 'FAQ',
+                    detail: `Не удалось найти раздел «${segmentTitle}» в дереве FAQ.`,
+                    life: 2500,
+                });
+                return;
+            }
+
+            items.value = updateGroupById(items.value, targetGroup.id, (group) => ({
+                ...group,
+                expanded: true,
+            }));
+
+            if (!targetGroup.loaded) {
+                await loadGroupChildren(targetGroup.id);
+            }
+
+            targetGroup = findGroupById(items.value, targetGroup.id);
+            currentLevel = targetGroup?.children?.filter((item) => item.type === 'group') || [];
+        }
+
+        await focusTreeNode('group', targetGroup?.id);
     };
 
     const openArticle = (articleId) => {
@@ -553,6 +663,7 @@ export const useFaqGroupsPage = () => {
         hasSearchQuery,
         searchLoading,
         searchResults,
+        highlightedNodeKey,
         error,
         actionLoading,
         groupDialog,
@@ -560,6 +671,7 @@ export const useFaqGroupsPage = () => {
         fetchRootGroups,
         openCreateRootGroupDialog,
         handleGroupToggle,
+        focusPathSegment,
         openArticle,
         handleGroupAction,
         closeGroupDialog,

@@ -1,10 +1,15 @@
 <template>
     <div class="faq-row-wrap" :class="item.type === 'group' ? 'group-wrap' : 'article-wrap'">
         <div
+            :id="`faq-node-${item.type}-${item.id}`"
+            tabindex="-1"
             class="faq-row"
             :class="[
                 item.type === 'group' ? 'is-group' : 'is-article',
-                { 'has-actions': canManageItem },
+                {
+                    'has-actions': canManageItem,
+                    'is-focused-from-search': highlightedNodeKey === `${item.type}-${item.id}`,
+                },
             ]"
             @click="onRowClick"
         >
@@ -57,6 +62,7 @@
                     :loading-group-id="loadingGroupId"
                     :current-user-id="currentUserId"
                     :can-manage-any-faq="canManageAnyFaq"
+                    :highlighted-node-key="highlightedNodeKey"
                     @toggle-group="$emit('toggle-group', $event)"
                     @open-article="$emit('open-article', $event)"
                     @group-action="$emit('group-action', $event)"
@@ -93,6 +99,10 @@ const props = defineProps({
     canManageAnyFaq: {
         type: Boolean,
         default: false,
+    },
+    highlightedNodeKey: {
+        type: String,
+        default: '',
     },
 });
 
@@ -183,6 +193,18 @@ const onRowClick = () => {
 .faq-row:hover{
     border-color: var(--p-blue-400);
     transform: translateY(-1px);
+}
+
+.faq-row:focus-visible {
+    outline: none;
+    border-color: var(--p-blue-500);
+    box-shadow: 0 0 0 3px rgba(var(--p-blue-500-rgb), 0.16);
+}
+
+.faq-row.is-focused-from-search {
+    border-color: var(--p-blue-500);
+    box-shadow: 0 0 0 3px rgba(var(--p-blue-500-rgb), 0.12);
+    background: color-mix(in srgb, var(--p-blue-500) 7%, var(--p-grey-7));
 }
 
 .faq-row.is-group {

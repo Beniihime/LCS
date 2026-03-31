@@ -37,19 +37,29 @@
                         </div>
 
                         <div v-else-if="searchResults.length" class="faq-search-list">
-                            <button
+                            <article
                                 v-for="article in searchResults"
                                 :key="article.id"
-                                type="button"
                                 class="faq-search-item"
-                                @click="openArticle(article.id)"
                             >
                                 <div class="faq-search-item-head">
-                                    <span class="faq-search-item-title">{{ article.question }}</span>
+                                    <button type="button" class="faq-search-item-link" @click="openArticle(article.id)">
+                                        <span class="faq-search-item-title">{{ article.question }}</span>
+                                    </button>
                                     <Tag rounded severity="success">Статья</Tag>
                                 </div>
-                                <span v-if="article.path" class="faq-search-item-path">{{ article.path }}</span>
-                            </button>
+                                <div v-if="article.pathSegments?.length" class="faq-search-item-path">
+                                    <button
+                                        v-for="(segment, segmentIndex) in article.pathSegments"
+                                        :key="`${article.id}-${segmentIndex}-${segment}`"
+                                        type="button"
+                                        class="faq-search-path-link"
+                                        @click="focusPathSegment(article, segmentIndex)"
+                                    >
+                                        {{ segment }}
+                                    </button>
+                                </div>
+                            </article>
                         </div>
 
                         <div v-else class="faq-search-empty">
@@ -91,6 +101,7 @@
                             :loading-group-id="loadingGroupId"
                             :current-user-id="currentUserId"
                             :can-manage-any-faq="canManageAnyFaq"
+                            :highlighted-node-key="highlightedNodeKey"
                             @toggle-group="handleGroupToggle"
                             @open-article="openArticle"
                             @group-action="handleGroupAction"
@@ -144,12 +155,14 @@ const {
     hasSearchQuery,
     searchLoading,
     searchResults,
+    highlightedNodeKey,
     actionLoading,
     groupDialog,
     deleteDialog,
     fetchRootGroups,
     openCreateRootGroupDialog,
     handleGroupToggle,
+    focusPathSegment,
     openArticle,
     handleGroupAction,
     closeGroupDialog,
@@ -308,6 +321,16 @@ main {
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
 }
 
+.faq-search-item-link {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
 .faq-search-item-head {
     display: flex;
     align-items: flex-start;
@@ -321,8 +344,39 @@ main {
 }
 
 .faq-search-item-path {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.faq-search-path-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0.28rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--p-blue-500) 12%, var(--faq-border));
+    background: rgba(var(--p-blue-500-rgb), 0.08);
+    color: color-mix(in srgb, var(--p-blue-700, #1d4ed8) 72%, var(--faq-text));
+    font-size: 0.82rem;
+    font-weight: 500;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: border-color 0.14s ease, background-color 0.14s ease, transform 0.14s ease;
+}
+
+.faq-search-path-link:hover {
+    border-color: var(--p-blue-400);
+    background: rgba(var(--p-blue-500-rgb), 0.12);
+    transform: translateY(-1px);
+}
+
+.faq-search-path-link:not(:last-child)::after {
+    content: "›";
+    margin-left: 0.55rem;
     color: var(--faq-muted);
-    font-size: 0.88rem;
+    pointer-events: none;
 }
 
 .faq-search-item-skeleton {
