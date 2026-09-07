@@ -376,6 +376,17 @@ const servicesCatalogItems = computed(() => {
         items.push({ id: 'ido', name: 'ИДО', icon: 'pi pi-building-columns', children: visibleIdoMenuItems.value });
     }
 
+    items.push({
+        id: 'portfolio',
+        name: 'Портфолио',
+        icon: 'pi pi-briefcase',
+        description: 'Электронная зачетка, достижения и сертификаты в одном месте.',
+        children: [
+            { id: 'electronic-record-book', name: 'Электронная зачётка', icon: 'pi pi-id-card', badge: 'Скоро', disabled: true, description: 'Успеваемость, оценки и академические результаты.' },
+            { id: 'my-curriculum', name: 'Мой учебный план', icon: 'pi pi-list-check', badge: 'Скоро', disabled: true, description: 'Дисциплины, модули и график обучения по программе.' },
+        ],
+    });
+
     return items;
 });
 

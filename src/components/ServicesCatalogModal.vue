@@ -195,7 +195,7 @@ const closeModal = () => {
 };
 
 const openItem = (item) => {
-    if (item.id === 'project-office' || item.id === 'umu-sirius') return;
+    if (item.disabled || item.id === 'project-office' || item.id === 'umu-sirius') return;
     if (item.children?.length) {
         activeParent.value = item;
         return;

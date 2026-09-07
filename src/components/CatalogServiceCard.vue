@@ -2,7 +2,9 @@
     <button
         type="button"
         class="catalog-service-card"
+        :class="{ 'catalog-service-card--disabled': item.disabled }"
         :style="cardStyle"
+        :disabled="item.disabled"
         @click="$emit('select', item)"
     >
         <span class="catalog-service-card-top">
@@ -141,6 +143,19 @@ const cardStyle = computed(() => {
 .catalog-service-card-footer i { transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
 .catalog-service-card:hover .catalog-service-icon, .catalog-service-card:focus-visible .catalog-service-icon { transform: rotate(-9deg) scale(1.12); }
 .catalog-service-card:hover .catalog-service-card-footer i, .catalog-service-card:focus-visible .catalog-service-card-footer i { transform: translateX(6px); }
+
+.catalog-service-card--disabled { opacity: 0.72; cursor: not-allowed; }
+.catalog-service-card--disabled:hover,
+.catalog-service-card--disabled:focus-visible { transform: none; box-shadow: 0 14px 30px rgba(15, 23, 42, 0.07); border-color: color-mix(in srgb, var(--catalog-card-accent) 24%, var(--p-grey-4)); outline: none; }
+.catalog-service-card--disabled:hover::before,
+.catalog-service-card--disabled:focus-visible::before { transform: none; }
+.catalog-service-card--disabled:hover::after,
+.catalog-service-card--disabled:focus-visible::after { opacity: 0; transform: translateX(-125%); }
+.catalog-service-card--disabled:hover .catalog-service-icon,
+.catalog-service-card--disabled:focus-visible .catalog-service-icon { transform: none; }
+.catalog-service-card--disabled:hover .catalog-service-card-footer i,
+.catalog-service-card--disabled:focus-visible .catalog-service-card-footer i { transform: none; }
+.catalog-service-card--disabled .catalog-service-badge { color: var(--p-text-muted-color, var(--p-grey-1)); background: color-mix(in srgb, var(--p-text-muted-color, var(--p-grey-1)) 12%, transparent); }
 
 @keyframes catalog-card-in {
     from { opacity: 0; transform: translateY(18px) scale(0.97); }
