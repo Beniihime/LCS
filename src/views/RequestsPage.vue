@@ -225,7 +225,7 @@
                         :sortable="true"
                         :showFilterMenu="false"
                         :frozen="col.field === 'number'"
-                        style="min-width: 300px;"
+                        :style="{ minWidth: col.minWidth || '300px' }"
                     >
                         <template #body="{ data }">
                             <template v-if="col.field === 'entityStateName'">
@@ -235,6 +235,9 @@
                                 <div class="d-flex align-items-center">
                                     <Tag :value="data.priorityName" :severity="data.priorityName === 'Высокий' ? 'danger' : data.priorityName === 'Низкий' ? 'success' : 'info'" />
                                 </div>
+                            </template>
+                            <template v-else-if="col.field === 'description'">
+                                <span class="requests-description-cell" :title="data.description">{{ data.description || '—' }}</span>
                             </template>
 
                             <template v-else>
@@ -364,11 +367,11 @@ const rowsPerPageOptions = [
 
 const columns = ref([
     { field: 'number', header: '№', placeholder: 'Введите номер...', filterable: true, filterField: 'number', filterType: 'text' },
-    { field: 'entityStateName', header: 'Статус', placeholder: 'Выберите статус', filterable: true, filterField: 'entityStateNames', filterType: 'multiselect', options: stateOptions },
-    { field: 'priorityName', header: 'Приоритет', placeholder: 'Выберите приоритет', filterable: true, filterField: 'priorityId', filterType: 'select', options: priorityOptions },
+    { field: 'entityStateName', header: 'Статус', placeholder: 'Выберите статус', filterable: true, filterField: 'entityStateNames', filterType: 'multiselect', options: stateOptions, minWidth: '150px' },
+    { field: 'priorityName', header: 'Приоритет', placeholder: 'Выберите приоритет', filterable: true, filterField: 'priorityId', filterType: 'select', options: priorityOptions, minWidth: '150px' },
+    { field: 'description', header: 'Описание', minWidth: '300px' },
     { field: 'clientFullName', header: 'Клиент' },
     { field: 'callSummaryName', header: 'Сводка', placeholder: 'Введите...', filterable: true, filterField: 'callSummaryName', filterType: 'text' },
-    { field: 'description', header: 'Описание' },
     { field: 'solution', header: 'Решение' },
     { field: 'serviceItemFullName', header: 'Элемент сервиса' },
     { field: 'serviceAttendanceFullName', header: 'Выполнил' },
@@ -381,7 +384,7 @@ const columns = ref([
     { field: 'utcDateClosed', header: 'Дата закрытия' }
 ]);
 
-const defaultColumns = ['number', 'entityStateName', 'priorityName', 'callSummaryName', 'clientFullName', 'executorFullName'];
+const defaultColumns = ['number', 'entityStateName', 'priorityName', 'description', 'callSummaryName', 'clientFullName', 'executorFullName'];
 const selectedColumnFields = ref(defaultColumns);
 
 const selectedColumns = computed(() => 
@@ -910,6 +913,15 @@ onMounted(async () => {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+}
+.requests-description-cell {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.35;
+    max-width: 100%;
 }
 
 @media (max-width: 768px) {

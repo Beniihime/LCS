@@ -72,12 +72,29 @@
                           <div class="details-section">
                               <div class="section-header">
                                 <h4><i class="pi pi-exclamation-circle"></i> Статус и приоритет</h4>
-                                <Button v-if="canEditStatement" icon="pi pi-pencil" text rounded severity="secondary" @click="openEditStatement" />
                               </div>
                               <p v-if="selectedCall.callType"><strong>Тип заявки:</strong> <span v-html="selectedCall.callType"></span></p>
                               <p v-if="selectedCall.entityStateName">
-                                <strong>Статус:</strong> 
+                                <strong>Статус:</strong>
                                 <Tag :value="selectedCall.entityStateName" :severity="getStatusSeverity(selectedCall.entityStateName)" :icon="getStatusIcon(selectedCall.entityStateName)" class="ms-3"/>
+                                <Button
+                                    v-if="canEditStatement"
+                                    icon="pi pi-pencil"
+                                    text
+                                    rounded
+                                    severity="secondary"
+                                    size="small"
+                                    class="ms-2"
+                                    :loading="statementSaving || statementLoading"
+                                    @click="openStatementMenu"
+                                />
+                                <Menu ref="statementMenuRef" :model="statementMenuItems" :popup="true">
+                                    <template #item="{ item, props }">
+                                        <button type="button" v-bind="props.action" class="statement-menu-item">
+                                            <Tag :value="item.label" :severity="item.severity" :icon="item.icon" />
+                                        </button>
+                                    </template>
+                                </Menu>
                               </p>
                               <p v-if="selectedCall.receiptTypeName"><strong>Тип приема:</strong> <span v-html="selectedCall.receiptTypeName"></span></p>
                               <p v-if="selectedCall.urgencyName"><strong>Срочность:</strong> <span v-html="selectedCall.urgencyName"></span></p>
@@ -166,19 +183,17 @@
             </Dialog>
             <EditCallParticipantsModal ref="editParticipantsModal" @saved="handleParticipantsSaved" />
             <EditCallBasicInformationModal ref="editBasicInfoModal" @saved="handleBasicInfoSaved" />
-            <EditCallStatementModal ref="editStatementModal" @saved="handleStatementSaved" />
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import axiosInstance from '@/utils/axios.js';
 import { useInfraCallDetails } from '@/components/InfraManager/composables/useInfraCallDetails.js';
 import { usePermissionStore } from '@/stores/permissions.js';
 import EditCallParticipantsModal from '@/components/InfraManager/EditCallParticipantsModal.vue';
 import EditCallBasicInformationModal from '@/components/InfraManager/EditCallBasicInformationModal.vue';
-import EditCallStatementModal from '@/components/InfraManager/EditCallStatementModal.vue';
 import { getInfraStatusIcon, getInfraStatusSeverity } from '@/utils/infraStatus.js';
 import { formatDateOmskFromUnixSeconds, formatDateOmskFromUtcString, formatFileSize } from '@/utils/date.js';
 
@@ -199,7 +214,96 @@ const canEditStatement = computed(() =>
   permissionStore.hasPermission('InfraManager_Call_Statement', 'Update')
   && permissionStore.hasPermission('InfraManager_Call_Statement', 'Read')
 );
-const editStatementModal = ref(null);
+
+// Изменение статуса через выпадающий список у карандаша
+const statements = ref([]);
+const statementLoading = ref(false);
+const statementSaving = ref(false);
+const statementMenuRef = ref(null);
+
+const fetchStatements = async (callId) => {
+  statementLoading.value = true;
+  try {
+    const response = await axiosInstance.get(`/api/infra-manager/calls/${callId}/statement`);
+    statements.value = response.data;
+    return true;
+  } catch (error) {
+    console.debug('Ошибка при загрузке доступных статусов:', error);
+    statements.value = [];
+    window.dispatchEvent(new CustomEvent('toast', {
+      detail: {
+        severity: 'error',
+        summary: 'Заявки',
+        detail: 'Не удалось загрузить доступные статусы',
+      },
+    }));
+    return false;
+  } finally {
+    statementLoading.value = false;
+  }
+};
+
+const onStatementSelect = async (newStateId) => {
+  if (!selectedCall.value || newStateId == null) return;
+
+  const prevEntityStateName = selectedCall.value.entityStateName;
+  const prevStatement = statements.value.find((s) => s.text === prevEntityStateName);
+  if (prevStatement && prevStatement.stateId === newStateId) return;
+
+  statementSaving.value = true;
+  try {
+    await axiosInstance.put(
+      `/api/infra-manager/calls/${selectedCall.value.id}/statement`,
+      JSON.stringify(newStateId),
+      { headers: { 'Content-Type': 'application/json' } },
+    );
+
+    const chosen = statements.value.find((s) => s.stateId === newStateId);
+    if (chosen) {
+      selectedCall.value = { ...selectedCall.value, entityStateName: chosen.text };
+    }
+
+    window.dispatchEvent(new CustomEvent('toast', {
+      detail: {
+        severity: 'success',
+        summary: 'Заявки',
+        detail: 'Статус успешно обновлён',
+      },
+    }));
+  } catch (error) {
+    console.debug('Ошибка при обновлении статуса:', error);
+    window.dispatchEvent(new CustomEvent('toast', {
+      detail: {
+        severity: 'error',
+        summary: 'Заявки',
+        detail: 'Не удалось обновить статус',
+      },
+    }));
+  } finally {
+    statementSaving.value = false;
+  }
+};
+
+const statementMenuItems = computed(() => {
+  if (statementLoading.value) {
+    return [{ label: 'Загрузка статусов…', disabled: true }];
+  }
+  return statements.value.map((s) => ({
+    label: s.text,
+    severity: getInfraStatusSeverity(s.text),
+    icon: getInfraStatusIcon(s.text),
+    command: () => onStatementSelect(s.stateId),
+  }));
+});
+
+const openStatementMenu = async (event) => {
+  if (!selectedCall.value) return;
+  statementMenuRef.value?.toggle(event);
+  if (!statements.value.length && !statementLoading.value) {
+    const ok = await fetchStatements(selectedCall.value.id);
+    if (!ok) statementMenuRef.value?.hide();
+  }
+};
 
 const lastCalls = ref([]);  // Список последних заявок
 const isCallsVisible = ref(false);
@@ -221,6 +325,10 @@ const {
     const response = await axiosInstance.get(`/api/infra-manager/users/me/calls/${callId}`);
     return response.data;
   },
+});
+
+watch(selectedCall, () => {
+  statements.value = [];
 });
 
 const getStatusSeverity = getInfraStatusSeverity;
@@ -296,27 +404,6 @@ const handleBasicInfoSaved = async () => {
   }
 };
 
-const openEditStatement = () => {
-  if (!selectedCall.value) return;
-  editStatementModal.value?.openModal({
-    id: selectedCall.value.id,
-    entityStateName: selectedCall.value.entityStateName,
-  });
-};
-
-const handleStatementSaved = async () => {
-  if (!selectedCall.value) return;
-  try {
-    const response = await axiosInstance.get(`/api/infra-manager/users/me/calls/${selectedCall.value.id}`);
-    selectedCall.value = {
-      ...selectedCall.value,
-      entityStateName: response.data.entityStateName,
-    };
-  } catch (error) {
-    console.debug('Ошибка при обновлении данных заявки:', error);
-  }
-};
-
 // Загрузить последние заявки или скрыть их по повторному нажатию
 const fetchCallsInfo = async () => {
   if (isCallsVisible.value) {
@@ -379,6 +466,23 @@ defineExpose({ openCallDetails });
 }
 .details-section p {
   margin: 5px 0;
+}
+.statement-menu-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+.statement-menu-item:hover {
+  background: var(--p-blue-500-low-op);
+}
+.statement-menu-item :deep(.p-tag) {
+  margin: 0;
 }
 
 h2 {
