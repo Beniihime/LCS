@@ -82,15 +82,20 @@
             <div class="panel-card">
                 <div class="panel-header">
                     <h3>Последние заявки</h3>
-                    <router-link
-                        v-if="showRequests"
-                        class="panel-header-action"
-                        :to="{ path: '/requests', query: { create: '1' } }"
-                        aria-label="Создать заявку"
-                        v-tooltip.top="'Создать заявку'"
-                    >
-                        <i class="pi pi-plus"></i>
-                    </router-link>
+                    <div class="panel-header-actions">
+                        <router-link
+                            v-if="showRequests"
+                            class="panel-header-action panel-header-action-primary"
+                            :to="{ path: '/requests', query: { create: '1' } }"
+                            aria-label="Создать заявку"
+                            v-tooltip.top="'Создать заявку'"
+                        >
+                            <i class="pi pi-plus"></i>
+                        </router-link>
+                        <router-link class="panel-header-action" to="/requests" aria-label="Открыть заявки" v-tooltip.top="'Открыть заявки'">
+                            <i class="pi pi-arrow-up-right"></i>
+                        </router-link>
+                    </div>
                 </div>
                 <div class="panel-content">
                     <div v-if="recentTicketsLoading" class="schedule-skeleton">
@@ -101,7 +106,7 @@
                             v-for="ticket in recentTickets"
                             :key="ticket.id"
                             class="recent-ticket"
-                            to="/requests"
+                            :to="{ path: '/requests', query: { callId: ticket.id } }"
                         >
                             <div class="recent-ticket-main">
                                 <strong>{{ ticket.callSummaryName || ticket.fullName || `Заявка №${ticket.number}` }}</strong>
@@ -129,15 +134,15 @@
                 <div class="panel-header">
                     <h3>Справки</h3>
                     <div class="panel-header-actions">
-                        <router-link
+                        <button
                             v-if="canCreateStudentTickets"
                             class="panel-header-action panel-header-action-primary"
-                            to="/tickets/my-requests"
                             aria-label="Создать справку"
                             v-tooltip.top="'Создать справку'"
+                            @click="openCertificateModal"
                         >
                             <i class="pi pi-plus"></i>
-                        </router-link>
+                        </button>
                         <router-link class="panel-header-action" :to="ticketsDashboardLink" aria-label="Открыть справки" v-tooltip.top="'Открыть справки'">
                             <i class="pi pi-arrow-up-right"></i>
                         </router-link>
@@ -167,6 +172,11 @@
         </section>
 
         <NewsFeedSection />
+        <StudentTicketCreateDialog
+            ref="createCertificateDialogRef"
+            :show-button="false"
+            @created="onCertificateCreated"
+        />
     </main>
 </template>
 
@@ -176,10 +186,11 @@ import axios from 'axios';
 import axiosInstance from '@/utils/axios.js';
 import NewsFeedSection from '@/components/News/NewsFeedSection.vue';
 import AsyncState from '@/components/Utils/AsyncState.vue';
+import StudentTicketCreateDialog from '@/components/Tickets/StudentTicketCreateDialog.vue';
 import { usePermissionStore } from '@/stores/permissions.js';
 import { getRequestAccess } from '@/utils/requestAccess.js';
 import { getCurrentUser } from '@/utils/currentUser.js';
-import { formatDateOmskFromUtcString } from '@/utils/date.js';
+import { formatDateOmskFromUtcString, formatDateRuLongWithTime } from '@/utils/date.js';
 import { getInfraStatusSeverity } from '@/utils/infraStatus.js';
 import { listMyTickets } from '@/api/tickets.js';
 import { requestMocks, ticketMocks, USE_MOCK_DATA } from '@/config/mockRuntime.js';
@@ -241,13 +252,20 @@ const canAccessStudentTickets = computed(() => (
 ));
 const canCreateStudentTickets = computed(() => permissionStore.hasPermission('TicketsStudent', 'Create'));
 const showTicketsShortcut = computed(() => canReadTickets.value || canAccessStudentTickets.value);
-const ticketsDashboardLink = computed(() => (
-    canReadTickets.value ? '/tickets' : '/tickets/my-requests'
-));
+const ticketsDashboardLink = computed(() => '/tickets/my-requests');
+const createCertificateDialogRef = ref(null);
+
+const openCertificateModal = () => {
+    createCertificateDialogRef.value?.openModal?.();
+};
+
+const onCertificateCreated = () => {
+    fetchRecentCertificates();
+};
 
 const getTicketStatusSeverity = getInfraStatusSeverity;
 const formatTicketDate = (date) => formatDateOmskFromUtcString(date);
-const formatCertificateDate = (date) => formatDateOmskFromUtcString(date);
+const formatCertificateDate = (date) => formatDateRuLongWithTime(date);
 const getCertificateStatusSeverity = (status) => ({
     New: 'info',
     Open: 'warning',
@@ -700,6 +718,8 @@ h3 {
     background: color-mix(in srgb, var(--p-primary-color) 8%, transparent);
     color: var(--p-primary-color);
     text-decoration: none;
+    cursor: pointer;
+    font: inherit;
     transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
 .panel-header-action:hover {

@@ -86,6 +86,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
+import { debounce } from 'lodash';
 import axiosInstance from '@/utils/axios';
 
 const showAddDialog = ref(false);
@@ -126,7 +127,6 @@ const loadingGroups = ref(false);
 
 // Пользователи
 const selectedUser = ref(null);
-const allUsers = ref([]);
 const filteredUsers = ref([]);
 const loadingUsers = ref(false);
 const submitting = ref(false);
@@ -134,7 +134,6 @@ const submitting = ref(false);
 // Загрузка начальных данных
 const loadInitialData = () => {
     loadGroups();
-    loadUsers();
 };
 
 // Загрузка групп для выбранного года
@@ -213,55 +212,58 @@ const onYearChange = () => {
     loadGroups();
 };
 
-// Загрузка пользователей
-const loadUsers = async () => {
-    if (allUsers.value.length > 0) return;
-    
-    loadingUsers.value = true;
-    try {
-        const payload = {
-            page: 1,
-            pageSize: 500,
-            isBlocked: false
-        };
+// Серверный поиск пользователей с дебаунсом.
+// Введённая строка разбивается на токены и раскладывается по полям
+// так же, как раздельные фильтры на странице пользователей:
+// 1-й токен → фамилия, 2-й → имя, 3-й → отчество, токен с "@" → e-mail.
+const debouncedSearchUsers = debounce(async (query) => {
+    const tokens = query.split(/\s+/).filter(Boolean);
 
-        const response = await axiosInstance.post('/api/users/list', payload);
-        
-        allUsers.value = response.data.entities.map(user => ({
+    const payload = {
+        page: 1,
+        pageSize: 20,
+        isBlocked: false,
+        lastName: tokens[0] ?? null,
+        firstName: tokens[1] ?? null,
+        middleName: tokens[2] ?? null,
+        email: tokens.find(t => t.includes('@')) ?? null,
+        roleIds: null
+    };
+
+    try {
+        const { data } = await axiosInstance.post('/api/users/list', payload);
+
+        filteredUsers.value = (data.entities || []).map(user => ({
             id: user.id,
             fullName: `${user.lastName} ${user.firstName} ${user.middleName || ''}`.trim(),
-            email: user.email,
-            isBlocked: user.isBlocked
+            email: user.email
         }));
-        
-        filteredUsers.value = [...allUsers.value];
     } catch (error) {
-        console.debug("Ошибка при загрузке пользователей: ", error);
+        console.debug("Ошибка при поиске пользователей: ", error);
         window.dispatchEvent(new CustomEvent('toast', {
-            detail: { 
-                severity: 'error', 
-                summary: 'Ошибка', 
-                detail: 'Не удалось загрузить список пользователей',
+            detail: {
+                severity: 'error',
+                summary: 'Ошибка',
+                detail: 'Не удалось выполнить поиск пользователей',
             }
         }));
+        filteredUsers.value = [];
     } finally {
         loadingUsers.value = false;
     }
-};
+}, 300);
 
 // Поиск пользователей
 const searchUsers = (event) => {
-    const query = event.query || '';
-    
-    if (!query.trim()) {
-        filteredUsers.value = allUsers.value;
+    const query = (event.query || '').trim();
+
+    if (!query) {
+        filteredUsers.value = [];
         return;
     }
-    
-    filteredUsers.value = allUsers.value.filter(user => 
-        user.fullName.toLowerCase().includes(query.toLowerCase()) ||
-        user.email?.toLowerCase().includes(query.toLowerCase())
-    );
+
+    loadingUsers.value = true;
+    debouncedSearchUsers(query);
 };
 
 // Сброс формы

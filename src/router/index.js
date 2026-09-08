@@ -409,7 +409,7 @@ router.beforeEach(async (to, from) => {
         title = 'Загрузка...';
     }
 
-    document.title = `${title} - LCS`;
+    document.title = `${title} - ЛКС`;
 
     const permissionStore = usePermissionStore();
     const requiresAuthRoute = to.matched.some(record => record.meta.requiresAuth);

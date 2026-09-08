@@ -28,6 +28,7 @@
     <ServicesCatalogModal
         v-model:visible="servicesVisible"
         :items="servicesCatalogItems"
+        :platform-items="platformsCatalogItems"
         :admin-items="adminCatalogItems"
         show-theme-editor
     />
@@ -62,7 +63,7 @@ const {
 
 const scheduleItem = computed(() => serviceItems.value.find((item) => item.id === 'schedule'));
 const servicesCatalogItems = computed(() => {
-    const items = serviceItems.value.filter((item) => item.id !== 'schedule');
+    const items = serviceItems.value.filter((item) => !['schedule', 'faq', 'umu-sirius', 'project-office'].includes(item.id));
 
     if (showTicketsMenu.value) {
         items.push({ id: 'tickets', name: 'Справки', icon: 'pi pi-ticket', children: ticketsItems.value });
@@ -72,12 +73,30 @@ const servicesCatalogItems = computed(() => {
         items.push({ id: 'ido', name: 'ИДО', icon: 'pi pi-building-columns', children: idoItems.value });
     }
 
+    items.push({
+        id: 'portfolio',
+        name: 'Портфолио',
+        icon: 'pi pi-briefcase',
+        description: 'Электронная зачетка, достижения и сертификаты в одном месте.',
+        children: [
+            { id: 'electronic-record-book', name: 'Электронная зачётка', icon: 'pi pi-id-card', badge: 'Скоро', disabled: true, description: 'Успеваемость, оценки и академические результаты.' },
+            { id: 'my-curriculum', name: 'Мой учебный план', icon: 'pi pi-list-check', badge: 'Скоро', disabled: true, description: 'Дисциплины, модули и график обучения по программе.' },
+        ],
+    });
+
+    return items;
+});
+const platformsCatalogItems = computed(() => {
+    const items = [];
+
+    items.push({ id: 'portal', name: 'Портал', badge: 'Платформа', icon: 'pi pi-globe', description: 'Учебный портал СибАДИ', path: 'https://portal.sibadi.org' });
+
     if (showUmuSiriusMenu.value) {
-        items.push({ id: 'umu-sirius', name: 'УМУ', icon: 'pi pi-briefcase', children: umuSiriusItems.value });
+        items.push({ id: 'umu-sirius', name: 'СибАДИ - Управление', icon: 'pi pi-briefcase', children: umuSiriusItems.value, badge: 'Скоро' });
     }
 
     if (showProjectOfficeMenu.value) {
-        items.push({ id: 'project-office', name: 'Проектный офис', icon: 'pi pi-paperclip', children: projectOfficeItems.value });
+        items.push({ id: 'project-office', name: 'Проектный офис', icon: 'pi pi-paperclip', children: projectOfficeItems.value, badge: 'Скоро', disabled: true });
     }
 
     return items;
