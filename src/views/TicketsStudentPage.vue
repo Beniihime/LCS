@@ -40,10 +40,30 @@
                         <div>
                             <h3>Ранее сформированные заявки</h3>
                         </div>
-                        <Tag :value="`Всего: ${totalRecords}`" severity="contrast" />
+                        <div class="tickets-student-card-head-actions">
+                            <Select
+                                v-model="rowsPerPage"
+                                :options="rowsPerPageOptions"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="Строк на странице"
+                                class="tickets-student-rows-select"
+                                @change="onRowsPerPageChange"
+                            />
+                            <Button
+                                icon="pi pi-filter"
+                                label="Фильтры"
+                                outlined
+                                severity="secondary"
+                                :class="{ 'tickets-student-filter-toggle--active': showFilters }"
+                                :badge="activeFilterCount ? String(activeFilterCount) : undefined"
+                                @click="showFilters = !showFilters"
+                            />
+                            <Tag :value="`Всего: ${totalRecords}`" severity="contrast" />
+                        </div>
                     </div>
 
-                    <div class="tickets-student-list-filters">
+                    <div v-if="showFilters" class="tickets-student-list-filters">
                         <InputText
                             :model-value="listFilters.number"
                             placeholder="Поиск по номеру"
@@ -64,14 +84,6 @@
                             optionValue="value"
                             placeholder="Приоритет"
                             @change="onListFilterChange('priority', $event.value)"
-                        />
-                        <Select
-                            v-model="rowsPerPage"
-                            :options="rowsPerPageOptions"
-                            optionLabel="label"
-                            optionValue="value"
-                            placeholder="Строк на странице"
-                            @change="onRowsPerPageChange"
                         />
                         <Button
                             icon="pi pi-filter-slash"
@@ -264,6 +276,8 @@ const listFilters = ref({
     priority: null,
 });
 
+const showFilters = ref(false);
+
 const listSectionRef = ref(null);
 
 const canReadStudentTickets = computed(() => permissionStore.hasPermission('TicketsStudent', 'Read'));
@@ -276,6 +290,12 @@ const hasActiveListFilters = computed(() => Boolean(
     || listFilters.value.status
     || listFilters.value.priority
 ));
+
+const activeFilterCount = computed(() => [
+    String(listFilters.value.number || '').trim(),
+    listFilters.value.status,
+    listFilters.value.priority,
+].filter(Boolean).length);
 
 const statusOptions = [
     { label: 'Все статусы', value: null },
@@ -567,11 +587,28 @@ onMounted(async () => {
     line-height: 1.5;
 }
 
+.tickets-student-card-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.tickets-student-filter-toggle--active {
+    border-color: var(--p-primary-color);
+    color: var(--p-primary-color);
+}
+
 .tickets-student-list-filters {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.75rem;
     align-items: center;
+}
+
+.tickets-student-rows-select {
+    max-width: 12rem;
 }
 
 .tickets-student-mobile-list {

@@ -27,6 +27,8 @@ export async function getRequestAccess(force = false) {
                 cachedResult = {
                     showRequests: true,
                     infraManagerUserId: 'mock-infra-user',
+                    hasUmuAccount: false,
+                    umuStudentId: '',
                 };
                 cachedUserId = currentUserId;
                 return cachedResult;
@@ -39,16 +41,21 @@ export async function getRequestAccess(force = false) {
                 ? currentUser.externalAccounts
                 : [];
             const infraAccount = accounts.find((account) => account.systemType === 'inframanager');
+            const umuAccount = accounts.find((account) => account.systemType === 'umu');
 
             cachedResult = {
                 showRequests: Boolean(infraAccount),
                 infraManagerUserId: infraAccount?.userIdInOtherSystem || '',
+                hasUmuAccount: Boolean(umuAccount),
+                umuStudentId: umuAccount?.userIdInOtherSystem || '',
             };
             cachedUserId = currentUser?.id || currentUserId;
         } catch (error) {
             cachedResult = {
                 showRequests: false,
                 infraManagerUserId: '',
+                hasUmuAccount: false,
+                umuStudentId: '',
             };
             cachedUserId = currentUserId;
         } finally {

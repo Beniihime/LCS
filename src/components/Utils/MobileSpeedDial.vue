@@ -59,6 +59,7 @@ const {
     showIdoMenu,
     showUmuSiriusMenu,
     showProjectOfficeMenu,
+    hasUmuAccount,
 } = useAppNavigation();
 
 const scheduleItem = computed(() => serviceItems.value.find((item) => item.id === 'schedule'));
@@ -73,16 +74,20 @@ const servicesCatalogItems = computed(() => {
         items.push({ id: 'ido', name: 'ИДО', icon: 'pi pi-building-columns', children: idoItems.value });
     }
 
-    items.push({
-        id: 'portfolio',
-        name: 'Портфолио',
-        icon: 'pi pi-briefcase',
-        description: 'Электронная зачетка, достижения и сертификаты в одном месте.',
-        children: [
-            { id: 'electronic-record-book', name: 'Электронная зачётка', icon: 'pi pi-id-card', badge: 'Скоро', disabled: true, description: 'Успеваемость, оценки и академические результаты.' },
-            { id: 'my-curriculum', name: 'Мой учебный план', icon: 'pi pi-list-check', badge: 'Скоро', disabled: true, description: 'Дисциплины, модули и график обучения по программе.' },
-        ],
-    });
+    const portfolioChildren = [
+        { id: 'electronic-record-book', name: 'Электронная зачётка', icon: 'pi pi-id-card', path: '/electronic-record-book', description: 'Успеваемость, оценки и академические результаты.' },
+        { id: 'my-curriculum', name: 'Мой учебный план', icon: 'pi pi-list-check', badge: 'Скоро', disabled: true, description: 'Дисциплины, модули и график обучения по программе.' },
+    ].filter((child) => child.id !== 'electronic-record-book' || hasUmuAccount.value);
+
+    if (portfolioChildren.length > 0) {
+        items.push({
+            id: 'portfolio',
+            name: 'Портфолио',
+            icon: 'pi pi-briefcase',
+            description: 'Электронная зачетка, достижения и сертификаты в одном месте.',
+            children: portfolioChildren,
+        });
+    }
 
     return items;
 });

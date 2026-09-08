@@ -275,6 +275,16 @@ const routes = [
                     title: 'Расписание'
                 }
             },
+            // Electronic record book (Портфолио)
+            {
+                path: "/electronic-record-book",
+                component: () => import('@/views/ElectronicRecordBookPage.vue'),
+                name: 'ElectronicRecordBook',
+                meta: {
+                    requiresAuth: true,
+                    title: 'Электронная зачётка'
+                }
+            },
             {
                 path: "/faq",
                 component: () => import('@/views/FaqPage.vue'),

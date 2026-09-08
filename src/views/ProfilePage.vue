@@ -12,12 +12,12 @@
                 <div class="external-systems-list">
                     <Button
                         v-for="account in externalAccounts"
-                        :key="account.id"
+                        :key="accountKey(account)"
                         unstyled
                         icon="pi pi-external-link me-3"
                         :label="getSystemTypeLabel(account.systemType)"
                         @click="openExternalAccount(account)"
-                        :class="{ 'active-link': activeProfile === 'external' && selectedExternalAccount?.id === account.id }"
+                        :class="{ 'active-link': activeProfile === 'external' && accountKey(selectedExternalAccount) === accountKey(account) }"
                         class="menu-item w-100 mb-2"
                     />
                     <Button
@@ -285,7 +285,7 @@
                         <div class="external-meta-grid">
                             <div class="external-meta-card">
                                 <div class="external-meta-label">ID связки</div>
-                                <div class="external-meta-value">{{ selectedExternalAccount.id }}</div>
+                                <div class="external-meta-value">{{ accountKey(selectedExternalAccount) }}</div>
                             </div>
                             <div class="external-meta-card">
                                 <div class="external-meta-label">User ID в системе</div>
@@ -622,6 +622,10 @@ const isBlocked = ref(null);
 const externalAccounts = ref([]);
 const externalAccountsLoading = ref(false);
 const selectedExternalAccount = ref(null);
+
+// Внешние аккаунты не имеют собственного id на стороне SSO, поэтому для выбора
+// используем составной ключ (тип системы + id в этой системе) — он уникален.
+const accountKey = (account) => `${account?.systemType ?? ''}::${account?.userIdInOtherSystem ?? ''}`;
 const showAddExternalDialog = ref(false);
 const showEditExternalDialog = ref(false);
 const showDeleteExternalDialog = ref(false);
@@ -1127,8 +1131,8 @@ const fetchExternalAccounts = async () => {
             return;
         }
 
-        const selectedId = selectedExternalAccount.value?.id;
-        selectedExternalAccount.value = externalAccounts.value.find(a => a.id === selectedId) || externalAccounts.value[0];
+        const selectedKey = accountKey(selectedExternalAccount.value);
+        selectedExternalAccount.value = externalAccounts.value.find(a => accountKey(a) === selectedKey) || externalAccounts.value[0];
     } catch (error) {
         console.debug('Ошибка при получении внешних аккаунтов: ', error);
         externalAccounts.value = [];
@@ -1423,8 +1427,8 @@ const fetchUserProfile = async (id) => {
             externalAccounts.value = profile.externalAccounts;
             statusInfra = getInfraExternalAccount(externalAccounts.value);
             status.value = Boolean(statusInfra);
-            const selectedId = selectedExternalAccount.value?.id;
-            selectedExternalAccount.value = externalAccounts.value.find((account) => account.id === selectedId)
+            const selectedKey = accountKey(selectedExternalAccount.value);
+            selectedExternalAccount.value = externalAccounts.value.find((account) => accountKey(account) === selectedKey)
                 || externalAccounts.value[0]
                 || null;
         }
