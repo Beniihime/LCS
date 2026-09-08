@@ -236,6 +236,16 @@ const openItem = (item) => {
 .services-group--theme { padding-top: 0.25rem; }
 .catalog-theme-editor { width: min(100%, 22rem); }
 @media (max-width: 960px) { .services-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (max-width: 760px) { .services-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 560px) { .services-catalog-modal.p-dialog { width: calc(100vw - 1rem) !important; } .services-grid { grid-template-columns: 1fr; } .catalog-section-context-card { align-items: flex-start; flex-wrap: wrap; } .catalog-section-count { margin-left: 3.9rem; } }
+@media (max-width: 760px) {
+    .services-catalog-modal.p-dialog {
+        width: calc(100vw - 1rem) !important;
+        max-width: calc(100vw - 1rem) !important;
+    }
+    .services-catalog-modal .p-dialog-header { padding: 1rem 1rem 0.5rem; font-size: 1.25rem; }
+    .services-catalog-modal .p-dialog-content { padding: 0.6rem 0.8rem 1rem; }
+    .services-catalog-body { gap: 1rem; }
+    .services-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; }
+}
+@media (max-width: 560px) { .catalog-section-context-card { align-items: flex-start; flex-wrap: wrap; } .catalog-section-count { margin-left: 3.9rem; } }
+@media (max-width: 360px) { .services-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 </style>
