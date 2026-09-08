@@ -116,6 +116,17 @@
                     </div>
                     <AccentColorEditor class="catalog-theme-editor" />
                 </section>
+
+                <section class="services-group services-group--logout">
+                    <Button
+                        label="Выйти из аккаунта"
+                        icon="pi pi-sign-out"
+                        severity="danger"
+                        outlined
+                        class="catalog-logout-button"
+                        @click="confirmLogout"
+                    />
+                </section>
             </template>
         </div>
     </Dialog>
@@ -125,6 +136,15 @@
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { usePermissionStore } from '@/stores/permissions.js';
+import { useNotificationStore } from '@/stores/notifications.js';
+import { disconnectNotificationsHub } from '@/utils/notificationHub.js';
+import { useConfirm } from 'primevue/useconfirm';
+import { useToast } from 'primevue/usetoast';
+import { clearAuthData } from '@/utils/TokenService.js';
+import { resetRequestAccessCache } from '@/utils/requestAccess.js';
+import { resetCurrentUserCache } from '@/utils/currentUser.js';
+import { runLogoutClipTransition } from '@/composables/logoutTransition';
+import axiosInstance from '@/utils/axios.js';
 import CatalogServiceCard from '@/components/CatalogServiceCard.vue';
 import { canAccessNewsManagement } from '@/api/news.js';
 import AccentColorEditor from '@/components/Utils/AccentColorEditor.vue';
@@ -140,6 +160,9 @@ const props = defineProps({
 const emit = defineEmits(['update:visible']);
 const router = useRouter();
 const permissionStore = usePermissionStore();
+const confirm = useConfirm();
+const toast = useToast();
+const notificationStore = useNotificationStore();
 const activeParent = ref(null);
 const canManageNews = computed(() => canAccessNewsManagement(permissionStore));
 const canAccessInfraSuite = computed(() => permissionStore.hasPermission('InfraManager', 'Read'));
@@ -189,6 +212,60 @@ const getDescription = (item) => item.description || descriptions[item.id] || de
 const withDescription = (item) => ({ ...item, description: getDescription(item) });
 const getItemsLabel = (count) => (count === 1 ? 'пункт' : count < 5 ? 'пункта' : 'пунктов');
 
+const confirmLogout = () => {
+    confirm.require({
+        message: 'Вы действительно хотите выйти?',
+        header: 'Выход из аккаунта',
+        icon: 'pi pi-info-circle',
+        rejectLabel: 'Отмена',
+        rejectProps: {
+            label: 'Cancel',
+            severity: 'secondary',
+            outlined: true,
+        },
+        acceptProps: {
+            label: 'Выйти',
+            severity: 'danger',
+        },
+        accept: () => {
+            logout();
+        },
+        reject: () => {
+            toast.add({ severity: 'info', summary: 'Отклонено', detail: 'Вы отклонили выход', life: 3000 });
+        },
+    });
+};
+
+const logout = async () => {
+    let ssoLogoutUrl = null;
+
+    try {
+        const response = await axiosInstance.post('/api/auth/sso/logout/redirection');
+        ssoLogoutUrl = response.data || null;
+    } catch (error) {
+        console.error('Не удалось получить URL для выхода из SSO:', error);
+    }
+
+    await disconnectNotificationsHub();
+    notificationStore.reset();
+    clearAuthData();
+    await permissionStore.clearPermissions();
+    await permissionStore.$reset();
+    resetRequestAccessCache();
+    resetCurrentUserCache();
+
+    sessionStorage.setItem('loggedOut', '1');
+
+    if (ssoLogoutUrl) {
+        await runLogoutClipTransition(() => {
+            window.location.href = ssoLogoutUrl;
+            return new Promise(() => {});
+        });
+    } else {
+        await runLogoutClipTransition(() => router.push('/auth'));
+    }
+};
+
 const closeModal = () => {
     activeParent.value = null;
     emit('update:visible', false);
@@ -235,6 +312,8 @@ const openItem = (item) => {
 .services-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.8rem; }
 .services-group--theme { padding-top: 0.25rem; }
 .catalog-theme-editor { width: min(100%, 22rem); }
+.services-group--logout { display: none; }
+.catalog-logout-button { width: 100%; justify-content: center; }
 @media (max-width: 960px) { .services-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 760px) {
     .services-catalog-modal.p-dialog {
@@ -245,6 +324,7 @@ const openItem = (item) => {
     .services-catalog-modal .p-dialog-content { padding: 0.6rem 0.8rem 1rem; }
     .services-catalog-body { gap: 1rem; }
     .services-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; }
+    .services-group--logout { display: flex; margin-top: 0.25rem; }
 }
 @media (max-width: 560px) { .catalog-section-context-card { align-items: flex-start; flex-wrap: wrap; } .catalog-section-count { margin-left: 3.9rem; } }
 @media (max-width: 360px) { .services-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

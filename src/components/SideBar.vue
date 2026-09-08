@@ -1,7 +1,6 @@
 <template>
-    <ConfirmDialog></ConfirmDialog>
-    <div 
-        class="sidebar-container" 
+    <div
+        class="sidebar-container"
         :class="[
             ['season-' + currentSeason, 'bg-image-' + currentSeason],
             { 'sidebar-mobile': isMobileMode },

@@ -1,13 +1,77 @@
 <template>
-    <main>
+    <main :class="{ 'sidebar-hidden': activeProfile !== 'external' }">
 
-        <!-- Сайдбар перключения профилей -->
-        <aside class="sidebar">
+        <!-- Краткая сводка профиля: ФИО, почта, роли (всегда виден, на мобильном — самым верхним) -->
+        <div class="profile-summary">
+            <div class="profile-card profile-card-user">
+                <!-- <div class="profile-header">
+                    <img src="../assets/backgrounds/profBack.webp" alt="Profile Header" class="header-image"/>
+                </div> -->
+                <div class="row mx-0 profile-user-header">
+                    <div class="col-auto d-flex align-items-center justify-content-center profile-user-avatar-col">
+                        <div
+                            class="avatar-wrapper"
+                            :class="{ 'avatar-wrapper-dragover': isAvatarDragOver }"
+                            @dragover.prevent="onAvatarDragOver"
+                            @dragleave.prevent="onAvatarDragLeave"
+                            @drop.prevent="onAvatarDrop"
+                        >
+                            <Avatar :image="srcAvatar" icon="pi pi-user fs-1" size="large" shape="circle" style="transition: all 0.5s;" />
+                            <div class="avatar-overlay" @click="triggerFileUpload">
+                                <div class="avatar-overlay-copy">
+                                    <div class="upload-button pi pi-camera" />
+                                    <small>{{ isAvatarDragOver ? 'Отпустите изображение' : 'Нажмите или перетащите фото' }}</small>
+                                </div>
+                                <input
+                                    ref="fileInput"
+                                    type="file"
+                                    style="display: none"
+                                    accept="image/*"
+                                    @change="onFileSelect"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col d-flex align-items-center profile-user-main-col">
+                        <div class="profile-body w-100">
+                            <div class="row justify-content-between profile-user-summary-row">
+                                <div class="col">
+                                    <h2>{{ fullName }}</h2>
+                                    <p class="profile-email">{{ email }}</p>
+                                    <div class="profile-role">
+                                        <template v-if="userRoles.length > 0">
+                                            <Chip v-for="ur in userRoles" :key="ur.id" class="role-label">
+                                                <span class="roleType" :class="getRoleTypeClass(ur)">
+                                                    {{ ur.type[0] }}
+                                                </span>
+                                                <span>{{ ur.title }}</span>
+                                            </Chip>
+                                        </template>
+                                        <template v-else>
+                                            <Tag severity="warn">Нет ролей</Tag>
+                                        </template>
+                                    </div>
+                                </div>
+                                <div class="col-auto d-flex align-items-center profile-user-action-col">
+                                    <UpdateUser v-if="!isCurrentUser && hasPermission('User', 'Update')" :userId="userId" @roles-changed="reloadProfile"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Переключатель разделов профиля (полоса, как выбор года в расписании) -->
+        <div class="profile-tabs">
+            <button type="button" :class="{ active: activeProfile === 'user' }" @click="setActiveProfile('user')">Профиль ЛКС</button>
+            <button type="button" :class="{ active: activeProfile === 'permiss' }" @click="setActiveProfile('permiss')">Полномочия</button>
+            <button type="button" :class="{ active: activeProfile === 'external' }" @click="setActiveProfile('external')">Внешние системы</button>
+        </div>
+
+        <!-- Сайдбар внешних систем (только на вкладке «Внешние системы») -->
+        <aside v-if="activeProfile === 'external'" class="sidebar">
             <div class="button-group">
-                <Button label="Профиль ЛКС" unstyled icon="pi pi-user me-3" @click="setActiveProfile('user')" :class="{ 'active-link': activeProfile === 'user' }" class="menu-item w-100 mb-3"/>
-                <Button unstyled label="Полномочия" icon="pi pi-lock me-3" @click="setActiveProfile('permiss')" :class="{ 'active-link': activeProfile === 'permiss' }" class="menu-item w-100 mb-3"/>
-
-                <Divider />
                 <div class="external-systems-title">Внешние системы</div>
                 <div class="external-systems-list">
                     <Button
@@ -30,16 +94,6 @@
                     />
                 </div>
             </div>
-
-            <!-- Кнопка блокировки -->
-            <Button 
-                v-if="!isCurrentUser && hasPermission('User', 'Update')"
-                :label="blockButtonLabel" 
-                class="w-100 block-button" 
-                :severity="blockButtonSeverity" 
-                text 
-                @click="toggleUserBlock"
-            />
 
             <Dialog v-model:visible="showAddExternalDialog" modal header="Добавить внешний аккаунт" :style="{ 'max-width': '40rem', width: '100%' }">
                 <div class="external-form-grid">
@@ -160,63 +214,6 @@
             </Breadcrumb>
 
             <div v-if="activeProfile === 'user'">
-                <div class="profile-card profile-card-user">
-                    <!-- <div class="profile-header">
-                        <img src="../assets/backgrounds/profBack.webp" alt="Profile Header" class="header-image"/>
-                    </div> -->
-                    <div class="row mx-0 profile-user-header">
-                        <div class="col-auto d-flex align-items-center justify-content-center profile-user-avatar-col">
-                            <div
-                                class="avatar-wrapper"
-                                :class="{ 'avatar-wrapper-dragover': isAvatarDragOver }"
-                                @dragover.prevent="onAvatarDragOver"
-                                @dragleave.prevent="onAvatarDragLeave"
-                                @drop.prevent="onAvatarDrop"
-                            >
-                                <Avatar :image="srcAvatar" icon="pi pi-user fs-1" size="large" shape="circle" style="transition: all 0.5s;" />
-                                <div class="avatar-overlay" @click="triggerFileUpload">
-                                    <div class="avatar-overlay-copy">
-                                        <div class="upload-button pi pi-camera" />
-                                        <small>{{ isAvatarDragOver ? 'Отпустите изображение' : 'Нажмите или перетащите фото' }}</small>
-                                    </div>
-                                    <input 
-                                        ref="fileInput" 
-                                        type="file" 
-                                        style="display: none" 
-                                        accept="image/*"
-                                        @change="onFileSelect"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col d-flex align-items-center profile-user-main-col">
-                            <div class="profile-body w-100">
-                                <div class="row justify-content-between profile-user-summary-row">
-                                    <div class="col">
-                                        <h2>{{ fullName }}</h2>
-                                        <p class="profile-email">{{ email }}</p>
-                                        <div class="profile-role">
-                                            <template v-if="userRoles.length > 0">
-                                                <Chip v-for="ur in userRoles" :key="ur.id" class="role-label">
-                                                    <span class="roleType" :class="getRoleTypeClass(ur)">
-                                                        {{ ur.type[0] }}
-                                                    </span>
-                                                    <span>{{ ur.title }}</span>
-                                                </Chip>
-                                            </template>
-                                            <template v-else>
-                                                <Tag severity="warn">Нет ролей</Tag>
-                                            </template>
-                                        </div>
-                                    </div>
-                                    <div class="col-auto d-flex align-items-center profile-user-action-col">
-                                        <UpdateUser v-if="!isCurrentUser && hasPermission('User', 'Update')" :userId="userId" @roles-changed="reloadProfile"/>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
                 <div class="profile-card profile-card-user-secondary" style="margin-top: 10px;">
                     <div class="profile-info-header">
                         <div>
@@ -246,6 +243,18 @@
                             <span class="field">Телефон</span>
                         </div> -->
                     </div>
+                </div>
+
+                <!-- Кнопка блокировки пользователя -->
+                <div v-if="!isCurrentUser && hasPermission('User', 'Update')" class="profile-block-row">
+                    <Button
+                        :label="blockButtonLabel"
+                        :severity="blockButtonSeverity"
+                        icon="pi pi-ban"
+                        class="w-100"
+                        outlined
+                        @click="toggleUserBlock"
+                    />
                 </div>
             </div>
 
@@ -1486,6 +1495,7 @@ onMounted(async () => {
 main {
     position: relative;
     display: flex;
+    flex-direction: column;
     height: 100%;
     padding: var(--app-page-padding-y) var(--app-page-padding-x);
     gap: 10px;
@@ -1557,6 +1567,9 @@ main {
 .block-button {
     margin-top: auto;
 }
+.profile-block-row {
+    margin-top: 1rem;
+}
 .avatar-wrapper {
     position: relative;
     border-radius: 50%;
@@ -1610,11 +1623,46 @@ main {
 }
 .content-wrap {
     flex: 1;
-    width: 100%;
+    width: auto;
     margin-left: 210px;
     padding-inline: 10px;
     overflow-y: auto;
     color: var(--p-text-color);
+}
+.profile-summary {
+    width: auto;
+    margin-left: 210px;
+    padding-inline: 10px;
+}
+main.sidebar-hidden .profile-summary,
+main.sidebar-hidden .profile-tabs,
+main.sidebar-hidden .content-wrap {
+    margin-left: 0;
+}
+.profile-tabs {
+    width: auto;
+    margin-left: 210px;
+    padding-inline: 10px;
+    display: flex;
+    gap: 0.5rem;
+}
+.profile-tabs button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0.62rem 0.78rem;
+    border: 1px solid var(--p-grey-4);
+    border-radius: 0.75rem;
+    color: var(--p-text-color);
+    background: var(--p-bg-color-1);
+    cursor: pointer;
+    font-weight: 700;
+    transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+.profile-tabs button:hover,
+.profile-tabs button.active {
+    border-color: color-mix(in srgb, var(--p-primary-color) 55%, transparent);
+    color: var(--p-primary-color);
+    background: color-mix(in srgb, var(--p-primary-color) 13%, transparent);
 }
 .profile-breadcrumbs {
     margin-bottom: 12px;
@@ -2108,6 +2156,29 @@ p {
         padding-inline: 0;
         overflow: visible;
         padding-bottom: var(--app-mobile-bottom-offset);
+    }
+
+    .profile-summary {
+        order: -1;
+        margin-left: 0;
+        padding-inline: 0;
+    }
+
+    .profile-tabs {
+        margin-left: 0;
+        padding-inline: 0;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .profile-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .profile-tabs button {
+        flex: 0 0 auto;
+        white-space: nowrap;
     }
 
     .profile-user-header {
