@@ -258,6 +258,7 @@ import {
     getTicketRequestTypes,
 } from '@/api/tickets.js';
 import FileDropzone from '@/components/Utils/FileDropzone.vue';
+import { getCurrentUser } from '@/utils/currentUser.js';
 
 defineProps({
     showButton: {
@@ -287,6 +288,18 @@ const allGroupOptions = ref([]);
 const filteredGroupOptions = ref([]);
 const groupsLoading = ref(false);
 const groupsLoadError = ref('');
+
+const currentUserFullName = ref('');
+
+const loadCurrentUserFullName = async () => {
+    try {
+        const user = await getCurrentUser();
+        currentUserFullName.value = [user?.lastName, user?.firstName, user?.middleName]
+            .filter(Boolean).join(' ').trim();
+    } catch (error) {
+        console.debug('Не удалось получить ФИО пользователя для справки:', error);
+    }
+};
 
 let requestTypesLoaded = false;
 
@@ -336,6 +349,16 @@ const parseDateValue = (value) => {
 };
 
 const isGroupField = (field) => field?.name === 'eduGroup';
+
+const isFioField = (field) => field?.name === 'fio'
+    || String(field?.label || '').toLowerCase().includes('фио');
+
+const applyProfileDefaults = (schema) => {
+    if (!currentUserFullName.value || !Array.isArray(schema)) return;
+    if (!schema.some(isFioField)) return;
+    if (formValues.value.fio && String(formValues.value.fio).trim()) return;
+    formValues.value = { ...formValues.value, fio: currentUserFullName.value };
+};
 
 const normalizeSchemaDefaultValue = (field) => {
     const defaultValue = field?.defaultValue;
@@ -569,6 +592,7 @@ const loadRequestTypeDetails = async (requestTypeId) => {
     if (requestTypeDetailsMap.value[requestTypeId]) {
         const schema = requestTypeDetailsMap.value[requestTypeId]?.formSchema || [];
         formValues.value = buildInitialFormValues(schema);
+        applyProfileDefaults(schema);
         formErrors.value = buildInitialFormErrors(schema);
         groupSelections.value = buildInitialGroupSelections(schema);
         if (schema.some(isGroupField)) {
@@ -588,6 +612,7 @@ const loadRequestTypeDetails = async (requestTypeId) => {
 
         const schema = response.data?.formSchema || [];
         formValues.value = buildInitialFormValues(schema);
+        applyProfileDefaults(schema);
         formErrors.value = buildInitialFormErrors(schema);
         groupSelections.value = buildInitialGroupSelections(schema);
 
@@ -735,6 +760,7 @@ const openModal = async () => {
         await loadRequestTypes();
         requestTypesLoaded = true;
     }
+    loadCurrentUserFullName();
     visible.value = true;
 };
 
@@ -757,7 +783,14 @@ watch(visible, (nextVisible) => {
     }
 });
 
+watch(currentUserFullName, () => {
+    if (selectedRequestTypeSchema.value.length) {
+        applyProfileDefaults(selectedRequestTypeSchema.value);
+    }
+});
+
 onMounted(async () => {
+    loadCurrentUserFullName();
     if (visible.value) {
         await openModal();
     }
