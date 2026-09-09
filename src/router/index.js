@@ -286,6 +286,15 @@ const routes = [
                 }
             },
             {
+                path: "/my-curriculum",
+                component: () => import('@/views/MyCurriculumPage.vue'),
+                name: 'MyCurriculum',
+                meta: {
+                    requiresAuth: true,
+                    title: 'Учебный план'
+                }
+            },
+            {
                 path: "/faq",
                 component: () => import('@/views/FaqPage.vue'),
                 name: 'Faq',

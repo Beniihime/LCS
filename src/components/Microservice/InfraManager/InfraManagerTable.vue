@@ -6,9 +6,152 @@
                     Прокрутите таблицу вправо, чтобы увидеть больше данных.
                 </div>
                 <Transition name="content-fade" mode="out-in">
+                <section v-if="isCardMode && (!loading || calls.length)" key="infra-manager-cards" class="requests-mobile-layout">
+                    <div class="requests-mobile-toolbar">
+                        <div>
+                            <h3 class="title m-0">Все заявки</h3>
+                            <p class="requests-mobile-subtitle">Быстрый просмотр актуальных обращений и статусов.</p>
+                        </div>
+                        <div class="requests-mobile-toolbar-actions">
+                            <Button icon="pi pi-arrow-left" outlined severity="secondary" @click="goBack" />
+                            <Button icon="pi pi-filter" outlined severity="secondary" @click="showMobileFilters = !showMobileFilters" />
+                            <Button
+                                icon="pi pi-sync"
+                                outlined
+                                severity="secondary"
+                                @click="fetchCalls"
+                                :loading="loading"
+                                :disabled="loading"
+                            />
+                        </div>
+                    </div>
+
+                    <div v-if="showMobileFilters" class="requests-mobile-filters">
+                        <InputText
+                            v-model="filters.number"
+                            placeholder="Поиск по номеру"
+                            @input="handleFilterInput('number', filters.number)"
+                        />
+                        <InputText
+                            v-model="filters.callSummaryName"
+                            placeholder="Поиск по сводке"
+                            @input="handleFilterInput('callSummaryName', filters.callSummaryName)"
+                        />
+                        <Select
+                            v-model="filters.priorityId"
+                            :options="priorityOptions"
+                            optionLabel="name"
+                            optionValue="id"
+                            placeholder="Приоритет"
+                            @change="handleFilterInput('priorityId', filters.priorityId)"
+                        />
+                        <MultiSelect
+                            v-model="filters.entityStateNames"
+                            :options="stateOptions"
+                            optionLabel="label"
+                            optionValue="value"
+                            display="chip"
+                            placeholder="Статусы"
+                            @change="handleFilterInput('entityStateNames', filters.entityStateNames)"
+                        />
+                        <Select
+                            v-model="filters.serviceName"
+                            :options="serviceOptions"
+                            optionLabel="label"
+                            optionValue="label"
+                            placeholder="Сервис"
+                            @change="handleFilterInput('serviceName', filters.serviceName)"
+                        />
+                        <div class="requests-mobile-filter-actions">
+                            <Select
+                                v-model="rowsPerPage"
+                                :options="rowsPerPageOptions"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="Строк на странице"
+                                @change="resetPagination"
+                            />
+                            <Button
+                                label="Сбросить"
+                                text
+                                severity="secondary"
+                                @click="clearMobileFilters"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="requests-mobile-summary">
+                        <span>Всего заявок: {{ totalRecords }}</span>
+                        <span>Показано: {{ currentPageCalls.length }}</span>
+                    </div>
+
+                    <div v-if="currentPageCalls.length" class="requests-card-list">
+                        <article
+                            v-for="call in currentPageCalls"
+                            :key="call.id"
+                            class="requests-card"
+                            :class="{ 'removed-row': call.removed }"
+                            @click="openCallDetails(call.id)"
+                        >
+                            <div class="requests-card-head">
+                                <div class="requests-card-number">
+                                    <OverlayBadge :value="call.documentCount" :severity="call.documentCount ? 'danger' : 'secondary'">
+                                        <i class="pi pi-file"></i>
+                                    </OverlayBadge>
+                                    <strong>№ {{ call.number || '—' }}</strong>
+                                </div>
+                                <Tag
+                                    :value="call.entityStateName"
+                                    :severity="getStatusSeverity(call.entityStateName)"
+                                    :icon="getStatusIcon(call.entityStateName)"
+                                />
+                            </div>
+
+                            <div class="requests-card-row">
+                                <span class="requests-card-label">Сводка</span>
+                                <span class="requests-card-value">{{ call.callSummaryName || '—' }}</span>
+                            </div>
+
+                            <div class="requests-card-meta">
+                                <Tag
+                                    :value="call.priorityName || 'Без приоритета'"
+                                    :severity="call.priorityName === 'Высокий' ? 'danger' : call.priorityName === 'Низкий' ? 'success' : 'info'"
+                                />
+                                <span class="requests-card-meta-item">{{ call.clientFullName || 'Клиент не указан' }}</span>
+                                <span class="requests-card-meta-item">{{ call.executorFullName || 'Исполнитель не назначен' }}</span>
+                            </div>
+
+                            <div class="requests-card-row">
+                                <span class="requests-card-label">Описание</span>
+                                <span class="requests-card-value clamp-2">{{ call.description || '—' }}</span>
+                            </div>
+
+                            <div class="requests-card-footer">
+                                <span>{{ call.utcDateRegistered ? formatUTCToOmsk(call.utcDateRegistered) : 'Дата регистрации не указана' }}</span>
+                                <Button
+                                    label="Открыть"
+                                    size="small"
+                                    outlined
+                                    severity="secondary"
+                                    @click.stop="openCallDetails(call.id)"
+                                />
+                            </div>
+                        </article>
+                    </div>
+                    <div v-else class="requests-empty-state">Не найдено.</div>
+
+                    <div class="requests-mobile-paginator">
+                        <Paginator
+                            :rows="rowsPerPage"
+                            :first="firstRowIndex"
+                            :totalRecords="totalRecords"
+                            @page="onPage"
+                        />
+                    </div>
+                </section>
                 <DataTable
                     key="infra-manager-table-content"
-                    v-if="!loading || calls.length"
+                    v-else-if="!loading || calls.length"
                     :value="calls"
                     :filters="filters"
                     filterDisplay="row"
@@ -279,13 +422,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch, reactive } from 'vue';
+import { ref, onMounted, nextTick, watch, reactive, computed } from 'vue';
 import axiosInstance from '@/utils/axios.js';
 import { useRoute, useRouter } from 'vue-router';
 import { debounce } from 'lodash';
 import qs from 'qs';
 import { getInfraStatusIcon, getInfraStatusSeverity } from '@/utils/infraStatus.js';
 import { formatDateOmskFromUtcString } from '@/utils/date.js';
+import { useResponsiveLayout } from '@/composables/useResponsiveLayout.js';
+import { useMobileTableView } from '@/composables/useMobileTableView.js';
 
 import InfraManagerCalls from '@/components/InfraManager/InfraManagerCalls.vue';
 
@@ -308,6 +453,18 @@ const loadedPages = ref(10);
 
 const route = useRoute();
 const router = useRouter();
+const { isPhone } = useResponsiveLayout();
+const {
+    isCardMode,
+    firstRowIndex,
+    currentPageItems: currentPageCalls,
+    showMobileFilters,
+} = useMobileTableView({
+    items: calls,
+    currentPage,
+    rowsPerPage,
+    isPhone,
+});
 
 const serviceOptions = ref([]);
 const priorityOptions = ref([]);
@@ -455,6 +612,24 @@ const clearFilter = (key, filterCallback) => {
     filterCallback();
     debouncedUpdateQuery(key, '');
 }
+
+const clearMobileFilters = () => {
+    currentPage.value = 1;
+    filters.number = '';
+    filters.callSummaryName = '';
+    filters.serviceName = [];
+    filters.priorityId = '';
+    filters.entityStateNames = [];
+
+    const query = { ...route.query };
+    delete query.number;
+    delete query.callSummaryName;
+    delete query.serviceName;
+    delete query.priorityId;
+    delete query.entityStateNames;
+
+    router.push({ query });
+};
 
 // Обновление query при входе
 const handleFilterInput = (key, value) => {
@@ -606,6 +781,169 @@ main {
 :deep(.p-datatable-tbody > tr:hover) {
     background-color: var(--p-blue-500-low-op) !important;
 }
+
+.requests-mobile-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.requests-mobile-toolbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.requests-mobile-subtitle {
+    margin: 0.35rem 0 0;
+    color: var(--p-text-muted-color, var(--p-grey-2));
+    font-size: 0.92rem;
+}
+
+.requests-mobile-toolbar-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.requests-mobile-filters {
+    display: grid;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: 18px;
+    border: 1px solid rgba(var(--p-blue-500-rgb), 0.12);
+    background: linear-gradient(
+        180deg,
+        rgba(var(--p-blue-500-rgb), 0.04),
+        rgba(255, 255, 255, 0)
+    );
+    min-width: 0;
+}
+.requests-mobile-filters > * {
+    min-width: 0;
+}
+.requests-mobile-filters :deep(.p-multiselect),
+.requests-mobile-filters :deep(.p-select),
+.requests-mobile-filters :deep(.p-inputtext) {
+    width: 100%;
+}
+.requests-mobile-filters :deep(.p-multiselect-label) {
+    white-space: normal;
+    flex-wrap: wrap;
+}
+
+.requests-mobile-filter-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.requests-mobile-summary {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.92rem;
+    color: var(--p-text-muted-color, var(--p-grey-2));
+}
+
+.requests-card-list {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.requests-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    padding: 1rem;
+    border-radius: 18px;
+    border: 1px solid rgba(var(--p-blue-500-rgb), 0.14);
+    background: linear-gradient(
+        180deg,
+        rgba(var(--p-blue-500-rgb), 0.05),
+        rgba(255, 255, 255, 0)
+    );
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.requests-card-head,
+.requests-card-number,
+.requests-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.requests-card-number {
+    justify-content: flex-start;
+}
+
+.requests-card-number .pi {
+    font-size: 1.3rem;
+}
+
+.requests-card-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+}
+
+.requests-card-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--p-text-muted-color, var(--p-grey-2));
+}
+
+.requests-card-value {
+    color: var(--p-text-color);
+    line-height: 1.45;
+}
+
+.requests-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.requests-card-meta-item {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.38rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(var(--p-blue-500-rgb), 0.08);
+    font-size: 0.82rem;
+}
+
+.requests-card-footer {
+    align-items: flex-end;
+    font-size: 0.85rem;
+    color: var(--p-text-muted-color, var(--p-grey-2));
+}
+
+.requests-empty-state {
+    padding: 2rem 1rem;
+    text-align: center;
+    border-radius: 18px;
+    border: 1px dashed rgba(var(--p-blue-500-rgb), 0.18);
+    color: var(--p-text-muted-color, var(--p-grey-2));
+}
+
+.requests-mobile-paginator {
+    padding-bottom: var(--app-mobile-bottom-offset);
+}
+
+.clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
 @media (max-width: 768px) {
     .content-wrapper {
         padding: 20px;
@@ -619,6 +957,35 @@ main {
     h2 {
         font-size: 18px;
     }
-   
+
+    .requests-mobile-toolbar,
+    .requests-card-head,
+    .requests-card-footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .requests-mobile-toolbar-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .requests-mobile-toolbar-actions :deep(.p-button) {
+        flex: 1;
+    }
+
+    .requests-mobile-summary,
+    .requests-mobile-filter-actions {
+        grid-template-columns: 1fr;
+        display: grid;
+    }
+
+    .requests-card-footer {
+        align-items: stretch;
+    }
+
+    .requests-card-footer :deep(.p-button) {
+        width: 100%;
+    }
 }
 </style>

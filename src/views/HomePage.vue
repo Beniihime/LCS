@@ -26,9 +26,9 @@
 
     <main class="content" :class="{ 'content-phone': authenticated && isPhone }">
       <header v-if="authenticated && isPhone" class="mobile-topbar">
-        <div class="mobile-topbar-mark" aria-hidden="true">L</div>
+        <div class="mobile-topbar-mark" aria-hidden="true">Л</div>
         <div class="mobile-topbar-copy">
-          <div class="mobile-topbar-kicker">LCS</div>
+          <div class="mobile-topbar-kicker">ЛКС</div>
           <div class="mobile-topbar-title">{{ currentPageTitle }}</div>
         </div>
       </header>

@@ -378,7 +378,7 @@ const servicesCatalogItems = computed(() => {
 
     const portfolioChildren = [
         { id: 'electronic-record-book', name: 'Электронная зачётка', icon: 'pi pi-id-card', path: '/electronic-record-book', description: 'Успеваемость, оценки и академические результаты.' },
-        { id: 'my-curriculum', name: 'Мой учебный план', icon: 'pi pi-list-check', badge: 'Скоро', disabled: true, description: 'Дисциплины, модули и график обучения по программе.' },
+        { id: 'my-curriculum', name: 'Мой учебный план', icon: 'pi pi-list-check', path: '/my-curriculum', description: 'Дисциплины, модули и график обучения по программе.' },
     ].filter((child) => child.id !== 'electronic-record-book' || hasUmuAccount.value);
 
     if (portfolioChildren.length > 0) {
@@ -390,6 +390,15 @@ const servicesCatalogItems = computed(() => {
             children: portfolioChildren,
         });
     }
+
+    items.push({
+        id: 'surveys',
+        name: 'Опросы',
+        icon: 'pi pi-clipboard',
+        badge: 'Скоро',
+        disabled: true,
+        description: 'Опросы и анкетирование сотрудников и студентов.',
+    });
 
     return items;
 });

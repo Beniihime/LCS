@@ -802,6 +802,19 @@ onMounted(async () => {
         rgba(var(--p-blue-500-rgb), 0.04),
         rgba(255, 255, 255, 0)
     );
+    min-width: 0;
+}
+.requests-mobile-filters > * {
+    min-width: 0;
+}
+.requests-mobile-filters :deep(.p-multiselect),
+.requests-mobile-filters :deep(.p-select),
+.requests-mobile-filters :deep(.p-inputtext) {
+    width: 100%;
+}
+.requests-mobile-filters :deep(.p-multiselect-label) {
+    white-space: normal;
+    flex-wrap: wrap;
 }
 
 .requests-mobile-filter-actions {

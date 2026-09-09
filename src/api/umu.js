@@ -24,3 +24,23 @@ export function getMyUmuGroups() {
 export function getMyUmuGrades(params = {}) {
     return axiosInstance.get(`${base}/students/me/grades`, { params });
 }
+
+/**
+ * Получить учебный план студента (дисциплины и блоки выборных) по выбранной группе.
+ * @param {Object} params
+ * @param {number} params.studentId — код студента в UMU, привязанный к выбранной группе
+ * @returns {Promise} axios-ответ с StudentCurriculum ({ curriculum, electives })
+ */
+export function getMyUmuCurriculum(params = {}) {
+    return axiosInstance.get(`${base}/students/me/curriculum`, { params });
+}
+
+/**
+ * Получить расписание сессии студента (экзамены/зачёты/пересдачи) по выбранной группе.
+ * @param {Object} params
+ * @param {number} params.studentId — код студента в UMU, привязанный к выбранной группе
+ * @returns {Promise} axios-ответ с StudentExamSchedule ({ items })
+ */
+export function getMyUmuExamSchedule(params = {}) {
+    return axiosInstance.get(`${base}/students/me/exam-schedule`, { params });
+}
